@@ -1,5 +1,5 @@
 {
-  "name": "bookworm-light-astro",
+  "name": "wala-katha",
   "version": "4.0.2",
   "license": "MIT",
   "type": "module",
@@ -10,8 +10,8 @@
     "preview": "astro preview",
     "format": "prettier -w .",
     "check": "astro check",
-    "deploy:cf-workers": "npm run build && wrangler deploy",
-    "preview:cf-workers": "npm run build && wrangler dev"
+    "deploy:cf-workers": "yarn build && wrangler deploy",
+    "preview:cf-workers": "yarn build && wrangler dev"
   },
   "dependencies": {
     "@astrojs/check": "0.9.8",
