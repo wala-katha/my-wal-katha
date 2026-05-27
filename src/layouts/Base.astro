@@ -25,16 +25,34 @@ export interface Props {
 }
 
 // distructure frontmatters
-const { title, meta_title, description, image, noindex, canonical } =
-  Astro.props;
+const { title, meta_title, description, image, noindex, canonical } = Astro.props;
+
+// --- 🧠 100% ACCURATE SMART SEO AUTO-FILL LOGIC ---
+const calculatedTitle = plainify(
+  meta_title && meta_title.trim() !== "" 
+    ? meta_title 
+    : title && title.trim() !== "" 
+      ? `${title} - Wal Katha` 
+      : config.site.title
+);
+
+const calculatedDescription = plainify(
+  description && description.trim() !== "" 
+    ? description 
+    : config.metadata.meta_description
+);
+
+// Auto-fill Keywords for Search Engines
+const siteKeywords = "Wal Katha, wala katha, wela katha, walkatha, සිංහල වැල කතා, sinhala wal katha, Wela kathaa, Sex Katha, Sex Stories, Wal Stories, Sinhala Sex, Sinhala Porn, Free Download, Sri Lanka, new wela katha, wal katha 9, sinhala wela katha, wal Katha sinhalen, Ammai Puthai, Paule wela Katha, Sinhala wal wala wela katha, amma katha, family katha, suparima katha, walma, wal katha kari katha, eha gedara, akka katha, malli katha, seeya katha, husband katha, wife katha, hora katha, New Wal Katha blogs, wal chithra katha, wal katha free, sinhala sex katha, sinhala wal katha blog, nangita hukala, campus, amma malli, akka, birinda, wife lingika paula, rasama, rasa wal katha";
+
+// Dynamic Canonical URL calculation
+const currentCanonical = canonical ? canonical : `${config.site.base_url}${Astro.url.pathname}`;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- favicon -->
     <link rel="shortcut icon" href={config.site.favicon} />
-    <!-- theme meta -->
     <meta name="theme-name" content="bookworm-light-astro" />
     <meta name="msapplication-TileColor" content="#000000" />
     <meta
@@ -50,7 +68,6 @@ const { title, meta_title, description, image, noindex, canonical } =
     <meta name="generator" content={Astro.generator} />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
-    <!-- google font css - Astro 6 built-in Font API -->
     {
       fontEntries.map(([key]) => {
         const cssVar = `--font-${key}` as any;
@@ -58,87 +75,43 @@ const { title, meta_title, description, image, noindex, canonical } =
       })
     }
 
-    <!-- responsive meta -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=5"
     />
 
-    <!-- title -->
-    <title>
-      {plainify(meta_title ? meta_title : title ? title : config.site.title)}
-    </title>
+    <title>{calculatedTitle}</title>
 
-    <!-- canonical url -->
-    {canonical && <link rel="canonical" href={canonical} item-prop="url" />}
+    <link rel="canonical" href={currentCanonical} />
 
-    <!-- noindex robots -->
     {noindex && <meta name="robots" content="noindex,nofollow" />}
 
-    <!-- meta-description -->
-    <meta
-      name="description"
-      content={plainify(
-        description ? description : config.metadata.meta_description,
-      )}
-    />
+    <meta name="description" content={calculatedDescription} />
+
+    <meta name="keywords" content={siteKeywords} />
 
     <ClientRouter />
 
-    <!-- author from config.json -->
     <meta name="author" content={config.metadata.meta_author} />
 
-    <!-- og-title -->
-    <meta
-      property="og:title"
-      content={plainify(
-        meta_title ? meta_title : title ? title : config.site.title,
-      )}
-    />
+    <meta property="og:title" content={calculatedTitle} />
 
-    <!-- og-description -->
-    <meta
-      property="og:description"
-      content={plainify(
-        description ? description : config.metadata.meta_description,
-      )}
-    />
+    <meta property="og:description" content={calculatedDescription} />
     <meta property="og:type" content="website" />
-    <meta
-      property="og:url"
-      content={`${config.site.base_url}/${Astro.url.pathname.replace("/", "")}`}
-    />
+    <meta property="og:url" content={currentCanonical} />
 
-    <!-- twitter-title -->
-    <meta
-      name="twitter:title"
-      content={plainify(
-        meta_title ? meta_title : title ? title : config.site.title,
-      )}
-    />
+    <meta name="twitter:title" content={calculatedTitle} />
 
-    <!-- twitter-description -->
-    <meta
-      name="twitter:description"
-      content={plainify(
-        description ? description : config.metadata.meta_description,
-      )}
-    />
+    <meta name="twitter:description" content={calculatedDescription} />
 
-    <!-- og-image -->
     <meta
       property="og:image"
-      content={`${config.site.base_url}${
-        image ? image : config.metadata.meta_image
-      }`}
+      content={image ? (image.startsWith('http') ? image : `${config.site.base_url}${image}`) : `${config.site.base_url}${config.metadata.meta_image}`}
     />
 
-    <!-- twitter-image -->
     <meta
       name="twitter:image"
-      content={`${config.site.base_url}${
-        image ? image : config.metadata.meta_image
-      }`}
+      content={image ? (image.startsWith('http') ? image : `${config.site.base_url}${image}`) : `${config.site.base_url}${config.metadata.meta_image}`}
     />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
