@@ -24,7 +24,7 @@ const { className, posts, fluid } = Astro.props;
       <div class={i === 0 && fluid != false ? "col-12" : "col-12 sm:col-6"}>
         {post.data.image && (
           <a
-            href={`/blog/${post.id}/`} // URL එක වෙනස් කළේ නැත, අගට නිවැරදිව Trailing Slash එක පමණක් තැබුවා
+            href={`/${post.id}/`} // SEO FIX: 404 ලෙඩේ ඇති කළ අනවශ්‍ය /blog/ කෑල්ල සම්පූර්ණයෙන්ම ඉවත් කර නිවැරදි කළා
             class="rounded-lg block hover:text-primary overflow-hidden group"
           >
             <Image
@@ -33,7 +33,7 @@ const { className, posts, fluid } = Astro.props;
               alt={post.data.title}
               width={i === 0 ? 925 : 445}
               height={i === 0 ? 475 : 230}
-              loading={i === 0 ? "eager" : "lazy"} // SEO: පළමු පෝස්ට් එක LCP සඳහා eager කළා
+              loading={i === 0 ? "eager" : "lazy"}
               decoding="async"
             />
           </a>
@@ -88,7 +88,7 @@ const { className, posts, fluid } = Astro.props;
         </ul>
         <h3 class="mb-4">
           <a
-            href={`/blog/${post.id}/`}
+            href={`/${post.id}/`} // SEO FIX: මෙතන තිබූ අනවශ්‍ය /blog/ එකද ඉවත් කර නිවැරදි ලින්ක් එක සකස් කළා
             class="block hover:text-primary transition duration-300"
           >
             {post.data.title}
