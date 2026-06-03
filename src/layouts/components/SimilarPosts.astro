@@ -11,10 +11,10 @@ type Props = {
 const { posts } = Astro.props;
 ---
 
-{/* 👑 ULTIMATE 3-WAY GOLDEN GRADIENT BACKGROUND:
-    ඉහළ සුදු පාටින් පටන් ගෙන, මැදදී ඉතා තද දිලිසෙන දඹරත්තරන් පාටක් (#B8860B / #D4AF37) වී, 
-    පහළට යද්දී නැවතත් සුදු පාටට හැරෙන සේ නූලටම පසුබිම හැඩගැස්වීම (Light / Dark Mode දෙකටම ගැළපේ). */}
-<div class="w-full bg-gradient-to-b from-white via-[#D4AF37]/30 to-white dark:from-darkmode-body dark:via-[#B8860B]/20 dark:to-darkmode-body p-4 sm:p-6 rounded-2xl transition-all duration-300">
+{/* 👑 CLEAN RICH BLACK INNER WRAPPER:
+    පිටත ප්‍රධාන මවු සෙක්ෂන් එකෙන් කළු ➔ කොළ ➔ කළු ග්‍රේඩියන්ට් එක පාලනය වන බැවින්, 
+    මෙම ඇතුළත කොටස කිසිදු අමතර පසුබිමකින් තොරව පිරිසිදුව නිශ්චලව තබා ඇත. */}
+<div class="w-full p-4 sm:p-6 transition-all duration-300">
   
   <div class="row gy-4 gx-2 sm:gx-4 justify-center">
     {
@@ -24,38 +24,32 @@ const { posts } = Astro.props;
           {post.data.image && (
             <a
               href={`/blog/${post.id}/`} /* ⚠️ FIXED: නිවැරදි Astro Content Layer URL එක */
-              class="rounded-lg block overflow-hidden group relative bg-gray-900 transition-all duration-300 mx-auto w-full post-card-frame"
-              style="aspect-ratio: 3 / 4;" /* ⚡ FIX: උස දශමයක් අඩු කර කාඩ් එක වඩාත් පිළිවෙළ කිරීමට Ratio එක 3:4 කළා */
+              class="rounded-lg block overflow-hidden group relative bg-[#010203] mx-auto w-full"
+              style="aspect-ratio: 3 / 4;" /* ⚡ FIX: උස දශමයක් අඩු කළ 3:4 Ratio එක */
             >
-              {/* 👑 RUNNING WHITE LINE ANIMATION CONTAINER: 
-                  පින්තූරය වටා සුදු පැහැති ඉරක් නොනවත්වා කොටුව වටේට දුවන ක්‍රියාකාරීත්වය */}
-              <div class="absolute inset-0 border border-white/20 rounded-lg pointer-events-none z-10 overflow-hidden">
-                <div class="animated-laser-line"></div>
-              </div>
-
+              {/* 👑 CLEAN & STATIC FRAME: කැරකෙන ඇනිමේෂන් සියල්ල ඉවත් කර, පින්තූරය වටා ස්ථාවර පිරිසිදු සුදු බෝඩර් එකක් පමණක් යෙදීම */}
               <Image
-                /* 👑 IMAGE STYLING: පින්තූරය වටා මූලික සුදු බෝඩර් එකක් සහ හොවර් එකේදී ලස්සන Glow එකක් ලැබෙන සේ සැකසීම */
-                class="w-full h-full object-contain rounded-lg border border-white/40 group-hover:border-white transition-all duration-300 shadow-[0_0_1px_rgba(0,0,0,0)] group-hover:shadow-[0_0_15px_rgba(255,255,255,0.6)] relative z-0"
+                class="w-full h-full object-contain rounded-lg border border-white/20 group-hover:border-white transition-all duration-300 relative z-0"
                 src={post.data.image}
                 alt={post.data.title}
                 width={500}
-                height={666} /* ⚡ Ratio එකට ගැළපෙන සේ උස ප්‍රමාණය නූලටම වෙනස් කළා */
+                height={666} /* ⚡ Ratio එකට ගැළපෙන සේ උස ප්‍රමාණය */
                 loading="lazy"
                 decoding="async"
               />
             </a>
           )}
           
-          {/* INFO ROW: මැදට පෙළගස්වා මොබයිල් තිර වලට ගැළපෙන සේ මෙටා ඩේටා අකුරු ලස්සනට කුඩා කළා */}
-          <ul class="mt-2 mb-1 flex flex-wrap items-center text-text text-[10px] sm:text-xs justify-center gap-x-2">
+          {/* INFO ROW: කළු පසුබිමට කැපී පෙනෙන සේ මෙටා ඩේටා සහ අයිකන පිරිසිදු සුදු පැහැයට හැරවීම */}
+          <ul class="mt-2 mb-1 flex flex-wrap items-center text-white/90 text-[10px] sm:text-xs justify-center gap-x-2">
             <li class="flex items-center flex-wrap">
-              <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[14px] sm:w-[14px] text-gray-600" />
+              <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[14px] sm:w-[14px] text-[#01AD9F]" />
               <ul>
                 {post.data.categories.slice(0, 1).map((category: string) => (
                   <li class="inline-block">
                     <a
                       href={`/categories/${slugify(category)}/`}
-                      class="hover:text-primary font-bold text-[9px] sm:text-xs bg-gray-100 dark:bg-darkmode-theme-light px-1 sm:px-2 py-0.5 rounded"
+                      class="hover:text-primary font-black text-[9px] sm:text-xs bg-white/10 px-1 sm:px-2 py-0.5 rounded text-white"
                     >
                       {humanize(category)}
                     </a>
@@ -63,17 +57,17 @@ const { posts } = Astro.props;
                 ))}
               </ul>
             </li>
-            <li class="hidden xs:flex items-center flex-wrap font-medium text-[9px] sm:text-xs text-gray-500">
-              <BiCalendarEdit className="mr-0.5 h-3 w-3 sm:h-4 sm:w-4" />
+            <li class="hidden xs:flex items-center flex-wrap font-bold text-[9px] sm:text-xs text-white/80">
+              <BiCalendarEdit className="mr-0.5 h-3 w-3 sm:h-4 sm:w-4 text-[#01AD9F]" />
               {dateFormat(post.data.date!)}
             </li>
           </ul>
 
-          {/* POST TITLE: text-center සහ mx-auto මඟින් මාතෘකාවේ දෙවැනි පේළිය පවා හරි මැදටම සකස් කරන ලදී */}
+          {/* POST TITLE: කළු පසුබිම මත උපරිමයෙන්ම පෙනීමට text-white සහ font-black යෙදීම */}
           <h3 class="mb-1 line-clamp-2 leading-tight text-center mx-auto w-full">
             <a
               href={`/blog/${post.id}/`}
-              class="block hover:text-primary transition duration-300 text-[11px] sm:text-base font-bold text-dark dark:text-darkmode-text text-center"
+              class="block hover:text-primary transition duration-300 text-[11px] sm:text-base font-black text-white text-center drop-shadow-sm"
             >
               {post.data.title}
             </a>
@@ -84,31 +78,3 @@ const { posts } = Astro.props;
   </div>
 
 </div>
-
-{/* ⚡ SCOPED CSS FOR THE RUNNING LASER ANIMATION: 
-    වෙනත් ෆයිල්ස් වලට බලපෑමක් නොකර, මෙම කොටසට පමණක් අතිශය සුමටව සුදු ඉර දුවන ලේසර් ඉෆෙක්ට් එක සක්‍රීය කිරීම */}
-<style>
-  .post-card-frame {
-    position: relative;
-  }
-  .animated-laser-line {
-    position: absolute;
-    width: 150%;
-    height: 150%;
-    background: conic-gradient(from 0deg, transparent 70%, #ffffff 90%, transparent 100%);
-    top: -25%;
-    left: -25%;
-    animation: rotateLaser 3s linear infinite;
-    z-index: 5;
-    mix-blend-mode: overlay;
-    pointer-events: none;
-  }
-  @keyframes rotateLaser {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-</style>
