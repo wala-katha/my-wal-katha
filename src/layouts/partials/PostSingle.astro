@@ -26,8 +26,8 @@ if (!smartSimilarPosts || smartSimilarPosts.length === 0) {
   smartSimilarPosts = posts.filter((p) => p.id !== post.id);
 }
 
-// 3. පෝස්ට් 3කට සීමා කිරීම (හෝම් පේජ් එකේ වගේ එක පේළියට ලස්සනට වාඩි වෙන්න)
-const finalSimilarPosts = smartSimilarPosts.slice(0, 3);
+// 3. FIX: උඹ ඉල්ලපු විදිහටම කෙළින් අතට (2:3) ලස්සනට පේළියට වාඩි වෙන්න පෝස්ට් ප්‍රමාණය 6ක් දක්වා වැඩි කළා
+const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
 ---
 
 <section class="section">
@@ -143,8 +143,11 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 3);
         <h2 class="mb-8 font-black text-left h4 border-l-4 border-primary pl-3 text-dark dark:text-darkmode-text">
           ඔබ කැමති විය හැකි තවත් කතා (Suggested Stories)
         </h2>
-        {/* හෝම් පේජ් එකේ වගේම 2:3 Grid එකට පෝස්ට් කාඩ් පෙන්වීමට දත්ත පාස් කිරීම */}
-        <SimilarPosts posts={finalSimilarPosts} />
+        
+        {/* ⚡ GRID LAYOUT FIX: එක පිට එක වැටීම වැළැක්වීමට සහ හෝම් පේජ් එකේ වගේ පේළියට 3 බැගින් ලස්සනට පෙන්වීමට wrapper එකට "row" ක්ලාස් එක එකතු කළා */}
+        <div class="row">
+          <SimilarPosts posts={finalSimilarPosts} />
+        </div>
       </div>
     </section>
   )
