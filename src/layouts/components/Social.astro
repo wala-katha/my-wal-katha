@@ -1,7 +1,6 @@
 ---
 const { source, className } = Astro.props;
-// ⚠️ සාමාන්‍ය React Import එක වෙනුවට, Astro 100% Support කරන Dynamic Component එක නිවැරදිව Import කිරීම
-import DynamicIcon from "@/helpers/DynamicIcon.jsx"; // .jsx හරි .tsx හරි Path එක තහවුරු කරගන්න.
+import DynamicIcon from "@/helpers/DynamicIcon";
 
 export interface ISocial {
   name: string;
@@ -16,7 +15,6 @@ const iconMap: Record<string, string> = {
   instagram: "FaInstagram",
   linkedin: "FaLinkedin",
   youtube: "FaYoutube",
-  pennant: "FaPennant", // ඩෙමෝ එකක තිබූ පෙන්ඩන්ට් එකක් සඳහා
 };
 
 const normalize = (src: any): ISocial[] => {
@@ -37,24 +35,18 @@ const normalize = (src: any): ISocial[] => {
 const items = normalize(source);
 ---
 
-{/* 👑 PREMIUM DARK-READY SOCIAL LIST: 
-    යූසර්ට මොබයිල් එකකදී ඇඟිල්ලෙන් ක්ලික් කරන්න පහසු වෙන්න අයිකන අතර පරතරය gap-x-2 සිට gap-x-3 දක්වා වැඩි කළා */}
-<ul class={`flex flex-wrap items-center gap-x-3 ${className}`}>
+<ul class={className}>
   {
     items.map((social: ISocial) => (
-      <li class="inline-block">
+      <li>
         <a
           aria-label={social.name}
           href={social.link}
           target="_blank"
           rel="noopener noreferrer nofollow"
-          /* 🎯 Contrast & UI Fix for Black Background: 
-             සාමාන්‍ය වෙලාවට තද සුදු පැහැය (#F8F8FF/80) දීලා, හොවර් එකේදී සයිට් එකේ තීම් Teal (#01AD9F) පැහැයෙන් ඉස්මතු කිරීම */
-          class="block text-[#F8F8FF]/80 transition duration-300 hover:text-[#01AD9F]"
         >
           <span class="sr-only">{social.name}</span>
-          {/* 👑 Icon Size Fix: අයිකන වල ප්‍රමාණය h-5 w-5 (ඩෙස්ක්ටොප්) දක්වා පිළිවෙළ කළා */}
-          <DynamicIcon className="inline-block h-5 w-5 sm:h-5 sm:w-5" icon={social.icon} />
+          <DynamicIcon className="inline-block" icon={social.icon} />
         </a>
       </li>
     ))
