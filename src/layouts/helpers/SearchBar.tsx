@@ -3,6 +3,7 @@ import { humanize, slugify } from "@/lib/utils/textConverter";
 import Fuse from "fuse.js";
 import React, { useEffect, useRef, useState } from "react";
 import { BiCalendarEdit, BiCategoryAlt } from "react-icons/bi";
+import { IoSearchOutline, IoCloseCircleOutline } from "react-icons/io5";
 
 export type SearchItem = {
   slug: string;
@@ -28,6 +29,14 @@ export default function SearchBar({ searchList }: Props) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputVal(e.currentTarget.value);
+  };
+
+  // ❌ සර්ච් එක ක්ලියර් කිරීමේ ක්‍රියාවලිය
+  const handleClear = () => {
+    setInputVal("");
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   const fuse = new Fuse(searchList, {
@@ -67,20 +76,39 @@ export default function SearchBar({ searchList }: Props) {
 
   return (
     <div className="min-h-[50vh] px-2 select-none">
-      {/* 👑 PREMIUM DARK SEARCH INPUT: 
-          කළු පසුබිමට ගැළපෙන සේ බොක්ස් එක bg-white/5 කර, ෆෝකස් වීමේදී සයිට් එකේ ප්‍රධාන Teal (#01AD9F) වර්ණයෙන් සියුම් Glow එකක් දුන්නා */}
+      {/* 👑 PREMIUM CAPSULE SEARCH BOX WITH DYNAMIC CLOSE BUTTON */}
       <div className="max-w-2xl mx-auto mb-10">
-        <input
-          className="w-full text-center px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-[#F8F8FF] placeholder-white/40 outline-none transition duration-300 focus:border-[#01AD9F] focus:bg-white/[0.08] focus:shadow-[0_0_15px_rgba(1,173,159,0.25)] text-base sm:text-lg font-medium"
-          placeholder="Type here to search posts..."
-          type="text"
-          name="search"
-          value={inputVal}
-          onChange={handleChange}
-          autoComplete="off"
-          autoFocus
-          ref={inputRef}
-        />
+        <div className="relative flex items-center group">
+          {/* 🔍 Premium Animated Left Search Icon */}
+          <div className="absolute left-4 text-white/40 group-focus-within:text-[#01AD9F] transition-colors duration-300 pointer-events-none">
+            <IoSearchOutline className="h-6 w-6" />
+          </div>
+
+          <input
+            className="w-full pl-12 pr-12 py-3.5 rounded-xl border border-white/10 bg-white/5 text-[#F8F8FF] placeholder-white/40 outline-none transition duration-300 focus:border-[#01AD9F] focus:bg-white/[0.07] focus:shadow-[0_0_20px_rgba(1,173,159,0.15)] text-base sm:text-lg font-medium"
+            placeholder="Type here to search posts..."
+            type="text"
+            name="search"
+            value={inputVal}
+            onChange={handleChange}
+            autoComplete="off"
+            autoFocus
+            ref={inputRef}
+          />
+
+          {/* ❌ ඩයිනමික් ක්ලෝස් / ක්ලියර් බටන් එක (ටයිප් කළ විට පමණක් ලස්සනට මතුවේ) */}
+          {inputVal.length > 0 && (
+            <button
+              onClick={handleClear}
+              type="button"
+              className="absolute right-4 text-white/40 hover:text-red-400 transition-colors duration-200 outline-none focus:text-red-400"
+              title="Clear search"
+              aria-label="Clear search space"
+            >
+              <IoCloseCircleOutline className="h-6 w-6 animate-fade-in" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* SEARCH COUNTER */}
@@ -115,7 +143,6 @@ export default function SearchBar({ searchList }: Props) {
               {/* POST METADATA */}
               <ul className="mt-5 mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm text-white/50">
                 <li className="flex items-center font-medium">
-                  {/* 🎯 CONTRAST FIX: text-gray-600 වෙනුවට කළු පසුබිම මත පට්ටට කැපී පෙනෙන text-[#01AD9F] (Teal) පැහැය දුන්නා */}
                   <BiCalendarEdit className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
                   <span>{dateFormat(item.data.date)}</span>
                 </li>
