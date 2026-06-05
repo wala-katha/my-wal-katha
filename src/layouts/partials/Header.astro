@@ -129,16 +129,17 @@ const { main }: { main: NavigationLink[] } = menu;
   }
 
   /* ==========================================================
-     ✨ SILVER METALLIC BORDER ANIMATION (රිදී ඉර දුවන මැජික් ඉෆෙක්ට් එක)
+     ✨ PREMIUM TWO-WAY SILVER LAVA FLOW BORDER ANIMATION
      ========================================================== */
   .silver-animated-border {
     position: absolute;
-    padding: 1.5px; /* ඉරේ මහත ප්‍රමාණය */
+    padding: 1.5px; /* රිදී ඉරෙහි ඝනකම */
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 255, 255, 0.03);
   }
 
-  /* කැරකෙන රිදී Gradient එළිය */
+  /* 🎯 දෙපැත්තෙන්ම සමානව ගලාගෙන යන රිදී ද්‍රව ධාරාව */
   .silver-animated-border::before {
     content: '';
     position: absolute;
@@ -146,20 +147,29 @@ const { main }: { main: NavigationLink[] } = menu;
     left: -50%;
     width: 200%;
     height: 200%;
-    background: conic-gradient(
-      from 0deg,
-      transparent 20%,
-      rgba(255, 255, 255, 0.1) 40%,
-      #ffffff 50%,
-      rgba(255, 255, 255, 0.1) 60%,
-      transparent 80%
+    background: linear-gradient(
+      45deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.02) 25%, 
+      rgba(255, 255, 255, 0.2) 40%, 
+      #ffffff 50%, 
+      rgba(255, 255, 255, 0.2) 60%, 
+      rgba(255, 255, 255, 0.02) 75%, 
+      transparent 100%
     );
-    animation: rotateSilverBorder 3s linear infinite;
+    animation: silverLavaFlow 2.5s cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite;
   }
 
-  @keyframes rotateSilverBorder {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+  @keyframes silverLavaFlow {
+    0% {
+      transform: rotate(0deg) scale(1);
+    }
+    50% {
+      transform: rotate(180deg) scale(1.05); /* මැදදී සියුම් ලෙස තීව්‍ර වීම */
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+    }
   }
 
   /* මොබයිල් මෙනු ස්ටයිලින් */
