@@ -18,14 +18,9 @@ export interface NavigationLink {
 const { main }: { main: NavigationLink[] } = menu;
 ---
 
-{/* 👑 PREMIUM GLOSSY GLASSMORPHISM HEADER WITH ANIMATED SILVER BORDER */}
-<header class="header sticky top-0 z-50 py-4 transition-all duration-300 bg-[#010203]/80 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.8)] overflow-hidden unique-silver-border-wrapper">
-  
-  {/* ✨ SILVER ANIMATED LINE EFFECT (රිදී පාටින් වටේටම කැරකෙන ලයිට් ඉරි කෑලි දෙක) */}
-  <div class="silver-border-line top-line"></div>
-  <div class="silver-border-line bottom-line"></div>
-
-  <nav class="navbar container flex items-center justify-between relative z-10">
+{/* 👑 PREMIUM GLOSSY GLASSMORPHISM HEADER */}
+<header id="site-header" class="header sticky top-0 z-50 py-4 transition-all duration-300 border-b border-white/[0.06] bg-[#010203]/80 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
+  <nav class="navbar container flex items-center justify-between">
     {/* LOGO */}
     <div class="order-0">
       <Logo />
@@ -34,7 +29,7 @@ const { main }: { main: NavigationLink[] } = menu;
     {/* MOBILE MENU TOGGLE CHECKBOX */}
     <input id="nav-toggle" type="checkbox" class="hidden" />
 
-    {/* CONTRAST FOR MOBILE BUTTONS */}
+    {/* MOBILE MENU BUTTONS */}
     <label
       id="show-button"
       for="nav-toggle"
@@ -80,22 +75,24 @@ const { main }: { main: NavigationLink[] } = menu;
                   </svg>
                 </button>
                 
-                {/* PREMIUM DARK DROPDOWN BOX */}
-                <ul 
+                {/* 👑 SILVER ANIMATED BORDER DROPDOWN BOX (රිදී පාටින් ඉරක් දුවන කොටුව) */}
+                <div 
                   id={`dropdown-${index}`} 
-                  class="nav-dropdown-list hidden md:absolute left-1/2 md:-translate-x-1/2 top-full min-w-[220px] rounded-xl border border-white/[0.08] bg-[#0c0d10]/95 backdrop-blur-lg p-2 shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-50 text-center mx-auto my-2 md:my-0"
+                  class="nav-dropdown-list silver-animated-border hidden md:absolute left-1/2 md:-translate-x-1/2 top-full min-w-[220px] rounded-xl z-50 text-center mx-auto my-2 md:my-0"
                 >
-                  {menu.children?.map((child) => (
-                    <li class="py-1.5">
-                      <a 
-                        href={child.url} 
-                        class="block px-4 py-2 text-sm text-white/70 hover:text-[#01AD9F] hover:bg-white/[0.03] rounded-lg transition duration-200 text-center w-full font-medium"
-                      >
-                        {child.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+                  <ul class="inner-dropdown bg-[#0c0d10] rounded-xl p-2 w-full h-full relative z-10">
+                    {menu.children?.map((child) => (
+                      <li class="py-1.5">
+                        <a 
+                          href={child.url} 
+                          class="block px-4 py-2 text-sm text-white/70 hover:text-[#01AD9F] hover:bg-white/[0.03] rounded-lg transition duration-200 text-center w-full font-medium"
+                        >
+                          {child.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </li>
             ) : (
               <li class="nav-item flex justify-center">
@@ -132,56 +129,40 @@ const { main }: { main: NavigationLink[] } = menu;
   }
 
   /* ==========================================================
-     👑 SILVER ANIMATED BORDER LIGHTS (කැරකෙන රිදී පාට ඉරි CSS)
+     ✨ SILVER METALLIC BORDER ANIMATION (රිදී ඉර දුවන මැජික් ඉෆෙක්ට් එක)
      ========================================================== */
-  .unique-silver-border-wrapper {
-    position: relative;
+  .silver-animated-border {
+    position: absolute;
+    padding: 1.5px; /* ඉරේ මහත ප්‍රමාණය */
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.08);
   }
 
-  /* හෙඩර් එකේ යටින් ස්ථිරවම තියෙන සියුම් ඩාර්ක් බෝඩර් එක */
-  .unique-silver-border-wrapper::after {
+  /* කැරකෙන රිදී Gradient එළිය */
+  .silver-animated-border::before {
     content: '';
     position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.06);
-    z-index: 2;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.1) 40%,
+      #ffffff 50%,
+      rgba(255, 255, 255, 0.1) 60%,
+      transparent 80%
+    );
+    animation: rotateSilverBorder 3s linear infinite;
   }
 
-  .silver-border-line {
-    position: absolute;
-    height: 1.5px;
-    /* රිදී, සුදු සහ විනිවිද පෙනෙන වර්ණ එකතු කර සාදන ලද Glossy Silver Gradient එක */
-    background: linear-gradient(90deg, transparent, rgba(200, 200, 200, 0.2), #ffffff, rgba(200, 200, 200, 0.2), transparent);
-    width: 30%;
-    z-index: 3;
-    pointer-events: none;
+  @keyframes rotateSilverBorder {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
-  .top-line {
-    top: 0;
-    animation: moveTopSilver 6s linear infinite;
-  }
-
-  .bottom-line {
-    bottom: 0;
-    animation: moveBottomSilver 6s linear infinite;
-  }
-
-  /* රිදී ඉරි වමෙන් දකුණට සහ දකුණෙන් වමට ස්මාර්ට් ලෙස දුවන ඇනිමේෂන් */
-  @keyframes moveTopSilver {
-    0% { left: -30%; }
-    100% { left: 110%; }
-  }
-
-  @keyframes moveBottomSilver {
-    0% { right: -30%; }
-    100% { right: 110%; }
-  }
-  
-  /* මොබයිල් සැකසුම් */
+  /* මොබයිල් මෙනු ස්ටයිලින් */
   @media (max-width: 767px) {
     .navbar-nav {
       background-color: #060709 !important;
@@ -196,9 +177,7 @@ const { main }: { main: NavigationLink[] } = menu;
       left: 0 !important;
       transform: none !important;
       width: 100% !important;
-      background-color: rgba(255, 255, 255, 0.02) !important;
       margin-top: 0.5rem !important;
-      border-color: rgba(255, 255, 255, 0.04) !important;
     }
   }
 </style>
@@ -207,9 +186,8 @@ const { main }: { main: NavigationLink[] } = menu;
   function initHeaderLogic() {
     const dropdownButtons = document.querySelectorAll(".nav-dropdown-btn");
     const navToggle = document.getElementById("nav-toggle") as HTMLInputElement;
-    const headerWrapper = document.querySelector(".unique-silver-border-wrapper");
+    const headerElement = document.getElementById("site-header");
 
-    // 1. Dropdown Toggle ක්‍රියාවලිය
     dropdownButtons.forEach((btn) => {
       const newBtn = btn.cloneNode(true) as HTMLButtonElement;
       btn.parentNode?.replaceChild(newBtn, btn);
@@ -222,11 +200,12 @@ const { main }: { main: NavigationLink[] } = menu;
         newBtn.addEventListener("click", (e) => {
           e.stopPropagation();
           
+          // අනෙක් විවෘතව ඇති ඩ්‍රොප්ඩවුන්ස් වැසීම
           document.querySelectorAll(".nav-dropdown-list").forEach((m) => {
             if (m.id !== targetId) {
               m.classList.add("hidden");
-              m.previousElementSibling?.querySelector(".dropdown-icon")?.classList.remove("rotate-180");
-              m.previousElementSibling?.setAttribute("aria-expanded", "false");
+              m.parentElement?.querySelector(".dropdown-icon")?.classList.remove("rotate-180");
+              m.parentElement?.querySelector(".nav-dropdown-btn")?.setAttribute("aria-expanded", "false");
             }
           });
 
@@ -244,29 +223,33 @@ const { main }: { main: NavigationLink[] } = menu;
       }
     });
 
-    // 2. 🎯 CRUCIAL FIX: මෙනුවෙන් පිටත ඕනෑම තැනක ක්ලික් කළ විට ඔටෝ වැසීමේ ක්‍රියාවලිය
-    document.addEventListener("click", (event) => {
-      const target = event.target as Node;
-
-      // හෙඩර් එක ඇතුළේ සිදුවන ක්ලික් කිරීම් නොසලකා හැරීම, පිටත ක්ලික් කිරීම් පමණක් හසු කර ගැනීම
-      if (headerWrapper && !headerWrapper.contains(target)) {
+    // 🎯 FIX: සම්පූර්ණ මෙනු එක හෝ ඩ්‍රොප්ඩවුන් එක ඇරලා තියෙද්දී පිටත ක්ලික් කළොත් ඔටෝ වැසීමේ ලොජික් එක
+    document.addEventListener("click", (e) => {
+      const target = e.target as Node;
+      
+      // ක්ලික් එක වැදුනේ හෙඩර් එක ඇතුළේ නෙමෙයි නම් පමණක් ක්‍රියාත්මක වේ
+      if (headerElement && !headerElement.contains(target)) {
         
-        // අ) මොබයිල් මෙනු එක ඇරිලා තියෙනවා නම් ඒක වසා දැමීම (Checkbox uncheck කිරීම)
-        if (navToggle && navToggle.checked) {
-          navToggle.checked = false;
-        }
-
-        // ආ) ඇරිලා තියෙන සියලුම Dropdown මෙනු වසා දැමීම
+        // 1. සියලුම ඩ්‍රොප්ඩවුන් මෙනු වසා දැමීම
         document.querySelectorAll(".nav-dropdown-list").forEach((menu) => {
           menu.classList.add("hidden");
-          menu.previousElementSibling?.querySelector(".dropdown-icon")?.classList.remove("rotate-180");
-          menu.previousElementSibling?.setAttribute("aria-expanded", "false");
+          const parent = menu.parentElement;
+          parent?.querySelector(".dropdown-icon")?.classList.remove("rotate-180");
+          parent?.querySelector(".nav-dropdown-btn")?.setAttribute("aria-expanded", "false");
         });
+
+        // 2. මොබයිල් මෙනු එක ඇරලා තිබ්බොත් ඒකත් ඔටෝ වැසීම (Checkbox uncheck කිරීම)
+        if (navToggle && navToggle.checked) {
+          navToggle.checked = false;
+          // Astro templates වල තියෙන custom toggle event එකක් තිබේ නම් එය trigger කිරීම
+          const changeEvent = new Event('change');
+          navToggle.dispatchEvent(changeEvent);
+        }
       }
     });
   }
 
-  // Astro සර්වර් සයිඩ් ලෝඩින් වලදී ක්‍රියාත්මක වීමට ජීවය දීම
+  // Astro Lifecycle සහ සාමාන්‍ය DOM එකට බඳින්න
   document.addEventListener("DOMContentLoaded", initHeaderLogic);
   document.addEventListener("astro:page-load", initHeaderLogic);
 </script>
