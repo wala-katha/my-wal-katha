@@ -39,6 +39,17 @@ export default function SearchBar({ searchList }: Props) {
     }
   };
 
+  // 🎯 FIX: හෝම් පේජ් එකට නොගොස් යූසර් කලින් හිටපු පිටුවටම (පෝස්ට් එකට) නිවැරදිව රැගෙන යන Exit ලොජික් එක
+  const handleExit = () => {
+    if (typeof window !== "undefined" && document.referrer) {
+      // කලින් ආපු පිටුවේ URL එක තිබේ නම් එම පිටුවටම රීඩිරෙක්ට් කරයි
+      window.location.href = document.referrer;
+    } else {
+      // කිසිම රෙෆරර් කෙනෙක් නැති සෘජු අවස්ථාවකදී පමණක් මුල් පිටුවට යයි
+      window.location.href = "/";
+    }
+  };
+
   const fuse = new Fuse(searchList, {
     keys: ["data.title", "data.categories", "data.tags"],
     includeMatches: true,
@@ -77,14 +88,14 @@ export default function SearchBar({ searchList }: Props) {
   return (
     <div className="min-h-[50vh] px-2 select-none relative">
       
-      {/* 🎯 SEO & UX FIX: කෙලින්ම Home යන්නේ නැතිව යූසර් කලින් හිටපු පෝස්ට් එකටම (Back) රැගෙන යන ප්‍රිමියම් EXIT CLOSE BUTTON එක */}
+      {/* 🎯 SEO & UX FIX: හෝම් එකට නොගොස් හිටපු තැනටම යාමට සකස් කළ ප්‍රිමියම් EXIT CLOSE BUTTON එක */}
       <div className="max-w-2xl mx-auto flex justify-end mb-4">
         <button
+          onClick={handleExit}
           type="button"
-          onClick={() => history.back()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.08] text-white/60 hover:text-red-400 transition-all duration-300 text-sm font-semibold tracking-wide shadow-sm cursor-pointer"
-          title="Exit search and go back"
-          aria-label="Exit search and go back"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.08] text-white/60 hover:text-red-400 transition-all duration-300 text-sm font-semibold tracking-wide shadow-sm outline-none"
+          title="Exit search and return to previous page"
+          aria-label="Exit search and return to previous page"
         >
           <span>Exit</span>
           <IoCloseOutline className="h-5 w-5" />
