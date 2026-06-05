@@ -29,19 +29,15 @@ const DynamicIcon: FC<IDynamicIcon> = ({ icon, className, ...props }) => {
     return <span className={`text-xs font-medium text-rose-500 select-none ${className || ""}`}>Icon not found</span>;
   }
 
-  // 🎯 SEARCH ICON LOOK ENHANCEMENT: 
-  // සර්ච් අයිකන් එක (IoSearch හෝ IoSearchOutline) මේක හරහා රෙන්ඩර් වෙද්දී කලු පසුබිමේ සුපිරියටම කැපී පේන්න
-  // ප්‍රිමියම් Teal ග්ලෝ එකක් සහ ස්මූත් ට්‍රාන්සිෂන් ක්ලාස් ටිකක් ඔටෝමැටිකව එකතු කරනවා.
+  // 🎯 PREMIUM UI FIX: සර්ච් අයිකන් එක කළු පසුබිමේ වඩාත් ලස්සනට සහ කැපී පෙනෙන ලෙස සකස් කිරීම
   const isSearchIcon = icon.toLowerCase().includes("search");
-  const enhancedClassName = `${className || ""} ${
-    isSearchIcon 
-      ? "text-[#01AD9F] filter drop-shadow-[0_0_6px_rgba(1,173,159,0.4)] transition-all duration-300 hover:scale-110" 
-      : ""
-  }`;
+  const finalClassName = isSearchIcon
+    ? `text-[#01AD9F] text-2xl filter drop-shadow-[0_0_8px_rgba(1,173,159,0.6)] transition-all duration-300 hover:scale-110 ${className || ""}`
+    : className;
 
   return (
     <Icon 
-      className={enhancedClassName} 
+      className={finalClassName} 
       /* 👑 SEO ACCESSIBILITY: අයිකන් එකක් කියවද්දී Layout Shift එකක් නොවී, 
          Google Spider එකට පිරිසිදුව SVG එකක් බව հඟවන්න aria-hidden එකක් දැම්මා */
       aria-hidden="true" 
