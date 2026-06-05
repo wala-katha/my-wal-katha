@@ -30,6 +30,7 @@ const { main }: { main: NavigationLink[] } = menu;
     <input id="nav-toggle" type="checkbox" class="hidden" />
 
     {/* MOBILE MENU BUTTONS */}
+    {/* 🎯 FIX: md:hidden ඉවත් කර Desktop එකේදීත් 100% මොබයිල් එකට සමානව බොත්තම් දෘශ්‍යමාන කළා */}
     <label
       id="show-button"
       for="nav-toggle"
@@ -55,9 +56,10 @@ const { main }: { main: NavigationLink[] } = menu;
     </label>
 
     {/* NAVIGATION MENU */}
+    {/* 🎯 FIX: md:flex සහ md:w-auto ඉවත් කර, Desktop එකේදීත් මෙනු එක මොබයිල් එකට 100%ක්ම සමාන කළා */}
     <ul
       id="nav-menu"
-      class="navbar-nav order-3 hidden w-full md:order-1 text-center gap-1"
+      class="navbar-nav order-3 hidden w-full text-center gap-1"
     >
       {
         main.map((menu, index) => (
@@ -75,10 +77,11 @@ const { main }: { main: NavigationLink[] } = menu;
                   </svg>
                 </button>
                 
-                {/* 👑 SILVER ANIMATED BORDER DROPDOWN BOX (රිදී පාටින් ඉරක් දුවන කොටුව) */}
+                {/* 👑 SILVER ANIMATED BORDER DROPDOWN BOX */}
+                {/* 🎯 FIX: md:absolute ඉවත් කර, Desktop එකේදීත් මොබයිල් එකේ මෙන් relative ලෙස ඇතුළතින්ම විවෘත වන සේ හැදුවා */}
                 <div 
                   id={`dropdown-${index}`} 
-                  class="nav-dropdown-list silver-animated-border hidden min-w-[220px] rounded-xl z-50 text-center mx-auto my-2"
+                  class="nav-dropdown-list silver-animated-border hidden top-full min-w-[220px] rounded-xl z-50 text-center mx-auto my-2"
                 >
                   <ul class="inner-dropdown bg-[#0c0d10] rounded-xl p-2 w-full h-full relative z-10">
                     {menu.children?.map((child) => (
@@ -172,43 +175,15 @@ const { main }: { main: NavigationLink[] } = menu;
     }
   }
 
-  /* ==========================================================
-     🎯 SMART RESPONSIVE SIDE DRAWER ENGINE (මොබයිල් සහ ඩෙස්ක්ටොප් දෙකටම)
-     ========================================================== */
-  
-  /* ඩෙස්ක්ටොප් සහ මොබයිල් සීමාවන් බිඳ දමා සියලු තිර වලට දකුණෙන් එන මෙනුවක් නිර්මාණය කිරීම */
+  /* 🎯 FIX: @media (max-width: 767px) ඉවත් කර ස්ටයිල්ස් සියල්ල Desktop එකටත් 100% පොදුවේ ක්‍රියාත්මක කළා */
   .navbar-nav {
-    position: fixed !important;
-    top: 0 !important;
-    right: -300px !important; /* ආරම්භයේදී දකුණු පැත්තේ හැංගීමට */
-    width: 280px !important;
-    height: 100vh !important;
     background-color: #060709 !important;
-    border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
-    padding: 6rem 1.5rem 2rem 1.5rem !important;
-    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.8) !important;
-    transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important; /* Smooth Fluid Slide-in */
-    display: flex !important;
-    flex-direction: column !important;
-    overflow-y: auto !important;
-    z-index: 40 !important;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
   }
-
-  /* චෙක්බොක්ස් එක ඇක්ටිව් වූ විට මෙනුව දකුණු පසින් ඇතුළට පැමිණීම */
-  #nav-toggle:checked ~ #nav-menu {
-    right: 0 !important;
-  }
-
-  /* බටන් ස්ටයිල්ස් හරියාකාරව හැසිරවීම */
-  #nav-toggle:checked ~ #show-button {
-    display: none !important;
-  }
-  #nav-toggle:checked ~ #hide-button {
-    display: flex !important;
-    z-index: 50 !important;
-  }
-
-  /* ඩ්‍රොප්ඩවුන් බොක්ස් එක මෙනු එක ඇතුළතටම සෙට් කිරීම */
   .nav-dropdown-list {
     position: relative !important;
     left: 0 !important;
@@ -263,7 +238,7 @@ const { main }: { main: NavigationLink[] } = menu;
     document.addEventListener("click", (e) => {
       const target = e.target as Node;
       
-      // ක්ලික් එක වැදුනේ හෙඩර් එක ඇතුළේ นෙමෙයි නම් පමණක් ක්‍රියාත්මක වේ
+      // ක්ලික් එක වැදුනේ හෙඩර් එක ඇතුළේ නෙමෙයි නම් පමණක් ක්‍රියාත්මක වේ
       if (headerElement && !headerElement.contains(target)) {
         
         // 1. සියලුම ඩ්‍රොප්ඩවුන් මෙනු වසා දැමීම
