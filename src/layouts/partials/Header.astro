@@ -189,6 +189,14 @@ const { main }: { main: NavigationLink[] } = menu;
       transform: rotate(360deg) scale(1);
     }
   }
+
+  /* 🎯 SEO & FUNCTIONAL FIX: ඩෙස්ක්ටොප් එකේදීත් චෙක්බොක්ස් එක හරහා ❌ ලකුණ මතු වීමට සලස්වන CSS රීතිය */
+  #nav-toggle:checked ~ #show-button {
+    display: none !important;
+  }
+  #nav-toggle:checked ~ #hide-button {
+    display: flex !important;
+  }
 </style>
 
 <script>
