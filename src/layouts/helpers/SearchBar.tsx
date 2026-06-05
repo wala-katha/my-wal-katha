@@ -39,15 +39,6 @@ export default function SearchBar({ searchList }: Props) {
     }
   };
 
-  // 🚪 සර්ච් පේජ් එකෙන් සම්පූර්ණයෙන්ම පිටතට යාම (Close/Exit Search)
-  const handleExitSearch = () => {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.href = "/";
-    }
-  };
-
   const fuse = new Fuse(searchList, {
     keys: ["data.title", "data.categories", "data.tags"],
     includeMatches: true,
@@ -86,26 +77,26 @@ export default function SearchBar({ searchList }: Props) {
   return (
     <div className="min-h-[50vh] px-2 select-none relative">
       
-      {/* 🎯 👑 PREMIUM EXIT/CLOSE SEARCH BUTTON (සර්ච් එකෙන් සම්පූර්ණයෙන්ම පිටතට යාමට) */}
-      <div className="max-w-2xl mx-auto flex justify-end mb-3">
-        <button
-          onClick={handleExitSearch}
-          type="button"
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-white/5 bg-white/[0.02] text-white/50 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/[0.05] transition-all duration-300 text-sm font-semibold outline-none group"
-          title="Close Search Page"
-          aria-label="Close Search Page and go back"
+      {/* 🎯 SEO & UX FIX: මුල් පිටුවට යාමට සහ සර්ච් එක වසා දැමීමට ඇති ප්‍රිමියම් EXIT CLOSE BUTTON එක */}
+      <div className="max-w-2xl mx-auto flex justify-end mb-4">
+        <a
+          href="/"
+          rel="home"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.08] text-white/60 hover:text-red-400 transition-all duration-300 text-sm font-semibold tracking-wide shadow-sm"
+          title="Exit search and go home"
+          aria-label="Exit search and go home"
         >
-          <span>Exit Search</span>
-          <IoCloseOutline className="h-5 w-5 transform group-hover:rotate-90 transition-transform duration-300" />
-        </button>
+          <span>Exit</span>
+          <IoCloseOutline className="h-5 w-5" />
+        </a>
       </div>
 
       {/* 👑 PREMIUM CAPSULE SEARCH BOX WITH DYNAMIC CLOSE BUTTON */}
       <div className="max-w-2xl mx-auto mb-10">
         <div className="relative flex items-center group">
-          {/* 🔍 PREMIUM ENHANCED GLOWING SEARCH ICON (කළු පසුබිමට කැපී පෙනෙන ලස්සන නිල්-කොළ ග්ලෝ එකක් දුන්නා) */}
-          <div className="absolute left-4 text-[#01AD9F] drop-shadow-[0_0_8px_rgba(1,173,159,0.5)] group-focus-within:scale-110 transition-all duration-300 pointer-events-none flex items-center justify-center">
-            <IoSearchOutline className="h-6 w-6 stroke-[2.5]" />
+          {/* 🔍 Premium Animated Left Search Icon (🎯 FIX: වඩාත් දීප්තිමත් කර කැපී පෙනෙන ලෙස සකස් කළා) */}
+          <div className="absolute left-4 text-[#01AD9F] filter drop-shadow-[0_0_8px_rgba(1,173,159,0.5)] transition-transform duration-300 pointer-events-none group-focus-within:scale-110">
+            <IoSearchOutline className="h-6 w-6" />
           </div>
 
           <input
@@ -157,9 +148,7 @@ export default function SearchBar({ searchList }: Props) {
                     className="group-hover/card:scale-[1.03] transition duration-500 w-full h-full object-cover"
                     src={item.data.image}
                     alt={item.data.title}
-                    loading="eager"
-                    fetchpriority="high"
-                    decoding="async"
+                    loading="lazy"
                     width={445}
                     height={230}
                   />
@@ -200,9 +189,9 @@ export default function SearchBar({ searchList }: Props) {
               </h3>
             </div>
 
-            {/* POST CONTENT EXCERPT (🎯 SEO FIX: HTML tags මුලින්ම ඉවත් කර ප්ලේන් ටෙක්ස්ට් ලෙස සකසා ඇත) */}
+            {/* POST CONTENT EXCERPT */}
             <p className="text-white/60 text-sm line-clamp-2 mt-2 leading-relaxed">
-              {item.content ? item.content.replace(/<[^>]*>/g, '') : ''}
+              {item.content}
             </p>
           </div>
         ))}
