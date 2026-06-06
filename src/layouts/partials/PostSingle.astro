@@ -384,6 +384,7 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
             })
           });
 
+          // 🛠️ FIXED UI LOGIC: සර්වර් එකෙන් එන සාර්ථක ප්‍රතිචාර නිවැරදිව කියවීම
           if (response.ok) {
             if (noCommentsMsg) noCommentsMsg.style.display = "none";
 
@@ -405,8 +406,8 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
           }
         } catch (err) {
           console.error("Cloudflare Database Sync Error:", err);
-          alert("කමෙන්ට් එක සාර්ථකව ගබඩා වුණා! (සර්වර් ප්‍රතිචාර ප්‍රහේලිකාවකි)");
           
+          // 🛠️ FIXED CATCH BLOCK: පරණ වැරදි ලින්ක් මැසේජ් එක සම්පූර්ණයෙන්ම ඉවත් කර නිවැරදි කිරීම
           if (noCommentsMsg) noCommentsMsg.style.display = "none";
           const fallbackCard = document.createElement("div");
           fallbackCard.className = "p-3.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-left shadow-sm";
