@@ -384,7 +384,6 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
             })
           });
 
-          // ⚠️ FIX: Response එක සාර්ථක නම් (status 200) කෙලින්ම UI එක අප්ඩේට් කරනවා
           if (response.ok) {
             if (noCommentsMsg) noCommentsMsg.style.display = "none";
 
@@ -401,15 +400,13 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
             commentsListHook.insertBefore(newCommentCard, commentsListHook.firstChild);
             textarea.value = "";
           } else {
-            // සර්වර් එකෙන් වැරැද්දක් ආවොත් (ලින්ක්ස් බ්ලොක් වීම් වැනි SEO ආරක්ෂණ වැටවල්)
             const errorData = await response.json().catch(() => ({}));
-            alert(errorData.error || "කමෙන්ට්ස් තුළ ලින්ක්ස් (Links) දැමීම තහනම් හෝ හිස් කමෙන්ට් එකකි!");
+            alert(errorData.error || "කමෙන්ට් එක ඉදිරිපත් කිරීමට නොහැකි වුණා.");
           }
         } catch (err) {
           console.error("Cloudflare Database Sync Error:", err);
           alert("කමෙන්ට් එක සාර්ථකව ගබඩා වුණා! (සර්වර් ප්‍රතිචාර ප්‍රහේලිකාවකි)");
           
-          // සර්වර් එකට දත්ත ගියත් කියවීමේ දෝෂයක් ආවොත් සජීවීව පෙන්වීමට:
           if (noCommentsMsg) noCommentsMsg.style.display = "none";
           const fallbackCard = document.createElement("div");
           fallbackCard.className = "p-3.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-left shadow-sm";
@@ -422,7 +419,7 @@ const cloudflareTokenId = "4dbf9269-5c2d-46b9-b396-402f9f504ae9";
           `;
           commentsListHook.insertBefore(fallbackCard, commentsListHook.firstChild);
           textarea.value = "";
-        } {
+        } finally {
           submitBtn.innerText = "Submit Comment";
           submitBtn.disabled = false;
         }
