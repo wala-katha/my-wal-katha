@@ -1,10 +1,4 @@
-ගැටලු දෙකේ root cause පැහැදිලිව හඳුනාගත්තා:
 
-**Double comment** — `DOMContentLoaded` සහ `astro:page-load` දෙකම fire වෙනවා, ඒ නිසා `initCommentSystem()` දෙවරක් run වෙලා submit button එකට event listeners දෙකක් attach වෙනවා.
-
-**Edit/Delete ownership** — session token නැති නිසා ඕනෑම කෙනෙකුට ඕනෑම comment එකක් edit/delete කරන්න පුළුවන්.
-
-```astro
 ---
 import Share from "@/components/Share.astro";
 import SimilarPosts from "@/layouts/components/SimilarPosts.astro";
@@ -777,12 +771,3 @@ const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
     }
   }
 </script>
-```
-
----
-
-## සිදු කළ fixes සාරාංශය
-
-**1. Double comment fix (root cause)** — `window.__commentSystemInit` global guard එකක් add කළා. `DOMContentLoaded` + `astro:page-load` දෙකම fire වූවත් `initCommentSystem()` **එක් වරක් පමණක්** run වෙනවා — duplicate event listeners attach නොවෙයි. `isSubmitting` flag එකක් submit button එකට add කළා — rapid double-click ද block කරනවා.
-
-**2. Edit/Delete ownership fix** — `sessionStorage` token එකක් use කරනවා. Session එකේ user දැමූ comments වලට **පමණක්** edit/delete buttons render වෙනවා. Server එකෙන් load වූ අනිකුත් comments වලට buttons නොපෙනෙයි. Save/Delete logic එකේ `ownerToken === SESSION_TOKEN` double-check ද ඇත.
