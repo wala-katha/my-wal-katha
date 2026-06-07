@@ -48,6 +48,10 @@ const articleSchema = JSON.stringify({
     "@type": "Organization",
     "name": "Wala Katha",
     "url": siteUrl,
+    "logo": {
+      "@type": "ImageObject",
+      "url": `${siteUrl}/images/logo.png`
+    }
   },
   "datePublished": date ? new Date(date).toISOString() : undefined,
   "dateModified": date ? new Date(date).toISOString() : undefined,
@@ -58,15 +62,29 @@ const articleSchema = JSON.stringify({
   "keywords": tags?.join(", ") ?? "",
   "articleSection": categories?.map((c: string) => humanize(c)).join(", ") ?? "",
   "inLanguage": "si",
+  "url": postUrl,
+});
+
+// SEO: BreadcrumbList Schema
+const breadcrumbSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "මුල් පිටුව", "item": siteUrl },
+    { "@type": "ListItem", "position": 2, "name": categories?.[0] ? humanize(categories[0]) : "Posts", "item": `${siteUrl}/categories/${slugify(categories?.[0] ?? "posts")}` },
+    { "@type": "ListItem", "position": 3, "name": title, "item": postUrl },
+  ]
 });
 ---
 
-<!-- SEO: Canonical + Open Graph + Twitter Card -->
+<!-- SEO: Canonical + Meta -->
 <link rel="canonical" href={postUrl} />
 <meta name="description" content={description ?? title} />
 <meta name="keywords" content={tags?.join(", ") ?? ""} />
 <meta name="author" content={authorName} />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<meta name="language" content="Sinhala" />
+<meta name="revisit-after" content="3 days" />
 
 <!-- Open Graph -->
 <meta property="og:type" content="article" />
@@ -74,9 +92,12 @@ const articleSchema = JSON.stringify({
 <meta property="og:description" content={description ?? title} />
 <meta property="og:url" content={postUrl} />
 {image && <meta property="og:image" content={`${siteUrl}${image}`} />}
+{image && <meta property="og:image:alt" content={title} />}
 <meta property="og:locale" content="si_LK" />
 <meta property="og:site_name" content="Wala Katha" />
 {date && <meta property="article:published_time" content={new Date(date).toISOString()} />}
+{date && <meta property="article:modified_time" content={new Date(date).toISOString()} />}
+<meta property="article:author" content={authorName} />
 {categories?.map((c: string) => <meta property="article:section" content={humanize(c)} />)}
 {tags?.map((t: string) => <meta property="article:tag" content={humanize(t)} />)}
 
@@ -85,9 +106,11 @@ const articleSchema = JSON.stringify({
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description ?? title} />
 {image && <meta name="twitter:image" content={`${siteUrl}${image}`} />}
+{image && <meta name="twitter:image:alt" content={title} />}
 
-<!-- Article Structured Data (JSON-LD) -->
+<!-- Article + Breadcrumb Structured Data (JSON-LD) -->
 <script type="application/ld+json" set:html={articleSchema} />
+<script type="application/ld+json" set:html={breadcrumbSchema} />
 
 <section class="section bg-[#010203] relative">
   <div class="container">
@@ -272,18 +295,17 @@ const articleSchema = JSON.stringify({
           </div>
         </div>
 
-        {/* ⚠️ PERMANENT WARNING NOTICE — TYPEWRITER ANIMATED */}
-        <div class="comment-warning-notice rounded-xl border border-red-500/30 px-4 py-3 mb-2" role="alert" aria-live="polite">
-          <div class="flex items-start gap-3">
-            <span class="mt-0.5 shrink-0 text-red-500 warning-icon-pulse" aria-hidden="true">
-              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        {/* ⚠️ WARNING NOTICE — REDESIGNED SMART STYLE */}
+        <div class="comment-warning-notice rounded-xl px-4 py-3 mb-2" role="alert" aria-live="polite">
+          <div class="warning-header">
+            <span class="warning-badge" aria-hidden="true">
+              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              වැදගත් දැනුම්දීම
             </span>
-            <div class="flex-1 min-w-0">
-              <p class="text-[13px] leading-relaxed font-semibold warning-text-glow">
-                <span class="text-red-400 font-black">⚠ වැදගත්: </span><span id="warning-typewriter" class="text-red-300"></span><span id="warning-cursor" class="warning-cursor text-red-400">|</span>
-              </p>
-            </div>
           </div>
+          <p class="warning-body text-[13px] leading-relaxed mt-2">
+            <span id="warning-typewriter"></span><span id="warning-cursor" class="warning-cursor">|</span>
+          </p>
         </div>
 
         {/* INLINE VALIDATION MESSAGE */}
@@ -392,13 +414,14 @@ const articleSchema = JSON.stringify({
     100% { transform: scale(1.6); opacity: 0; }
   }
 
-  /* ⚠️ WARNING NOTICE */
+  /* ⚠️ WARNING NOTICE — SMART REDESIGN */
   .comment-warning-notice {
-    background: linear-gradient(135deg, #0d0101 0%, #160303 50%, #0d0101 100%);
+    background: linear-gradient(135deg, rgba(30,6,6,0.95) 0%, rgba(20,4,4,0.98) 100%);
+    border: 1px solid rgba(239,68,68,0.25);
     box-shadow:
-      0 0 0 1px rgba(239,68,68,0.18),
-      inset 0 0 24px rgba(239,68,68,0.05),
-      0 4px 16px rgba(0,0,0,0.4);
+      0 0 0 1px rgba(239,68,68,0.08),
+      inset 0 1px 0 rgba(239,68,68,0.1),
+      0 4px 20px rgba(0,0,0,0.5);
     position: relative;
     overflow: hidden;
   }
@@ -407,29 +430,51 @@ const articleSchema = JSON.stringify({
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 3px;
-    background: linear-gradient(to bottom, #ef4444, #b91c1c);
+    background: linear-gradient(to bottom, #f87171, #b91c1c);
     border-radius: 2px 0 0 2px;
   }
-  .warning-text-glow {
-    text-shadow: 0 0 14px rgba(239,68,68,0.2);
+  .comment-warning-notice::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(239,68,68,0.3), transparent);
   }
-  .warning-icon-pulse {
-    animation: wpulse 2.5s ease-in-out infinite;
+  .warning-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  @keyframes wpulse {
-    0%, 100% { opacity: 1; filter: drop-shadow(0 0 3px rgba(239,68,68,0.5)); }
-    50% { opacity: 0.6; filter: drop-shadow(0 0 6px rgba(239,68,68,0.9)); }
+  .warning-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.25);
+    color: #f87171;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .warning-body {
+    color: rgba(252,165,165,0.85);
+    padding-left: 2px;
   }
 
-  /* ✍️ TYPEWRITER CURSOR — animation නවතී typewriter ඉවර වූ පසු */
+  /* ✍️ TYPEWRITER CURSOR — හිස් වේ typewriter ඉවර වූ පසු */
   .warning-cursor {
     display: inline-block;
     font-weight: 900;
-    animation: wblink 0.7s step-end infinite;
+    color: #f87171;
     margin-left: 1px;
+    animation: wblink 0.7s step-end infinite;
   }
   .warning-cursor.done {
-    display: none;
+    animation: none;
+    opacity: 0;
   }
   @keyframes wblink {
     0%, 100% { opacity: 1; }
@@ -486,11 +531,14 @@ const articleSchema = JSON.stringify({
     const fullText =
       "ඔබ comment එකක් දැමූ පසුව එය නැවත වෙනස් කිරීමට හෝ මැකීමට නොහැකිය. " +
       "අදහස් පළ කිරීමේදී අන් අයට හානියක් නොවන පරිදි සහ links දැමීමෙන් වැළකී සිටිය යුතුය. " +
-      "නීති කඩන සියලු දෙනාගේ devices සදහටම block කිරීමට හැකියාව ඇත — නැවත පැමිණීමට නොහැකි ලෙස. 🚫";
+      "නීති කඩන සියලු දෙනාගේ devices සදහටම block කිරීමට හැකියාව ඇත — නැවත ඔබට මෙම අඩවියට පැමිණීමට නොහැකි ලෙස. ❌";
 
     let i = 0;
     el.textContent = "";
-    if (cursor) cursor.style.display = "inline-block";
+    if (cursor) {
+      cursor.classList.remove("done");
+      cursor.style.opacity = "";
+    }
 
     const interval = setInterval(() => {
       el.textContent = fullText.slice(0, i + 1);
@@ -672,9 +720,6 @@ const articleSchema = JSON.stringify({
       floatingBtn.setAttribute("aria-expanded", "true");
       loadComments();
       warningTypewriterDone = false;
-      // cursor .done class ඉවත් කරනවා — නැවත animate වෙන්නට
-      const cursor = document.getElementById("warning-cursor");
-      if (cursor) cursor.classList.remove("done");
       setTimeout(runWarningTypewriter, 400);
     }
 
