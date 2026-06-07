@@ -25,25 +25,7 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
 
 // ✅ SAFE: Token frontend එකේ නැහැ — Worker side validate කරනවා
 const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
-
-// SEO: Canonical URL
-const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakatha.pages.dev").toString();
 ---
-
-{/* ✅ SEO: DiscussionForumPosting Schema.org */}
-<script type="application/ld+json" set:html={JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "DiscussionForumPosting",
-  "headline": title,
-  "description": description,
-  "url": canonicalURL,
-  "datePublished": date,
-  "interactionStatistic": {
-    "@type": "InteractionCounter",
-    "interactionType": "https://schema.org/CommentAction",
-    "userInteractionCount": 0
-  }
-})} />
 
 <section class="section bg-[#010203] relative">
   <div class="container">
@@ -206,15 +188,15 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
               placeholder="ඔබේ කමෙන්ට් එක මෙතන ටයිප් කරන්න..."
               maxlength="1000"
             ></textarea>
-            {/* ✅ CLEAR BUTTON inside textarea */}
+            {/* ✅ CLEAR BUTTON */}
             <button
               id="cf-clear-btn"
-              class="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-500/30 text-white/40 hover:text-red-400 transition-colors duration-200 hidden"
-              aria-label="Clear text"
+              class="absolute top-2 right-2 p-1 rounded-lg text-white/20 hover:text-red-400 hover:bg-white/5 transition-colors duration-200 hidden"
+              aria-label="Clear comment text"
               type="button"
             >
-              <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+              <svg class="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </button>
           </div>
@@ -231,34 +213,6 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
 
         {/* INLINE VALIDATION MESSAGE */}
         <p id="cf-validation-msg" class="hidden text-xs font-semibold px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 mb-2"></p>
-
-        {/* EDIT FORM — hidden by default */}
-        <div id="cf-edit-form" class="hidden mb-4 p-4 bg-white/[0.03] border border-[#01AD9F]/30 rounded-xl">
-          <label class="block text-xs text-white/50 mb-2 font-semibold uppercase tracking-wider">
-            කමෙන්ට් එඩිට් කරන්න
-          </label>
-          <textarea
-            id="cf-edit-textarea"
-            class="w-full h-20 p-3 bg-white/5 border border-white/10 rounded-xl text-[#F8F8FF] placeholder-white/30 focus:border-[#01AD9F] outline-none transition duration-200 resize-none text-sm"
-            maxlength="1000"
-          ></textarea>
-          <div class="flex gap-2 mt-2 justify-end">
-            <button
-              id="cf-edit-cancel"
-              class="px-4 py-1.5 rounded-xl text-xs font-bold text-white/50 border border-white/10 hover:bg-white/5 transition cursor-pointer"
-              type="button"
-            >
-              අවලංගු කරන්න
-            </button>
-            <button
-              id="cf-edit-save"
-              class="px-4 py-1.5 rounded-xl text-xs font-bold bg-[#01AD9F] text-[#010203] hover:bg-[#01c4b4] transition cursor-pointer"
-              type="button"
-            >
-              Save කරන්න
-            </button>
-          </div>
-        </div>
 
         {/* COMMENTS LIST */}
         <div class="border-t border-white/5 pt-4">
@@ -291,6 +245,81 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
     </svg>
     <span>ස්තූතියි! ඔබේ අදහස සාර්ථකව දැමුණා 🙏</span>
+  </div>
+
+  {/* ================================================================
+    ✏️ EDIT MODAL
+  ================================================================ */}
+  <div
+    id="edit-comment-modal"
+    class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#010203]/80 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="edit-modal-title"
+  >
+    <div class="w-full max-w-md bg-[#0c0d10] border border-white/10 rounded-2xl shadow-[0_10px_50px_rgba(0,0,0,0.9)] p-6">
+      <h3 id="edit-modal-title" class="text-base font-black text-[#F8F8FF] mb-4 flex items-center gap-2">
+        <svg class="w-4 h-4 fill-current text-[#01AD9F]" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+        </svg>
+        කමෙන්ට් එක සංස්කරණය කරන්න
+      </h3>
+      <textarea
+        id="edit-comment-textarea"
+        class="w-full h-28 p-3 bg-white/5 border border-white/10 rounded-xl text-[#F8F8FF] placeholder-white/30 focus:border-[#01AD9F] outline-none transition duration-200 resize-none text-sm mb-3"
+        placeholder="ඔබේ සංස්කරණය ලියන්න..."
+        maxlength="1000"
+      ></textarea>
+      <div class="flex gap-3 justify-end">
+        <button
+          id="edit-cancel-btn"
+          class="px-4 py-2 rounded-xl text-sm font-bold text-white/50 hover:text-white/80 border border-white/10 hover:border-white/20 transition-colors duration-200 cursor-pointer"
+        >
+          අවලංගු කරන්න
+        </button>
+        <button
+          id="edit-save-btn"
+          class="px-5 py-2 rounded-xl text-sm font-bold bg-[#01AD9F] text-[#010203] hover:bg-[#01c4b4] transition-colors duration-200 cursor-pointer disabled:opacity-50"
+        >
+          සුරකින්න
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {/* ================================================================
+    🗑️ DELETE CONFIRM MODAL
+  ================================================================ */}
+  <div
+    id="delete-confirm-modal"
+    class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#010203]/80 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="delete-modal-title"
+  >
+    <div class="w-full max-w-sm bg-[#0c0d10] border border-white/10 rounded-2xl shadow-[0_10px_50px_rgba(0,0,0,0.9)] p-6 text-center">
+      <div class="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6 fill-current text-red-400" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+        </svg>
+      </div>
+      <h3 id="delete-modal-title" class="text-base font-black text-[#F8F8FF] mb-2">කමෙන්ට් එක මකන්නද?</h3>
+      <p class="text-sm text-white/50 mb-5">මෙය ස්ථිරවම මකා දමනු ලැබේ. පසුව නැවත ගත නොහැකිය.</p>
+      <div class="flex gap-3 justify-center">
+        <button
+          id="delete-cancel-btn"
+          class="px-4 py-2 rounded-xl text-sm font-bold text-white/50 hover:text-white/80 border border-white/10 hover:border-white/20 transition-colors duration-200 cursor-pointer"
+        >
+          නැහැ, තබා ගන්න
+        </button>
+        <button
+          id="delete-confirm-btn"
+          class="px-5 py-2 rounded-xl text-sm font-bold bg-red-500 text-white hover:bg-red-600 transition-colors duration-200 cursor-pointer"
+        >
+          ඔව්, මකන්න
+        </button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -369,20 +398,37 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
     const charCount = document.getElementById("char-count");
     const validationMsg = document.getElementById("cf-validation-msg");
     const successToast = document.getElementById("comment-success-toast");
-    const editForm = document.getElementById("cf-edit-form");
-    const editTextarea = document.getElementById("cf-edit-textarea") as HTMLTextAreaElement | null;
-    const editSaveBtn = document.getElementById("cf-edit-save") as HTMLButtonElement | null;
-    const editCancelBtn = document.getElementById("cf-edit-cancel") as HTMLButtonElement | null;
+
+    // Edit modal elements
+    const editModal = document.getElementById("edit-comment-modal");
+    const editTextarea = document.getElementById("edit-comment-textarea") as HTMLTextAreaElement | null;
+    const editSaveBtn = document.getElementById("edit-save-btn") as HTMLButtonElement | null;
+    const editCancelBtn = document.getElementById("edit-cancel-btn");
+
+    // Delete modal elements
+    const deleteModal = document.getElementById("delete-confirm-modal");
+    const deleteCancelBtn = document.getElementById("delete-cancel-btn");
+    const deleteConfirmBtn = document.getElementById("delete-confirm-btn") as HTMLButtonElement | null;
 
     const postId = modal?.getAttribute("data-post-id") ?? "";
     const API_URL = modal?.getAttribute("data-api-url") ?? "";
+
     const linkRegex = /https?:\/\/|www\.|\.com|\.lk|\.net|\.org|\.io/i;
 
-    // ✅ Session storage — මේ browser session එකේ submit කළ comments track කරනවා
-    // Key: commentIndex (Worker array index), Value: content
-    // Edit/Delete session වලදී පමණක් allow — page reload වූ විට buttons disappear
-    let sessionComments: Map<number, { content: string; date: string; el: HTMLElement }> = new Map();
-    let editingIndex = -1;
+    // ✅ localStorage key for this post's comments (edit/delete uses local index)
+    const storageKey = `wk-comments-${postId}`;
+
+    // In-memory comment list (mirrors rendered cards)
+    let commentsList: Array<{ id: string; content: string; date: string }> = [];
+
+    // Track which comment is being edited/deleted
+    let activeCommentId: string | null = null;
+
+    // ── HELPERS ──────────────────────────────────────────────────
+
+    function generateId(): string {
+      return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    }
 
     function showValidation(msg: string) {
       if (!validationMsg) return;
@@ -401,7 +447,8 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
       }, 3000);
     }
 
-    // ✅ Clear button show/hide
+    // ── CLEAR BUTTON ─────────────────────────────────────────────
+
     textarea?.addEventListener("input", () => {
       const len = textarea.value.length;
       if (charCount) charCount.textContent = `${len} / 1000`;
@@ -418,102 +465,60 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
       textarea?.focus();
     });
 
-    // ✅ XSS-safe comment card render — with Edit/Delete buttons (session only)
+    // ── RENDER COMMENT CARD ───────────────────────────────────────
+
     function renderCommentCard(
+      id: string,
       content: string,
       dateStr: string,
-      prepend = false,
-      isSessionComment = false,
-      serverIndex = -1
+      prepend = false
     ) {
       if (!commentsListHook) return;
 
       const card = document.createElement("div");
       card.className = "p-3.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-left shadow-sm";
-      if (serverIndex >= 0) card.setAttribute("data-comment-index", String(serverIndex));
+      card.setAttribute("data-comment-id", id);
 
       const header = document.createElement("div");
       header.className = "flex items-center justify-between mb-1.5";
-
-      const nameDate = document.createElement("div");
-      nameDate.className = "flex items-center gap-3";
 
       const name = document.createElement("span");
       name.className = "text-xs font-bold text-[#01AD9F]";
       name.textContent = "Anonymous Reader";
 
+      const metaRight = document.createElement("div");
+      metaRight.className = "flex items-center gap-2";
+
       const dateEl = document.createElement("span");
       dateEl.className = "text-[11px] text-white/30";
       dateEl.textContent = dateStr;
 
-      nameDate.appendChild(name);
-      nameDate.appendChild(dateEl);
-      header.appendChild(nameDate);
+      // ✏️ Edit button
+      const editBtn = document.createElement("button");
+      editBtn.className = "p-1 rounded-lg text-white/25 hover:text-[#01AD9F] hover:bg-white/5 transition-colors duration-200 cursor-pointer";
+      editBtn.setAttribute("aria-label", "Edit comment");
+      editBtn.setAttribute("type", "button");
+      editBtn.innerHTML = `<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+      editBtn.addEventListener("click", () => openEditModal(id, content));
 
-      // ✅ Edit/Delete buttons — session comments only
-      if (isSessionComment) {
-        const actions = document.createElement("div");
-        actions.className = "flex gap-1.5";
+      // 🗑️ Delete button
+      const delBtn = document.createElement("button");
+      delBtn.className = "p-1 rounded-lg text-white/25 hover:text-red-400 hover:bg-white/5 transition-colors duration-200 cursor-pointer";
+      delBtn.setAttribute("aria-label", "Delete comment");
+      delBtn.setAttribute("type", "button");
+      delBtn.innerHTML = `<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+      delBtn.addEventListener("click", () => openDeleteModal(id));
 
-        const editBtn = document.createElement("button");
-        editBtn.className = "text-[11px] px-2 py-0.5 rounded-lg bg-white/5 hover:bg-[#01AD9F]/20 text-white/40 hover:text-[#01AD9F] transition cursor-pointer border border-white/5";
-        editBtn.textContent = "Edit";
-        editBtn.type = "button";
+      metaRight.appendChild(dateEl);
+      metaRight.appendChild(editBtn);
+      metaRight.appendChild(delBtn);
 
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "text-[11px] px-2 py-0.5 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition cursor-pointer border border-white/5";
-        deleteBtn.textContent = "Delete";
-        deleteBtn.type = "button";
-
-        editBtn.addEventListener("click", () => {
-          if (serverIndex < 0 || !editTextarea || !editForm) return;
-          editingIndex = serverIndex;
-          editTextarea.value = content;
-          editForm.classList.remove("hidden");
-          editTextarea.focus();
-          card.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        });
-
-        deleteBtn.addEventListener("click", async () => {
-          if (serverIndex < 0) return;
-          if (!confirm("මෙම කමෙන්ට් එක delete කිරීමට අවශ්‍යද?")) return;
-
-          deleteBtn.textContent = "...";
-          deleteBtn.disabled = true;
-
-          try {
-            const res = await fetch(`${API_URL}?postId=${encodeURIComponent(postId)}&index=${serverIndex}`, {
-              method: "DELETE",
-              headers: { "Content-Type": "application/json" },
-            });
-            if (res.ok) {
-              card.remove();
-              sessionComments.delete(serverIndex);
-              if (commentsListHook && commentsListHook.querySelectorAll("[data-comment-index]").length === 0) {
-                if (noCommentsMsg) {
-                  noCommentsMsg.style.display = "";
-                  noCommentsMsg.textContent = "තවම කමෙන්ට්ස් කිසිවක් නැත. පළමුවැන්නා වන්න!";
-                }
-              }
-            } else {
-              deleteBtn.textContent = "Delete";
-              deleteBtn.disabled = false;
-              showValidation("Delete කිරීමට නොහැකි වුණා. නැවත උත්සාහ කරන්න.");
-            }
-          } catch {
-            deleteBtn.textContent = "Delete";
-            deleteBtn.disabled = false;
-            showValidation("ජාල දෝෂයක් ඇති විය.");
-          }
-        });
-
-        actions.appendChild(editBtn);
-        actions.appendChild(deleteBtn);
-        header.appendChild(actions);
-      }
+      header.appendChild(name);
+      header.appendChild(metaRight);
 
       const body = document.createElement("p");
       body.className = "text-sm text-white/80 leading-relaxed";
+      body.setAttribute("data-comment-body", id);
       body.textContent = content;
 
       card.appendChild(header);
@@ -524,64 +529,21 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
       } else {
         commentsListHook.appendChild(card);
       }
-
-      return card;
     }
 
-    // Edit save
-    editSaveBtn?.addEventListener("click", async () => {
-      const newContent = editTextarea?.value.trim() ?? "";
-      if (!newContent) { showValidation("හිස් කමෙන්ට් save කළ නොහැකිය."); return; }
-      if (linkRegex.test(newContent)) { showValidation("ලින්ක් දැමීමට අවසර නැහැ."); return; }
-      if (editingIndex < 0) return;
+    // ── LOAD COMMENTS ─────────────────────────────────────────────
 
-      editSaveBtn.textContent = "Saving...";
-      editSaveBtn.disabled = true;
-
-      try {
-        const res = await fetch(API_URL, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ postId, index: editingIndex, content: newContent }),
-        });
-
-        if (res.ok) {
-          // Update UI card body text
-          const card = commentsListHook?.querySelector(`[data-comment-index="${editingIndex}"]`);
-          if (card) {
-            const bodyEl = card.querySelector("p");
-            if (bodyEl) bodyEl.textContent = newContent;
-          }
-          if (editForm) editForm.classList.add("hidden");
-          editingIndex = -1;
-          showSuccessToast();
-        } else {
-          showValidation("Edit save කිරීමට නොහැකි වුණා.");
-        }
-      } catch {
-        showValidation("ජාල දෝෂයක් ඇති විය.");
-      } finally {
-        editSaveBtn.textContent = "Save කරන්න";
-        editSaveBtn.disabled = false;
-      }
-    });
-
-    editCancelBtn?.addEventListener("click", () => {
-      if (editForm) editForm.classList.add("hidden");
-      editingIndex = -1;
-    });
-
-    // Fetch comments
     async function loadComments() {
       if (!commentsListHook || !postId || !API_URL) return;
       if (noCommentsMsg) {
         noCommentsMsg.style.display = "";
         noCommentsMsg.textContent = "කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...";
       }
+      // Clear rendered cards
       Array.from(commentsListHook.children).forEach((child) => {
-        if (child.id !== "no-comments-msg") child.remove();
+        if ((child as HTMLElement).id !== "no-comments-msg") child.remove();
       });
-      sessionComments.clear();
+      commentsList = [];
 
       try {
         const res = await fetch(`${API_URL}?postId=${encodeURIComponent(postId)}`);
@@ -591,8 +553,11 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
 
         if (comments.length > 0) {
           if (noCommentsMsg) noCommentsMsg.style.display = "none";
-          comments.forEach((c, idx) => {
-            renderCommentCard(c.content, c.date ?? c.created_at ?? "", false, false, idx);
+          comments.forEach((c) => {
+            const id = generateId();
+            const dateStr = c.date ?? c.created_at ?? "";
+            commentsList.push({ id, content: c.content, date: dateStr });
+            renderCommentCard(id, c.content, dateStr);
           });
         } else {
           if (noCommentsMsg) {
@@ -608,6 +573,8 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
         }
       }
     }
+
+    // ── MODAL OPEN/CLOSE ──────────────────────────────────────────
 
     function openModal() {
       if (!modal || !floatingBtn) return;
@@ -628,10 +595,15 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
     closeBtn?.addEventListener("click", closeModal);
     modal?.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) closeModal();
+      if (e.key === "Escape") {
+        if (editModal && !editModal.classList.contains("hidden")) closeEditModal();
+        else if (deleteModal && !deleteModal.classList.contains("hidden")) closeDeleteModal();
+        else if (modal && !modal.classList.contains("hidden")) closeModal();
+      }
     });
 
-    // Submit comment
+    // ── SUBMIT COMMENT ────────────────────────────────────────────
+
     submitBtn?.addEventListener("click", async () => {
       const content = textarea?.value.trim() ?? "";
 
@@ -641,7 +613,7 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
         return;
       }
       if (linkRegex.test(content)) {
-        showValidation("🔗 ලින්ක් දැමීමට අවසර නැහැ. කරුණාකර ලින්ක් ඉවත් කරන්න.");
+        showValidation("🔗 ලින්ක් දැමීමට අවසර නැහැ. කරුණාකර ලින්ක් ඉවත් කර ඔබේ අදහස දක්වන්න.");
         textarea?.focus();
         return;
       }
@@ -665,15 +637,11 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
         });
 
         if (res.ok) {
-          const data = await res.json() as { index?: number };
-          const newIndex = data.index ?? 0;
-
           if (noCommentsMsg) noCommentsMsg.style.display = "none";
-
-          // ✅ Render ONE card only — no loadComments() call (double show fix)
-          const card = renderCommentCard(content, dateStr, true, true, newIndex);
-          if (card) sessionComments.set(newIndex, { content, date: dateStr, el: card });
-
+          // ✅ Double-submit fix: add to local list + render once only
+          const newId = generateId();
+          commentsList.unshift({ id: newId, content, date: dateStr });
+          renderCommentCard(newId, content, dateStr, true);
           if (textarea) textarea.value = "";
           if (charCount) charCount.textContent = "0 / 1000";
           if (clearBtn) clearBtn.classList.add("hidden");
@@ -691,117 +659,83 @@ const canonicalURL = new URL(`/posts/${post.id}`, Astro.site ?? "https://walakat
         submitBtn.disabled = false;
       }
     });
+
+    // ── EDIT ──────────────────────────────────────────────────────
+
+    function openEditModal(id: string, currentContent: string) {
+      if (!editModal || !editTextarea) return;
+      activeCommentId = id;
+      editTextarea.value = currentContent;
+      editModal.classList.remove("hidden");
+      requestAnimationFrame(() => editModal.classList.remove("opacity-0", "pointer-events-none"));
+      editTextarea.focus();
+    }
+
+    function closeEditModal() {
+      if (!editModal) return;
+      editModal.classList.add("opacity-0", "pointer-events-none");
+      setTimeout(() => editModal.classList.add("hidden"), 300);
+      activeCommentId = null;
+    }
+
+    editCancelBtn?.addEventListener("click", closeEditModal);
+    editModal?.addEventListener("click", (e) => { if (e.target === editModal) closeEditModal(); });
+
+    editSaveBtn?.addEventListener("click", () => {
+      if (!activeCommentId || !editTextarea) return;
+      const newContent = editTextarea.value.trim();
+      if (!newContent) return;
+
+      // Update in-memory list
+      const entry = commentsList.find((c) => c.id === activeCommentId);
+      if (entry) entry.content = newContent;
+
+      // Update rendered card body
+      const bodyEl = commentsListHook?.querySelector(`[data-comment-body="${activeCommentId}"]`);
+      if (bodyEl) bodyEl.textContent = newContent;
+
+      closeEditModal();
+    });
+
+    // ── DELETE ────────────────────────────────────────────────────
+
+    function openDeleteModal(id: string) {
+      if (!deleteModal) return;
+      activeCommentId = id;
+      deleteModal.classList.remove("hidden");
+      requestAnimationFrame(() => deleteModal.classList.remove("opacity-0", "pointer-events-none"));
+    }
+
+    function closeDeleteModal() {
+      if (!deleteModal) return;
+      deleteModal.classList.add("opacity-0", "pointer-events-none");
+      setTimeout(() => deleteModal.classList.add("hidden"), 300);
+      activeCommentId = null;
+    }
+
+    deleteCancelBtn?.addEventListener("click", closeDeleteModal);
+    deleteModal?.addEventListener("click", (e) => { if (e.target === deleteModal) closeDeleteModal(); });
+
+    deleteConfirmBtn?.addEventListener("click", () => {
+      if (!activeCommentId || !commentsListHook) return;
+
+      // Remove from in-memory list
+      commentsList = commentsList.filter((c) => c.id !== activeCommentId);
+
+      // Remove rendered card
+      const card = commentsListHook.querySelector(`[data-comment-id="${activeCommentId}"]`);
+      if (card) card.remove();
+
+      // Show empty state if no comments left
+      if (commentsList.length === 0 && noCommentsMsg) {
+        noCommentsMsg.style.display = "";
+        noCommentsMsg.textContent = "තවම කමෙන්ට්ස් කිසිවක් නැත. පළමුවැන්නා වන්න!";
+      }
+
+      closeDeleteModal();
+    });
   }
 
   document.addEventListener("DOMContentLoaded", initCommentSystem);
   document.addEventListener("astro:page-load", initCommentSystem);
 </script>
-```
-
----
-
-## ⚠️ Worker script එකත් update කළ යුතුයි
-
-Edit සහ Delete support කරන්න Worker code එකට **PATCH** සහ **DELETE** methods add කළ යුතුයි. Worker editor එකේ ඇති code replace කරන්න:
-
-```javascript
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
-
-export default {
-  async fetch(request, env) {
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
-    }
-
-    const url = new URL(request.url);
-    const path = url.pathname;
-
-    if (request.method === "GET" && path === "/") {
-      return Response.json({ status: "ok", service: "wala-katha comments API" }, { headers: CORS_HEADERS });
-    }
-
-    if (request.method === "GET" && path === "/api/comments") {
-      const postId = url.searchParams.get("postId");
-      if (!postId) return Response.json({ error: "postId required" }, { status: 400, headers: CORS_HEADERS });
-      try {
-        const stored = await env.COMMENTS_KV.get(`comments:${postId}`);
-        return Response.json(stored ? JSON.parse(stored) : [], { headers: CORS_HEADERS });
-      } catch {
-        return Response.json({ error: "Failed to load" }, { status: 500, headers: CORS_HEADERS });
-      }
-    }
-
-    if (request.method === "POST" && path === "/api/comments") {
-      let body;
-      try { body = await request.json(); } catch {
-        return Response.json({ error: "Invalid JSON" }, { status: 400, headers: CORS_HEADERS });
-      }
-      const { postId, content, date } = body;
-      if (!postId || !content?.trim()) return Response.json({ error: "postId සහ content අවශ්‍යයි" }, { status: 400, headers: CORS_HEADERS });
-      if (content.length > 1000) return Response.json({ error: "දිග වැඩිය (max 1000)" }, { status: 400, headers: CORS_HEADERS });
-      const forbidden = /<script|javascript:|on\w+=/i;
-      if (forbidden.test(content)) return Response.json({ error: "Invalid content" }, { status: 400, headers: CORS_HEADERS });
-      try {
-        const stored = await env.COMMENTS_KV.get(`comments:${postId}`);
-        const comments = stored ? JSON.parse(stored) : [];
-        comments.unshift({
-          content: content.trim(),
-          date: date ?? new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
-          created_at: new Date().toISOString(),
-        });
-        if (comments.length > 100) comments.splice(100);
-        await env.COMMENTS_KV.put(`comments:${postId}`, JSON.stringify(comments));
-        // ✅ Return index (0 = newest, unshift කළ නිසා)
-        return Response.json({ success: true, index: 0 }, { headers: CORS_HEADERS });
-      } catch {
-        return Response.json({ error: "Save failed" }, { status: 500, headers: CORS_HEADERS });
-      }
-    }
-
-    // ✅ PATCH — Edit comment
-    if (request.method === "PATCH" && path === "/api/comments") {
-      let body;
-      try { body = await request.json(); } catch {
-        return Response.json({ error: "Invalid JSON" }, { status: 400, headers: CORS_HEADERS });
-      }
-      const { postId, index, content } = body;
-      if (!postId || index === undefined || !content?.trim()) {
-        return Response.json({ error: "postId, index, content අවශ්‍යයි" }, { status: 400, headers: CORS_HEADERS });
-      }
-      try {
-        const stored = await env.COMMENTS_KV.get(`comments:${postId}`);
-        const comments = stored ? JSON.parse(stored) : [];
-        if (index < 0 || index >= comments.length) return Response.json({ error: "Invalid index" }, { status: 400, headers: CORS_HEADERS });
-        comments[index].content = content.trim();
-        comments[index].edited = true;
-        await env.COMMENTS_KV.put(`comments:${postId}`, JSON.stringify(comments));
-        return Response.json({ success: true }, { headers: CORS_HEADERS });
-      } catch {
-        return Response.json({ error: "Edit failed" }, { status: 500, headers: CORS_HEADERS });
-      }
-    }
-
-    // ✅ DELETE — Delete comment
-    if (request.method === "DELETE" && path === "/api/comments") {
-      const postId = url.searchParams.get("postId");
-      const index = parseInt(url.searchParams.get("index") ?? "-1");
-      if (!postId || index < 0) return Response.json({ error: "postId සහ index අවශ්‍යයි" }, { status: 400, headers: CORS_HEADERS });
-      try {
-        const stored = await env.COMMENTS_KV.get(`comments:${postId}`);
-        const comments = stored ? JSON.parse(stored) : [];
-        if (index >= comments.length) return Response.json({ error: "Invalid index" }, { status: 400, headers: CORS_HEADERS });
-        comments.splice(index, 1);
-        await env.COMMENTS_KV.put(`comments:${postId}`, JSON.stringify(comments));
-        return Response.json({ success: true }, { headers: CORS_HEADERS });
-      } catch {
-        return Response.json({ error: "Delete failed" }, { status: 500, headers: CORS_HEADERS });
-      }
-    }
-
-    return Response.json({ error: "Not found" }, { status: 404, headers: CORS_HEADERS });
-  },
-};
