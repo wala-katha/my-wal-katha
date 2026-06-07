@@ -27,30 +27,67 @@ const finalSimilarPosts = smartSimilarPosts.slice(0, 6);
 // ✅ SAFE: Token frontend එකේ නැහැ — Worker side validate කරනවා
 const WORKER_API = "https://comments.wala-katha.workers.dev/api/comments";
 
-// SEO
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const ogImage = image ? new URL(String(image), Astro.site).toString() : "";
-const publishedISO = date ? new Date(date).toISOString() : "";
-const authorsStr = allAuthors
-  .filter((a) => authors.map((au: string) => slugify(au)).includes(slugify(a.data.title)))
-  .map((a) => a.data.title)
-  .join(", ");
----
+// SEO: Structured Data (Article Schema)
+const siteUrl = Astro.site?.toString().replace(/\/$/, "") ?? "";
+const postUrl = `${siteUrl}/posts/${post.id}`;
+const authorName = allAuthors.find((a) =>
+  authors.map((au: string) => slugify(au)).includes(slugify(a.data.title))
+)?.data.title ?? "Wala Katha";
 
-<!-- SEO: JSON-LD Structured Data -->
-<script type="application/ld+json" set:html={JSON.stringify({
+const articleSchema = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": title,
   "description": description ?? "",
-  "image": ogImage || undefined,
-  "datePublished": publishedISO || undefined,
-  "author": authorsStr
-    ? { "@type": "Person", "name": authorsStr }
-    : undefined,
+  "image": image ? `${siteUrl}${image}` : undefined,
+  "author": {
+    "@type": "Person",
+    "name": authorName,
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Wala Katha",
+    "url": siteUrl,
+  },
+  "datePublished": date ? new Date(date).toISOString() : undefined,
+  "dateModified": date ? new Date(date).toISOString() : undefined,
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": postUrl,
+  },
   "keywords": tags?.join(", ") ?? "",
-  "url": canonicalURL.toString(),
-})} />
+  "articleSection": categories?.map((c: string) => humanize(c)).join(", ") ?? "",
+  "inLanguage": "si",
+});
+---
+
+<!-- SEO: Canonical + Open Graph + Twitter Card -->
+<link rel="canonical" href={postUrl} />
+<meta name="description" content={description ?? title} />
+<meta name="keywords" content={tags?.join(", ") ?? ""} />
+<meta name="author" content={authorName} />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="article" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description ?? title} />
+<meta property="og:url" content={postUrl} />
+{image && <meta property="og:image" content={`${siteUrl}${image}`} />}
+<meta property="og:locale" content="si_LK" />
+<meta property="og:site_name" content="Wala Katha" />
+{date && <meta property="article:published_time" content={new Date(date).toISOString()} />}
+{categories?.map((c: string) => <meta property="article:section" content={humanize(c)} />)}
+{tags?.map((t: string) => <meta property="article:tag" content={humanize(t)} />)}
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description ?? title} />
+{image && <meta name="twitter:image" content={`${siteUrl}${image}`} />}
+
+<!-- Article Structured Data (JSON-LD) -->
+<script type="application/ld+json" set:html={articleSchema} />
 
 <section class="section bg-[#010203] relative">
   <div class="container">
@@ -70,7 +107,6 @@ const authorsStr = allAuthors
                 <a
                   href={`/authors/${slugify(author.id)}`}
                   class="flex items-center hover:text-primary font-bold text-[#F8F8FF]"
-                  rel="author"
                 >
                   {author.data.image && (
                     <Image
@@ -87,7 +123,7 @@ const authorsStr = allAuthors
           </li>
           <li class="mx-3 flex items-center flex-wrap font-semibold text-[#F8F8FF]">
             <BiCalendarEdit className="mr-1 h-5 w-5 text-[#01AD9F]" />
-            <time datetime={publishedISO}>{dateFormat(date)}</time>
+            {dateFormat(date)}
           </li>
           <li class="mx-3 flex items-center flex-wrap">
             <BiCategoryAlt className="mr-1 h-[18px] w-[18px] text-[#01AD9F]" />
@@ -134,7 +170,6 @@ const authorsStr = allAuthors
                 <a
                   href={`/tags/${slugify(tag)}`}
                   class="block rounded-lg bg-[#FFCC00] border border-[#FFCC00] px-4 py-2 font-black text-[#010203] text-sm hover:bg-[#E6B800] transition duration-300"
-                  rel="tag"
                 >
                   #{humanize(tag)}
                 </a>
@@ -153,16 +188,16 @@ const authorsStr = allAuthors
   </div>
 
   {/* ================================================================
-    💬 FLOATING COMMENT BUTTON — 7-COLOR ANIMATED
+    💬 FLOATING COMMENT BUTTON — ANIMATED
   ================================================================ */}
   <button
     id="comment-floating-btn"
-    class="fixed bottom-6 right-6 z-40 flex items-center gap-2 text-[#010203] font-black px-5 py-3 rounded-full shadow-[0_4px_20px_rgba(1,173,159,0.4)] cursor-pointer select-none comment-float-btn"
+    class="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-[#01AD9F] text-[#010203] font-black px-5 py-3 rounded-full shadow-[0_4px_20px_rgba(1,173,159,0.4)] cursor-pointer select-none comment-float-btn"
     aria-label="Open Comments Section"
     aria-expanded="false"
     aria-controls="comment-popup-modal"
   >
-    <span class="comment-btn-ring" aria-hidden="true"></span>
+    <span class="comment-btn-ring"></span>
     <svg class="w-5 h-5 fill-current relative z-10" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
     </svg>
@@ -193,7 +228,6 @@ const authorsStr = allAuthors
           id="comment-close-btn"
           class="p-1.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.08] text-white/60 hover:text-red-400 transition-colors duration-200 cursor-pointer outline-none"
           aria-label="Close Comments"
-          type="button"
         >
           <svg class="w-6 h-6 stroke-current fill-none" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -215,7 +249,6 @@ const authorsStr = allAuthors
               class="w-full h-24 p-3 pr-10 bg-white/5 border border-white/10 rounded-xl text-[#F8F8FF] placeholder-white/30 focus:border-[#01AD9F] outline-none transition duration-200 resize-none text-sm"
               placeholder="ඔබේ කමෙන්ට් එක මෙතන ටයිප් කරන්න..."
               maxlength="1000"
-              aria-describedby="char-count"
             ></textarea>
             <button
               id="cf-clear-btn"
@@ -229,19 +262,34 @@ const authorsStr = allAuthors
             </button>
           </div>
           <div class="flex items-center justify-between mt-2">
-            <span id="char-count" class="text-xs text-white/30" aria-live="polite">0 / 1000</span>
+            <span id="char-count" class="text-xs text-white/30">0 / 1000</span>
             <button
               id="cf-submit-comment"
               class="bg-[#01AD9F] text-[#010203] font-bold px-6 py-2 rounded-xl text-sm transition hover:bg-[#01c4b4] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              type="button"
             >
               Submit Comment
             </button>
           </div>
         </div>
 
+        {/* ⚠️ PERMANENT WARNING NOTICE */}
+        <div class="comment-warning-notice rounded-xl border border-red-500/30 bg-[#0a0000] px-4 py-3 mb-2" role="alert" aria-live="polite">
+          <div class="flex items-start gap-2.5">
+            <span class="mt-0.5 shrink-0 text-red-500" aria-hidden="true">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            </span>
+            <p class="text-[13px] leading-relaxed font-semibold warning-text-glow">
+              <span class="text-red-500 font-black">⚠ වැදගත්:</span>
+              <span class="text-red-400"> ඔබ comment එකක් දැමූ පසුව එය නැවත වෙනස් කිරීමට හෝ මැකීමට </span>
+              <span class="text-red-500 font-black">නොහැකිය.</span>
+              <span class="text-red-400"> අදහස් පළ කිරීමේදී අන් අයට හානියක් නොවන පරිදි සහ links දැමීමෙන් වැළකී සිටිය යුතුය. </span>
+              <span class="text-red-300 font-black">නීති කඩන සියලු දෙනාගේ devices සදහටම block කිරීමට හැකියාව ඇත — නැවත පැමිණීමට නොහැකි ලෙස. 🚫</span>
+            </p>
+          </div>
+        </div>
+
         {/* INLINE VALIDATION MESSAGE */}
-        <p id="cf-validation-msg" class="hidden text-xs font-semibold px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 mb-2" role="alert"></p>
+        <p id="cf-validation-msg" class="hidden text-xs font-semibold px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 mb-2"></p>
 
         {/* COMMENTS LIST */}
         <div class="border-t border-white/5 pt-4">
@@ -269,91 +317,11 @@ const authorsStr = allAuthors
     id="comment-success-toast"
     class="fixed bottom-24 right-6 z-50 flex items-center gap-3 bg-[#01AD9F] text-[#010203] font-bold px-5 py-3 rounded-2xl shadow-[0_4px_24px_rgba(1,173,159,0.5)] translate-y-4 opacity-0 pointer-events-none transition-all duration-300"
     aria-live="polite"
-    role="status"
   >
     <svg class="w-5 h-5 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
     </svg>
     <span>ස්තූතියි! ඔබේ අදහස සාර්ථකව දැමුණා 🙏</span>
-  </div>
-
-  {/* ================================================================
-    ✏️ EDIT MODAL
-  ================================================================ */}
-  <div
-    id="edit-comment-modal"
-    class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#010203]/80 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 hidden"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="edit-modal-title"
-  >
-    <div class="w-full max-w-md bg-[#0c0d10] border border-white/10 rounded-2xl shadow-[0_10px_50px_rgba(0,0,0,0.9)] p-6">
-      <h3 id="edit-modal-title" class="text-base font-black text-[#F8F8FF] mb-4 flex items-center gap-2">
-        <svg class="w-4 h-4 fill-current text-[#01AD9F]" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-        </svg>
-        කමෙන්ට් එක සංස්කරණය කරන්න
-      </h3>
-      <textarea
-        id="edit-comment-textarea"
-        class="w-full h-28 p-3 bg-white/5 border border-white/10 rounded-xl text-[#F8F8FF] placeholder-white/30 focus:border-[#01AD9F] outline-none transition duration-200 resize-none text-sm mb-3"
-        placeholder="ඔබේ සංස්කරණය ලියන්න..."
-        maxlength="1000"
-      ></textarea>
-      <div class="flex gap-3 justify-end">
-        <button
-          id="edit-cancel-btn"
-          class="px-4 py-2 rounded-xl text-sm font-bold text-white/50 hover:text-white/80 border border-white/10 hover:border-white/20 transition-colors duration-200 cursor-pointer"
-          type="button"
-        >
-          අවලංගු කරන්න
-        </button>
-        <button
-          id="edit-save-btn"
-          class="px-5 py-2 rounded-xl text-sm font-bold bg-[#01AD9F] text-[#010203] hover:bg-[#01c4b4] transition-colors duration-200 cursor-pointer disabled:opacity-50"
-          type="button"
-        >
-          සුරකින්න
-        </button>
-      </div>
-    </div>
-  </div>
-
-  {/* ================================================================
-    🗑️ DELETE CONFIRM MODAL
-  ================================================================ */}
-  <div
-    id="delete-confirm-modal"
-    class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#010203]/80 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 hidden"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="delete-modal-title"
-  >
-    <div class="w-full max-w-sm bg-[#0c0d10] border border-white/10 rounded-2xl shadow-[0_10px_50px_rgba(0,0,0,0.9)] p-6 text-center">
-      <div class="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4" aria-hidden="true">
-        <svg class="w-6 h-6 fill-current text-red-400" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-        </svg>
-      </div>
-      <h3 id="delete-modal-title" class="text-base font-black text-[#F8F8FF] mb-2">කමෙන්ට් එක මකන්නද?</h3>
-      <p class="text-sm text-white/50 mb-5">මෙය ස්ථිරවම මකා දමනු ලැබේ. පසුව නැවත ගත නොහැකිය.</p>
-      <div class="flex gap-3 justify-center">
-        <button
-          id="delete-cancel-btn"
-          class="px-4 py-2 rounded-xl text-sm font-bold text-white/50 hover:text-white/80 border border-white/10 hover:border-white/20 transition-colors duration-200 cursor-pointer"
-          type="button"
-        >
-          නැහැ, තබා ගන්න
-        </button>
-        <button
-          id="delete-confirm-btn"
-          class="px-5 py-2 rounded-xl text-sm font-bold bg-red-500 text-white hover:bg-red-600 transition-colors duration-200 cursor-pointer"
-          type="button"
-        >
-          ඔව්, මකන්න
-        </button>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -389,63 +357,42 @@ const authorsStr = allAuthors
     border-radius: 99px;
   }
 
-  /* ═══════════════════════════════════════════════════
-     💬 FLOATING BUTTON — 7-COLOR SMART ANIMATION
-     කළු (#010203) පසු බිමේ කැපෙන පාට 7ක්:
-     #01AD9F (teal) → #FF6B35 (orange) → #A855F7 (purple)
-     → #FFCC00 (yellow) → #EF4444 (red) → #3B82F6 (blue)
-     → #22C55E (green) → back to teal
-  ═══════════════════════════════════════════════════ */
+  /* 💬 FLOATING BUTTON ANIMATION */
   .comment-float-btn {
-    background: #01AD9F;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    animation:
-      cfloat 3s ease-in-out infinite,
-      ccolor 7s linear infinite;
-    position: relative;
-    overflow: visible;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    animation: cfloat 3s ease-in-out infinite;
   }
   .comment-float-btn:hover {
-    transform: scale(1.08) translateY(-2px) !important;
+    transform: scale(1.08) translateY(-2px);
     box-shadow: 0 8px 32px rgba(1,173,159,0.55);
-    animation-play-state: paused, running;
   }
   .comment-float-btn:active {
-    transform: scale(0.95) !important;
+    transform: scale(0.95);
   }
-
-  /* float up-down */
   @keyframes cfloat {
     0%, 100% { transform: translateY(0px); }
-    50%       { transform: translateY(-6px); }
+    50% { transform: translateY(-6px); }
   }
-
-  /* 7-color background cycle — shadow ද match කරනවා */
-  @keyframes ccolor {
-    0%        { background: #01AD9F; box-shadow: 0 4px 20px rgba(1,173,159,0.55); }
-    14.28%    { background: #FF6B35; box-shadow: 0 4px 20px rgba(255,107,53,0.55); }
-    28.57%    { background: #A855F7; box-shadow: 0 4px 20px rgba(168,85,247,0.55); }
-    42.85%    { background: #FFCC00; box-shadow: 0 4px 20px rgba(255,204,0,0.55); }
-    57.14%    { background: #EF4444; box-shadow: 0 4px 20px rgba(239,68,68,0.55); }
-    71.42%    { background: #3B82F6; box-shadow: 0 4px 20px rgba(59,130,246,0.55); }
-    85.71%    { background: #22C55E; box-shadow: 0 4px 20px rgba(34,197,94,0.55); }
-    100%      { background: #01AD9F; box-shadow: 0 4px 20px rgba(1,173,159,0.55); }
-  }
-
-  /* pulse ring — color ද parent එකත් sync කරනවා */
   .comment-btn-ring {
     position: absolute;
     inset: 0;
     border-radius: 9999px;
-    background: inherit;
-    opacity: 0.45;
+    background: rgba(1,173,159,0.35);
     animation: cring 2s ease-out infinite;
     z-index: 0;
-    pointer-events: none;
   }
   @keyframes cring {
-    0%   { transform: scale(1);   opacity: 0.55; }
-    100% { transform: scale(1.7); opacity: 0; }
+    0% { transform: scale(1); opacity: 0.7; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+
+  /* ⚠️ WARNING NOTICE */
+  .comment-warning-notice {
+    background: linear-gradient(135deg, #0a0000 0%, #120000 100%);
+    box-shadow: 0 0 0 1px rgba(239,68,68,0.15), inset 0 0 20px rgba(239,68,68,0.03);
+  }
+  .warning-text-glow {
+    text-shadow: 0 0 12px rgba(239,68,68,0.18);
   }
 </style>
 
@@ -463,20 +410,10 @@ const authorsStr = allAuthors
   //    clone-replace pattern එකෙන් clear කරනවා. ඒ නිසා කී වතාවක්
   //    init call වුණත් listener duplicate නොවෙයි.
   //
-  // ✅ FIX 2 — EDIT NOT PERSISTING ROOT CAUSE:
-  //    editSaveBtn click handler Worker API ට PATCH request
-  //    යවන්නේ නොවෙ — memory update + DOM update පමණයි.
-  //    Page refresh කළාම server data overwrite කරනවා.
-  //
-  //    FIX: editSaveBtn handler එකට Worker API PATCH call add කළා.
-  //
-  // ✅ FIX 3 — DELETE NOT PERSISTING ROOT CAUSE:
-  //    deleteConfirmBtn click handler Worker API ට DELETE request
-  //    යවන්නේ නොවෙ — local commentsList + DOM update පමණයි.
-  //    Page refresh කළාම server data restore කරනවා.
-  //
-  //    FIX: deleteConfirmBtn handler එකට Worker API DELETE call add කළා.
-  //    Optimistic UI: API call සාර්ථක නොවූ විට card restore කරනවා.
+  // ✅ NOTE — EDIT & DELETE:
+  //    Requirements අනුව edit සහ delete functionality සම්පූර්ණයෙන්
+  //    ඉවත් කර ඇත. Comment submit කළ පසු වෙනස් කිරීමට හෝ
+  //    මැකීමට නොහැකිය — permanent record.
   // ════════════════════════════════════════════════════════════════
 
   function getSessionToken(): string {
@@ -500,20 +437,12 @@ const authorsStr = allAuthors
     const validationMsg = document.getElementById("cf-validation-msg");
     const successToast = document.getElementById("comment-success-toast");
 
-    const editModal = document.getElementById("edit-comment-modal");
-    const editTextarea = document.getElementById("edit-comment-textarea") as HTMLTextAreaElement | null;
-    const editCancelBtn = document.getElementById("edit-cancel-btn");
-
-    const deleteModal = document.getElementById("delete-confirm-modal");
-    const deleteCancelBtn = document.getElementById("delete-cancel-btn");
-
     const postId = modal?.getAttribute("data-post-id") ?? "";
     const API_URL = modal?.getAttribute("data-api-url") ?? "";
 
     const linkRegex = /https?:\/\/|www\.|\.com|\.lk|\.net|\.org|\.io/i;
 
     let commentsList: Array<{ id: string; content: string; date: string; ownerToken: string; serverId?: string }> = [];
-    let activeCommentId: string | null = null;
 
     // ── FIX 1: Clone-replace pattern — prior event listeners clear කරනවා ──
     function freshEl<T extends HTMLElement>(id: string): T | null {
@@ -527,8 +456,6 @@ const authorsStr = allAuthors
     const submitBtn = freshEl<HTMLButtonElement>("cf-submit-comment");
     const textarea = freshEl<HTMLTextAreaElement>("cf-comment-text");
     const clearBtn = freshEl<HTMLButtonElement>("cf-clear-btn");
-    const editSaveBtn = freshEl<HTMLButtonElement>("edit-save-btn");
-    const deleteConfirmBtn = freshEl<HTMLButtonElement>("delete-confirm-btn");
 
     // ── HELPERS ────────────────────────────────────────────────
 
@@ -572,12 +499,12 @@ const authorsStr = allAuthors
     });
 
     // ── RENDER COMMENT CARD ────────────────────────────────────
+    // Edit/Delete buttons සම්පූර්ණයෙන් ඉවත් කර ඇත
 
     function renderCommentCard(
       id: string,
       content: string,
       dateStr: string,
-      ownerToken: string,
       prepend = false
     ) {
       if (!commentsListHook) return;
@@ -593,36 +520,12 @@ const authorsStr = allAuthors
       name.className = "text-xs font-bold text-[#01AD9F]";
       name.textContent = "Anonymous Reader";
 
-      const metaRight = document.createElement("div");
-      metaRight.className = "flex items-center gap-2";
-
       const dateEl = document.createElement("span");
       dateEl.className = "text-[11px] text-white/30";
       dateEl.textContent = dateStr;
 
-      metaRight.appendChild(dateEl);
-
-      if (ownerToken === SESSION_TOKEN) {
-        const editBtn = document.createElement("button");
-        editBtn.className = "p-1 rounded-lg text-white/25 hover:text-[#01AD9F] hover:bg-white/5 transition-colors duration-200 cursor-pointer";
-        editBtn.setAttribute("aria-label", "Edit comment");
-        editBtn.setAttribute("type", "button");
-        editBtn.innerHTML = `<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
-        editBtn.addEventListener("click", () => openEditModal(id, content));
-
-        const delBtn = document.createElement("button");
-        delBtn.className = "p-1 rounded-lg text-white/25 hover:text-red-400 hover:bg-white/5 transition-colors duration-200 cursor-pointer";
-        delBtn.setAttribute("aria-label", "Delete comment");
-        delBtn.setAttribute("type", "button");
-        delBtn.innerHTML = `<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
-        delBtn.addEventListener("click", () => openDeleteModal(id));
-
-        metaRight.appendChild(editBtn);
-        metaRight.appendChild(delBtn);
-      }
-
       header.appendChild(name);
-      header.appendChild(metaRight);
+      header.appendChild(dateEl);
 
       const body = document.createElement("p");
       body.className = "text-sm text-white/80 leading-relaxed";
@@ -664,7 +567,7 @@ const authorsStr = allAuthors
             const localId = generateId();
             const dateStr = c.date ?? c.created_at ?? "";
             commentsList.push({ id: localId, content: c.content, date: dateStr, ownerToken: "", serverId: c.id });
-            renderCommentCard(localId, c.content, dateStr, "");
+            renderCommentCard(localId, c.content, dateStr);
           });
         } else {
           if (noCommentsMsg) {
@@ -703,9 +606,7 @@ const authorsStr = allAuthors
     modal?.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        if (editModal && !editModal.classList.contains("hidden")) closeEditModal();
-        else if (deleteModal && !deleteModal.classList.contains("hidden")) closeDeleteModal();
-        else if (modal && !modal.classList.contains("hidden")) closeModal();
+        if (modal && !modal.classList.contains("hidden")) closeModal();
       }
     });
 
@@ -752,7 +653,7 @@ const authorsStr = allAuthors
           if (noCommentsMsg) noCommentsMsg.style.display = "none";
           const newId = generateId();
           commentsList.unshift({ id: newId, content, date: dateStr, ownerToken: SESSION_TOKEN, serverId: saved.id });
-          renderCommentCard(newId, content, dateStr, SESSION_TOKEN, true);
+          renderCommentCard(newId, content, dateStr, true);
           if (textarea) textarea.value = "";
           if (charCount) charCount.textContent = "0 / 1000";
           if (clearBtn) clearBtn.classList.add("hidden");
@@ -768,151 +669,6 @@ const authorsStr = allAuthors
       } finally {
         isSubmitting = false;
         if (submitBtn) { submitBtn.textContent = "Submit Comment"; submitBtn.disabled = false; }
-      }
-    });
-
-    // ── EDIT ────────────────────────────────────────────────────
-
-    function openEditModal(id: string, currentContent: string) {
-      if (!editModal || !editTextarea) return;
-      activeCommentId = id;
-      editTextarea.value = currentContent;
-      editModal.classList.remove("hidden");
-      requestAnimationFrame(() => editModal.classList.remove("opacity-0", "pointer-events-none"));
-      editTextarea.focus();
-    }
-
-    function closeEditModal() {
-      if (!editModal) return;
-      editModal.classList.add("opacity-0", "pointer-events-none");
-      setTimeout(() => editModal.classList.add("hidden"), 300);
-      activeCommentId = null;
-    }
-
-    editCancelBtn?.addEventListener("click", closeEditModal);
-    editModal?.addEventListener("click", (e) => { if (e.target === editModal) closeEditModal(); });
-
-    // ✅ FIX 2: Edit save — Worker API ට PATCH request යවනවා
-    editSaveBtn?.addEventListener("click", async () => {
-      if (!activeCommentId || !editTextarea || !editSaveBtn) return;
-      const newContent = editTextarea.value.trim();
-      if (!newContent) return;
-
-      const entry = commentsList.find((c) => c.id === activeCommentId);
-      if (!entry || entry.ownerToken !== SESSION_TOKEN) {
-        closeEditModal();
-        return;
-      }
-
-      // Optimistic UI update
-      const prevContent = entry.content;
-      entry.content = newContent;
-      const bodyEl = commentsListHook?.querySelector(`[data-comment-body="${activeCommentId}"]`);
-      if (bodyEl) bodyEl.textContent = newContent;
-
-      editSaveBtn.disabled = true;
-      editSaveBtn.textContent = "සුරකිමින්...";
-
-      try {
-        if (entry.serverId) {
-          const res = await fetch(`${API_URL}/${entry.serverId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content: newContent }),
-          });
-
-          if (!res.ok) {
-            // Revert on API failure
-            entry.content = prevContent;
-            if (bodyEl) bodyEl.textContent = prevContent;
-            const err = await res.json().catch(() => ({})) as { error?: string };
-            showValidation(err.error ?? "කමෙන්ට් එක update කිරීමට නොහැකි වුණා. නැවත උත්සාහ කරන්න.");
-            editSaveBtn.disabled = false;
-            editSaveBtn.textContent = "සුරකින්න";
-            return;
-          }
-        }
-      } catch (err) {
-        console.error("Edit save error:", err);
-        // Revert on network error
-        entry.content = prevContent;
-        if (bodyEl) bodyEl.textContent = prevContent;
-        showValidation("ජාල දෝෂයක් ඇති විය. ඔබේ සම්බන්ධතාව පරීක්ෂා කරන්න.");
-        editSaveBtn.disabled = false;
-        editSaveBtn.textContent = "සුරකින්න";
-        return;
-      }
-
-      editSaveBtn.disabled = false;
-      editSaveBtn.textContent = "සුරකින්න";
-      closeEditModal();
-    });
-
-    // ── DELETE ──────────────────────────────────────────────────
-
-    function openDeleteModal(id: string) {
-      if (!deleteModal) return;
-      activeCommentId = id;
-      deleteModal.classList.remove("hidden");
-      requestAnimationFrame(() => deleteModal.classList.remove("opacity-0", "pointer-events-none"));
-    }
-
-    function closeDeleteModal() {
-      if (!deleteModal) return;
-      deleteModal.classList.add("opacity-0", "pointer-events-none");
-      setTimeout(() => deleteModal.classList.add("hidden"), 300);
-      activeCommentId = null;
-    }
-
-    deleteCancelBtn?.addEventListener("click", closeDeleteModal);
-    deleteModal?.addEventListener("click", (e) => { if (e.target === deleteModal) closeDeleteModal(); });
-
-    // ✅ FIX 3: Delete confirm — Worker API ට DELETE request යවනවා
-    deleteConfirmBtn?.addEventListener("click", async () => {
-      if (!activeCommentId || !commentsListHook) return;
-
-      const entry = commentsList.find((c) => c.id === activeCommentId);
-      if (!entry || entry.ownerToken !== SESSION_TOKEN) {
-        closeDeleteModal();
-        return;
-      }
-
-      // Optimistic UI remove
-      const card = commentsListHook.querySelector(`[data-comment-id="${activeCommentId}"]`);
-      card?.remove();
-      commentsList = commentsList.filter((c) => c.id !== activeCommentId);
-
-      if (commentsList.length === 0 && noCommentsMsg) {
-        noCommentsMsg.style.display = "";
-        noCommentsMsg.textContent = "තවම කමෙන්ට්ස් කිසිවක් නැත. පළමුවැන්නා වන්න!";
-      }
-
-      closeDeleteModal();
-
-      // Server-side DELETE
-      if (entry.serverId) {
-        try {
-          const res = await fetch(`${API_URL}/${entry.serverId}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-          });
-
-          if (!res.ok) {
-            // Revert: card restore කරනවා
-            commentsList.splice(0, 0, entry);
-            if (noCommentsMsg) noCommentsMsg.style.display = "none";
-            renderCommentCard(entry.id, entry.content, entry.date, entry.ownerToken, true);
-            const err = await res.json().catch(() => ({})) as { error?: string };
-            showValidation(err.error ?? "කමෙන්ට් එක delete කිරීමට නොහැකි වුණා. නැවත උත්සාහ කරන්න.");
-          }
-        } catch (err) {
-          console.error("Delete error:", err);
-          // Revert on network error
-          commentsList.splice(0, 0, entry);
-          if (noCommentsMsg) noCommentsMsg.style.display = "none";
-          renderCommentCard(entry.id, entry.content, entry.date, entry.ownerToken, true);
-          showValidation("ජාල දෝෂයක් ඇති විය. ඔබේ සම්බන්ධතාව පරීක්ෂා කරන්න.");
-        }
       }
     });
   }
