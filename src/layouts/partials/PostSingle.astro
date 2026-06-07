@@ -63,6 +63,12 @@ const articleSchema = JSON.stringify({
   "articleSection": categories?.map((c: string) => humanize(c)).join(", ") ?? "",
   "inLanguage": "si",
   "url": postUrl,
+  "commentCount": 0,
+  "interactionStatistic": {
+    "@type": "InteractionCounter",
+    "interactionType": "https://schema.org/CommentAction",
+    "userInteractionCount": 0
+  }
 });
 
 // SEO: BreadcrumbList Schema
@@ -74,6 +80,17 @@ const breadcrumbSchema = JSON.stringify({
     { "@type": "ListItem", "position": 2, "name": categories?.[0] ? humanize(categories[0]) : "Posts", "item": `${siteUrl}/categories/${slugify(categories?.[0] ?? "posts")}` },
     { "@type": "ListItem", "position": 3, "name": title, "item": postUrl },
   ]
+});
+
+// SEO: CommentList Schema (static shell — JS updates dynamically)
+const commentListSchema = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": postUrl,
+  "name": title,
+  "url": postUrl,
+  "inLanguage": "si",
+  "discussionUrl": postUrl,
 });
 ---
 
@@ -93,6 +110,8 @@ const breadcrumbSchema = JSON.stringify({
 <meta property="og:url" content={postUrl} />
 {image && <meta property="og:image" content={`${siteUrl}${image}`} />}
 {image && <meta property="og:image:alt" content={title} />}
+{image && <meta property="og:image:width" content="1000" />}
+{image && <meta property="og:image:height" content="500" />}
 <meta property="og:locale" content="si_LK" />
 <meta property="og:site_name" content="Wala Katha" />
 {date && <meta property="article:published_time" content={new Date(date).toISOString()} />}
@@ -103,14 +122,16 @@ const breadcrumbSchema = JSON.stringify({
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@walakatha" />
 <meta name="twitter:title" content={title} />
 <meta name="twitter:description" content={description ?? title} />
 {image && <meta name="twitter:image" content={`${siteUrl}${image}`} />}
 {image && <meta name="twitter:image:alt" content={title} />}
 
-<!-- Article + Breadcrumb Structured Data (JSON-LD) -->
+<!-- Article + Breadcrumb + CommentList Structured Data (JSON-LD) -->
 <script type="application/ld+json" set:html={articleSchema} />
 <script type="application/ld+json" set:html={breadcrumbSchema} />
+<script type="application/ld+json" set:html={commentListSchema} />
 
 <section class="section bg-[#010203] relative">
   <div class="container">
@@ -295,7 +316,7 @@ const breadcrumbSchema = JSON.stringify({
           </div>
         </div>
 
-        {/* ⚠️ WARNING NOTICE — REDESIGNED SMART STYLE */}
+        {/* ⚠️ WARNING NOTICE */}
         <div class="comment-warning-notice rounded-xl px-4 py-3 mb-2" role="alert" aria-live="polite">
           <div class="warning-header">
             <span class="warning-badge" aria-hidden="true">
@@ -320,7 +341,6 @@ const breadcrumbSchema = JSON.stringify({
             aria-live="polite"
             aria-label="Comments list"
           >
-            {/* LOADING STATE — animated bars */}
             <div id="no-comments-msg" class="py-3 text-center">
               <p class="text-sm text-white/50 italic mb-3">කමෙන්ට්ස් ලෝඩ් වෙමින් පවතී...</p>
               <div class="loading-bars-wrap" aria-hidden="true">
@@ -353,15 +373,60 @@ const breadcrumbSchema = JSON.stringify({
   </div>
 </section>
 
-{/* RELATED STORIES */}
+{/* ================================================================
+  📚 RELATED STORIES — 3D BOOK CARD STYLE
+================================================================ */}
 {finalSimilarPosts.length > 0 && (
   <section class="section pt-12 pb-16 bg-gradient-to-b from-[#010203] via-[#022c16] to-[#010203] border-t border-white/5">
     <div class="container">
-      <h2 class="mb-8 font-black text-center h4 text-[#F8F8FF]">
+      <h2 class="mb-10 font-black text-center h4 text-[#F8F8FF]">
         ඔබ කැමති විය හැකි තවත් කතා
       </h2>
-      <div class="row">
-        <SimilarPosts posts={finalSimilarPosts} />
+      <div class="book-cards-grid">
+        {finalSimilarPosts.map((p) => (
+          <a
+            href={`/posts/${p.id}`}
+            class="book-card-wrap"
+            aria-label={p.data.title}
+          >
+            <div class="book-card">
+              {/* BOOK SPINE */}
+              <div class="book-spine">
+                <span class="book-spine-title">{p.data.title}</span>
+              </div>
+              {/* BOOK COVER */}
+              <div class="book-cover">
+                {p.data.image ? (
+                  <Image
+                    src={p.data.image}
+                    alt={p.data.title}
+                    width={240}
+                    height={340}
+                    class="book-cover-img"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div class="book-cover-placeholder">
+                    <span class="book-placeholder-icon">📖</span>
+                  </div>
+                )}
+                {/* COVER OVERLAY with title */}
+                <div class="book-cover-overlay">
+                  <p class="book-overlay-title">{p.data.title}</p>
+                  {p.data.categories?.[0] && (
+                    <span class="book-overlay-cat">{humanize(p.data.categories[0])}</span>
+                  )}
+                </div>
+                {/* BOOK SHINE EFFECT */}
+                <div class="book-shine" aria-hidden="true"></div>
+              </div>
+              {/* BOOK SHADOW */}
+              <div class="book-shadow" aria-hidden="true"></div>
+            </div>
+            {/* TITLE BELOW BOOK */}
+            <p class="book-below-title">{p.data.title}</p>
+          </a>
+        ))}
       </div>
     </div>
   </section>
@@ -394,9 +459,7 @@ const breadcrumbSchema = JSON.stringify({
     transform: scale(1.08) translateY(-2px);
     box-shadow: 0 8px 32px rgba(1,173,159,0.55);
   }
-  .comment-float-btn:active {
-    transform: scale(0.95);
-  }
+  .comment-float-btn:active { transform: scale(0.95); }
   @keyframes cfloat {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-6px); }
@@ -414,14 +477,11 @@ const breadcrumbSchema = JSON.stringify({
     100% { transform: scale(1.6); opacity: 0; }
   }
 
-  /* ⚠️ WARNING NOTICE — SMART REDESIGN */
+  /* ⚠️ WARNING NOTICE */
   .comment-warning-notice {
     background: linear-gradient(135deg, rgba(30,6,6,0.95) 0%, rgba(20,4,4,0.98) 100%);
     border: 1px solid rgba(239,68,68,0.25);
-    box-shadow:
-      0 0 0 1px rgba(239,68,68,0.08),
-      inset 0 1px 0 rgba(239,68,68,0.1),
-      0 4px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 0 0 1px rgba(239,68,68,0.08), inset 0 1px 0 rgba(239,68,68,0.1), 0 4px 20px rgba(0,0,0,0.5);
     position: relative;
     overflow: hidden;
   }
@@ -440,11 +500,7 @@ const breadcrumbSchema = JSON.stringify({
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(239,68,68,0.3), transparent);
   }
-  .warning-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+  .warning-header { display: flex; align-items: center; gap: 8px; }
   .warning-badge {
     display: inline-flex;
     align-items: center;
@@ -459,12 +515,7 @@ const breadcrumbSchema = JSON.stringify({
     padding: 3px 8px;
     border-radius: 6px;
   }
-  .warning-body {
-    color: rgba(252,165,165,0.85);
-    padding-left: 2px;
-  }
-
-  /* ✍️ TYPEWRITER CURSOR — හිස් වේ typewriter ඉවර වූ පසු */
+  .warning-body { color: rgba(252,165,165,0.85); padding-left: 2px; }
   .warning-cursor {
     display: inline-block;
     font-weight: 900;
@@ -472,10 +523,7 @@ const breadcrumbSchema = JSON.stringify({
     margin-left: 1px;
     animation: wblink 0.7s step-end infinite;
   }
-  .warning-cursor.done {
-    animation: none;
-    opacity: 0;
-  }
+  .warning-cursor.done { animation: none; opacity: 0; }
   @keyframes wblink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
@@ -503,7 +551,194 @@ const breadcrumbSchema = JSON.stringify({
   .lbar:nth-child(5) { animation-delay: 0.6s;  height: 10px; }
   @keyframes lbarAnim {
     0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
-    50%       { transform: scaleY(1);   opacity: 1;   }
+    50%       { transform: scaleY(1);   opacity: 1; }
+  }
+
+  /* ================================================================
+    📚 BOOK CARDS — 3D POPUP STYLE
+  ================================================================ */
+  .book-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 2.5rem 1.5rem;
+    justify-items: center;
+  }
+  @media (min-width: 640px) {
+    .book-cards-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (min-width: 1024px) {
+    .book-cards-grid { grid-template-columns: repeat(6, 1fr); }
+  }
+
+  .book-card-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    perspective: 800px;
+  }
+
+  .book-card {
+    position: relative;
+    width: 130px;
+    height: 185px;
+    transform-style: preserve-3d;
+    transform: rotateY(-18deg) rotateX(4deg);
+    transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1),
+                filter 0.45s ease;
+    cursor: pointer;
+    filter: drop-shadow(6px 10px 18px rgba(0,0,0,0.7));
+  }
+  .book-card-wrap:hover .book-card {
+    transform: rotateY(-4deg) rotateX(2deg) translateY(-10px) scale(1.06);
+    filter: drop-shadow(10px 20px 30px rgba(1,173,159,0.35));
+  }
+
+  /* BOOK SPINE */
+  .book-spine {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 22px;
+    height: 100%;
+    background: linear-gradient(180deg, #01c4b4 0%, #017a72 50%, #014d47 100%);
+    border-radius: 3px 0 0 3px;
+    transform: rotateY(-90deg) translateX(-11px);
+    transform-origin: left center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: inset -3px 0 6px rgba(0,0,0,0.4);
+  }
+  .book-spine-title {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    color: rgba(255,255,255,0.9);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    padding: 6px 2px;
+    overflow: hidden;
+    max-height: 160px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* BOOK COVER */
+  .book-cover {
+    position: absolute;
+    inset: 0;
+    border-radius: 0 4px 4px 0;
+    overflow: hidden;
+    background: #0c0d10;
+    border-left: 3px solid rgba(1,173,159,0.6);
+    box-shadow:
+      inset -4px 0 8px rgba(0,0,0,0.5),
+      inset 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .book-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .book-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f1f1e 0%, #051a18 100%);
+  }
+  .book-placeholder-icon {
+    font-size: 2.5rem;
+    opacity: 0.6;
+  }
+
+  /* COVER OVERLAY */
+  .book-cover-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 8px 8px;
+    background: linear-gradient(to top, rgba(1,10,9,0.97) 0%, rgba(1,10,9,0.7) 60%, transparent 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .book-overlay-title {
+    color: #F8F8FF;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .book-overlay-cat {
+    display: inline-block;
+    font-size: 8px;
+    font-weight: 700;
+    color: #01AD9F;
+    background: rgba(1,173,159,0.12);
+    border: 1px solid rgba(1,173,159,0.25);
+    padding: 1px 5px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* SHINE EFFECT */
+  .book-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255,255,255,0.07) 50%,
+      transparent 70%
+    );
+    pointer-events: none;
+    border-radius: 0 4px 4px 0;
+    transition: opacity 0.3s ease;
+  }
+  .book-card-wrap:hover .book-shine { opacity: 0; }
+
+  /* BOOK SHADOW on ground */
+  .book-shadow {
+    position: absolute;
+    bottom: -14px;
+    left: 10%;
+    width: 80%;
+    height: 14px;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, transparent 80%);
+    transform: rotateX(90deg) translateZ(-7px);
+    pointer-events: none;
+  }
+
+  /* TITLE BELOW BOOK */
+  .book-below-title {
+    color: rgba(248,248,255,0.75);
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.4;
+    max-width: 130px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.3s ease;
+  }
+  .book-card-wrap:hover .book-below-title {
+    color: #01AD9F;
   }
 </style>
 
@@ -535,10 +770,7 @@ const breadcrumbSchema = JSON.stringify({
 
     let i = 0;
     el.textContent = "";
-    if (cursor) {
-      cursor.classList.remove("done");
-      cursor.style.opacity = "";
-    }
+    if (cursor) { cursor.classList.remove("done"); cursor.style.opacity = ""; }
 
     const interval = setInterval(() => {
       el.textContent = fullText.slice(0, i + 1);
@@ -546,7 +778,6 @@ const breadcrumbSchema = JSON.stringify({
       if (i >= fullText.length) {
         clearInterval(interval);
         warningTypewriterDone = true;
-        // ✅ FIX: typewriter ඉවර වූ පසු cursor සම්පූර්ණයෙන් hide කරනවා
         if (cursor) cursor.classList.add("done");
       }
     }, 28);
@@ -567,7 +798,8 @@ const breadcrumbSchema = JSON.stringify({
     const postId = modal?.getAttribute("data-post-id") ?? "";
     const API_URL = modal?.getAttribute("data-api-url") ?? "";
 
-    const linkRegex = /https?:\/\/|www\.|\.com|\.lk|\.net|\.org|\.io/i;
+    // ✅ UPGRADED LINK DETECTION — https://, http://, www., bare domains, shorteners
+    const linkRegex = /https?:\/\/|ftp:\/\/|www\.|\.com\b|\.lk\b|\.net\b|\.org\b|\.io\b|\.info\b|\.biz\b|\.edu\b|\.gov\b|\.me\b|\.tv\b|\.co\b|bit\.ly|tinyurl|t\.co|goo\.gl|ow\.ly|shorturl|is\.gd|buff\.ly/i;
 
     let commentsList: Array<{ id: string; content: string; date: string; ownerToken: string; serverId?: string }> = [];
 
@@ -620,14 +852,8 @@ const breadcrumbSchema = JSON.stringify({
       textarea?.focus();
     });
 
-    function renderCommentCard(
-      id: string,
-      content: string,
-      dateStr: string,
-      prepend = false
-    ) {
+    function renderCommentCard(id: string, content: string, dateStr: string, prepend = false) {
       if (!commentsListHook) return;
-
       const card = document.createElement("div");
       card.className = "p-3.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-left shadow-sm";
       card.setAttribute("data-comment-id", id);
@@ -751,6 +977,7 @@ const breadcrumbSchema = JSON.stringify({
         textarea?.focus();
         return;
       }
+      // ✅ UPGRADED: සියලු link patterns block කිරීම
       if (linkRegex.test(content)) {
         showValidation("🔗 ලින්ක් දැමීමට අවසර නැහැ. කරුණාකර ලින්ක් ඉවත් කර ඔබේ අදහස දක්වන්න.");
         textarea?.focus();
