@@ -8,14 +8,14 @@ import { sortByDate } from "@/lib/utils/sortFunctions";
 
 export async function getStaticPaths() {
   const authors = await getSinglePage("authors");
-  // ස්වයංක්‍රීය නිවැරදි කිරීම: ලේඛකයින් නොමැති නම් බිඳ වැටීම් වළක්වයි
   const paginationLimit = config.settings.pagination || 8;
   const totalPages = Math.ceil(authors.length / paginationLimit);
+  
+  // මුළු පිටු ගණන 0 වුවහොත් අවම වශයෙන් පළමු පිටුව සඳහා Build එක සිදුවීමට ඉඩ සලසයි
+  const safeTotalPages = totalPages < 1 ? 1 : totalPages;
   const paths = [];
 
-  // ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): 
-  // පරණ ලූප් එකේ තිබූ 404 බග් එක සහ පිටු මඟ හැරීමේ ගැටලුව සම්පූර්ණයෙන්ම නිවැරදි කර ඇත
-  for (let i = 1; i <= totalPages; i++) {
+  for (let i = 1; i <= safeTotalPages; i++) {
     paths.push({
       params: {
         slug: i.toString(),
@@ -31,40 +31,61 @@ const sortedPosts = sortByDate(authors);
 
 const paginationLimit = config.settings.pagination || 8;
 const totalPages = Math.ceil(authors.length / paginationLimit);
-const currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
+const safeTotalPages = totalPages < 1 ? 1 : totalPages;
+
+// 1. ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): 
+let currentPage = slug && !isNaN(Number(slug)) ? Number(slug) : 1;
+if (currentPage > safeTotalPages) {
+  currentPage = safeTotalPages;
+} else if (currentPage < 1) {
+  currentPage = 1;
+}
 
 const indexOfLastPost = currentPage * paginationLimit;
 const indexOfFirstPost = indexOfLastPost - paginationLimit;
 const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
 
-// SEO සඳහා ගැලපෙන පරිදි Meta Title එක සකසා ගැනීම
-const metaTitle = `Authors - Page ${currentPage}`;
-const metaDescription = `Discover our talented writers and content creators. Browse page ${currentPage} of our author directory.`;
+// 2. SEO ප්‍රශස්තකරණය: සෙවුම් යන්ත්‍ර සඳහා වඩාත් ගැළපෙන සිංහල/ඉංග්‍රීසි මිශ්‍ර මාතෘකා
+const metaTitle = `අපේ ලේඛකයින් - Our Authors | Page ${currentPage}`;
+const metaDescription = `අපේ වෙබ් අඩවියේ ලිපි ලියන දක්ෂ කතෘවරුන් සහ ලේඛකයින් මෙතැනින් එකම තැනකින් සොයා ගන්න. (පිටුව ${currentPage})`;
+
+// 3. SEO Canonical URL නිවැරදි කිරීම (Auto-Fix): 
+// පළමු පිටුව නම් ප්‍රධාන පිටුවටම ලින්ක් එක ලබා දේ (Duplicate Content මඟහරවයි)
+const base_url = config.site.base_url.replace(/\/$/, ""); // අගට ඇති / ඉවත් කිරීම
+const canonicalUrl = currentPage === 1 
+  ? `${base_url}/authors` 
+  : `${base_url}/authors/page/${currentPage}`;
 ---
 
-<Base title={metaTitle} description={metaDescription}>
+<Base title={metaTitle} description={metaDescription} canonical={canonicalUrl}>
   {/* කළු පසුබිමට ගැළපෙන සහ කියවීමේ පහසුව උපරිම කළ CSS ව්‍යුහය */}
   <section class="section bg-slate-950 py-12 min-h-screen text-slate-100">
-    <div class="container mx-auto px-4 text-center">
+    <div class="container mx-auto px-4">
       
       {/* හෙඩිම කළු පසුබිමේ රන්වන් සහ සුදු පැහැයෙන් ඉස්මතු කිරීම */}
-      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-8">
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-center mb-12">
         Our <span class="text-amber-400">Authors</span>
       </h1>
       
       {/* ලේඛකයින්ගේ ලැයිස්තුව (Component) */}
       <div class="mb-12">
-        <Authors authors={currentPosts} />
+        {currentPosts.length > 0 ? (
+          <Authors authors={currentPosts} />
+        ) : (
+          <p class="text-slate-400 text-center py-8">කතෘවරුන් කිසිවෙකු හමුනොවීය.</p>
+        )}
       </div>
       
-      {/* පිටු අංකනය (Pagination) */}
-      <div class="flex justify-center mt-8">
-        <Pagination
-          section={"authors"}
-          currentPage={currentPage}
-          totalPages={totalPages}
-        />
-      </div>
+      {/* පිටු අංකනය (Pagination) - පිටු 1කට වඩා තිබේ නම් පමණක් පෙන්වයි */}
+      {safeTotalPages > 1 && (
+        <div class="flex justify-center mt-12">
+          <Pagination
+            section={"authors"}
+            currentPage={currentPage}
+            totalPages={safeTotalPages}
+          />
+        </div>
+      )}
       
     </div>
   </section>
