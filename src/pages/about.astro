@@ -1,16 +1,52 @@
 ---
 import Base from "@/layouts/Base.astro";
+import config from "@/config/config.json"; // 📈 SEO සහ Canonical URL සැකසීම සඳහා Config ගොනුව සම්බන්ධ කළා
 import { markdownify } from "@/lib/utils/textConverter";
 import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import { getEntry, render } from "astro:content";
 
 const entry = (await getEntry("about", "-index")) as CollectionEntry<"about">;
+
+// 1. ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): දත්ත හිස් නම් සයිට් එක ක්‍රෑෂ් වීම වළක්වයි
+if (!entry || !entry.data) {
+  return Astro.redirect("/404");
+}
+
 const { Content } = await render(entry);
-const { title, meta_title, image, what_i_do } = entry.data;
+const { title, meta_title, description, image, what_i_do } = entry.data;
+
+// 📈 2. SEO ප්‍රශස්තකරණය: පිරිසිදු Canonical URL එකක් සැකසීම
+const base_url = (config?.site?.base_url || "").replace(/\/$/, ""); 
+const canonicalUrl = `${base_url}/about`;
+
+// 🚀 GOOGLE SEO ABOUTPAGE SCHEMA: සෙවුම් යන්ත්‍ර වලට වෙබ් අඩවියේ නිල අනන්‍යතාවය තහවුරු කිරීමට (JSON-LD)
+const aboutPageSchema = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": title || "About Us",
+  "description": description || "අපේ වෙබ් අඩවිය සහ අපගේ සේවාවන් පිළිබඳ සියලු විස්තර මෙතැනින් කියවන්න.",
+  "url": canonicalUrl,
+  "mainEntity": {
+    "@type": "Organization",
+    "name": config?.site?.title || "Wala Katha",
+    "url": base_url,
+    "logo": `${base_url}/images/logo.png`
+  }
+};
 ---
 
-<Base title={title} meta_title={meta_title} image={image}>
+<Base 
+  title={title} 
+  meta_title={meta_title} 
+  description={description || "අපේ වෙබ් අඩවිය සහ අපගේ සේවාවන් පිළිබඳ සියලු විස්තර මෙතැනින් කියවන්න."}
+  image={image}
+  canonical={canonicalUrl}
+>
+  {/* Google AboutPage Structured Data ඇතුළත් කිරීම (SEO Booster) */}
+  <script type="application/ld+json" set:html={JSON.stringify(aboutPageSchema)} />
+
+  {/* 100% Original Section Layout structure */}
   <section class="section">
     <div class="container">
       <div class="row md:gx-4">
@@ -23,40 +59,54 @@ const { title, meta_title, image, what_i_do } = entry.data;
                   width={295}
                   height={395}
                   alt={title}
-                  class="rounded-lg w-full"
+                  class="rounded-lg w-full shadow-lg dark:shadow-slate-900/50"
                 />
               </div>
             )
           }
         </div>
         <div class="sm:col-7 md:col-8">
-          <h1 set:html={markdownify(title)} class="h3 mb-8" />
+          {/* Main Title (Dark Mode Typography Compatible) */}
+          <h1 set:html={markdownify(title)} class="h3 mb-8 text-text dark:text-slate-100" />
 
-          <div class="content">
+          {/* Markdown Content Wrapper (කළු පසුබිමේ අකුරු කියවීමට ලස්සනට ප්‍රශස්ත කර ඇත) */}
+          <div class="content text-text dark:text-slate-200 prose dark:prose-invert max-w-none">
             <Content />
           </div>
-          <a href="/contact" class="btn btn-primary text-white py-2"
-            >Get In Touch</a
-          >
+          
+          <a href="/contact" class="btn btn-primary text-white py-2 mt-6 inline-block">
+            Get In Touch
+          </a>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section pt-0">
-    <div class="container">
-      <h3 class="page-heading mb-20">{what_i_do.title}</h3>
-      <div class="row justify-center gy-4 text-center">
-        {
-          what_i_do.items.map((item: any) => (
-            <div class="lg:col-4 md:col-6">
-              <i class="{{.icon}} fa-3x text-primary mb-4" />
-              <h4 class="text-dark font-weight-700 mb-3">{item.title}</h4>
-              <p>{item.description}</p>
-            </div>
-          ))
-        }
+  {/* What I Do Section - 100% Original Structure */}
+  {what_i_do && what_i_do.items && (
+    <section class="section pt-0">
+      <div class="container">
+        <h3 class="page-heading mb-20 text-center">{what_i_do.title}</h3>
+        <div class="row justify-center gy-4 text-center">
+          {
+            what_i_do.items.map((item: any) => (
+              <div class="lg:col-4 md:col-6">
+                {/* Features Card - 100% Original Layout එක ඇතුළත කළු පසුබිම මත අලංකාර ලෙස කැපී පෙනෙන සේ සැකසීම */}
+                <div class="p-6 rounded-xl bg-theme-light dark:bg-slate-800/40 border border-border/50 dark:border-slate-800/80 h-full transition duration-300 hover:scale-[1.02] hover:border-primary/30">
+                  {/* Icon CSS Fix */}
+                  {item.icon && <i class={`${item.icon} fa-3x text-primary mb-4 block`} />}
+                  
+                  {/* Title Fix */}
+                  <h4 class="text-text dark:text-slate-100 font-bold mb-3 text-xl">{item.title}</h4>
+                  
+                  {/* Description Fix */}
+                  <p class="text-text/80 dark:text-slate-300 text-sm leading-relaxed">{item.description}</p>
+                </div>
+              </div>
+            ))
+          }
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
 </Base>
