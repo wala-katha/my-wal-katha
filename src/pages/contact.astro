@@ -4,14 +4,13 @@ import Base from "@/layouts/Base.astro";
 import { markdownify } from "@/lib/utils/textConverter";
 import type { CollectionEntry } from "astro:content";
 import { getEntry } from "astro:content";
-import { BiSpreadsheet, BiEnvelope, BiPhoneCall } from "react-icons/bi"; // ⚡ UI Consistent එකක් සඳහා වෙනත් පිටුවල ඇති පරිදි Bi ශ්‍රිතයේ අයිකන භාවිතය
+import { BiSpreadsheet, BiEnvelope, BiPhoneCall, BiXCircle } from "react-icons/bi"; // ❌ බටන් එක සඳහා BiXCircle එකතු කළා
 
 const entry = (await getEntry(
   "contact",
   "-index"
 )) as CollectionEntry<"contact">;
 
-// 1. ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): දත්ත හිස් නම් සයිට් එක ක්‍රෑෂ් වීම වළක්වයි
 if (!entry || !entry.data) {
   return Astro.redirect("/404");
 }
@@ -20,16 +19,14 @@ const { contact_form_action } = config.params;
 const { address, email, phone } = config.contactinfo;
 const { title, description, meta_title, image } = entry.data;
 
-// 📈 2. SEO ප්‍රශස්තකරණය: පිරිසිදු Canonical URL එකක් සැකසීම
 const base_url = (config?.site?.base_url || "").replace(/\/$/, ""); 
 const canonicalUrl = `${base_url}/contact`;
 
-// 🚀 GOOGLE SEO CONTACTPAGE SCHEMA: සෙවුම් යන්ත්‍ර වලට සම්බන්ධතා තොරතුරු නිවැරදිව දීමට (JSON-LD)
 const contactPageSchema = {
   "@context": "https://schema.org",
   "@type": "ContactPage",
   "name": title || "Contact Us",
-  "description": description || "අපේ වෙබ් අඩවිය සම්බන්ධ කර ගැනීමට අවශ්‍ය සියලුම තොරතුරු මෙතැනින් ලබා ගන්න.",
+  "description": description || "අපේ... වෙබ් අඩවිය සම්බන්ධ කර ගැනීමට අවශ්‍ය සියලුම තොරතුරු මෙතැනින් ලබා ගන්න.",
   "url": canonicalUrl,
   "mainEntity": {
     "@type": "Organization",
@@ -52,7 +49,6 @@ const contactPageSchema = {
   image={image}
   canonical={canonicalUrl}
 >
-  {/* Google ContactPage Structured Data ඇතුළත් කිරීම (SEO Booster) */}
   <script type="application/ld+json" set:html={JSON.stringify(contactPageSchema)} />
 
   <section class="section">
@@ -60,7 +56,6 @@ const contactPageSchema = {
       <h1 set:html={markdownify(title)} class="h2 page-heading" />
       <div class="row md:gx-5 gy-5">
         <div class="sm:col-5 md:col-4">
-          {/* 🛠️ DARK UI FIX: text-text-dark ඉවත් කර කළු පසුබිමට ගැළපෙන පන්ති ලබා දීම */}
           <p class="mb-8 text-2xl font-bold text-text dark:text-slate-100">Contact Info</p>
           <ul class="flex flex-col space-y-8">
             <li>
@@ -75,10 +70,7 @@ const contactPageSchema = {
                 <BiEnvelope className="mr-2 text-primary h-6 w-6" />
                 <p class="font-semibold">Email</p>
               </div>
-              <p
-                set:html={markdownify(email)}
-                class="mt-2 leading-5 pl-8 content text-text/80 dark:text-slate-300"
-              />
+              <p set:html={markdownify(email)} class="mt-2 leading-5 pl-8 content text-text/80 dark:text-slate-300" />
             </li>
             <li>
               <div class="flex text-text dark:text-slate-100 items-center text-xl">
@@ -89,60 +81,124 @@ const contactPageSchema = {
             </li>
           </ul>
         </div>
+        
         <div class="sm:col-7 md:col-8">
-          {/* ⚡ FORM BOXES HIGHLIGHT: සුදු පැහැති පසුබිම, කළු සහ මහත අකුරු මෝස්තරය ඇතුළත් කර ඇත */}
           <form
-            class="contact-form row gy-2 justify-center"
+            class="contact-form row gy-3 justify-center"
             method="POST"
             action={contact_form_action}
           >
-            <div class="lg:col-6">
-              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="name"
-                >Name <span class="text-red-600">*</span></label
-              >
-              <input
-                class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary text-black dark:text-black font-bold placeholder-gray-400"
-                name="name"
-                type="text"
-                required
-              />
+            {/* Name Input Container */}
+            <div class="lg:col-6 relative">
+              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="name">
+                Name <span class="text-red-600">*</span>
+              </label>
+              <div class="relative flex items-center">
+                <input
+                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10"
+                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
+                  name="name"
+                  type="text"
+                  required
+                />
+                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden transition-all">
+                  <BiXCircle class="h-5 w-5" />
+                </button>
+              </div>
             </div>
-            <div class="lg:col-6">
-              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="email"
-                >Email <span class="text-red-600">*</span></label
-              >
-              <input
-                class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary text-black dark:text-black font-bold placeholder-gray-400"
-                name="email"
-                type="email"
-                required
-              />
+
+            {/* Email Input Container */}
+            <div class="lg:col-6 relative">
+              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="email">
+                Email <span class="text-red-600">*</span>
+              </label>
+              <div class="relative flex items-center">
+                <input
+                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10"
+                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
+                  name="email"
+                  type="email"
+                  required
+                />
+                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden transition-all">
+                  <BiXCircle class="h-5 w-5" />
+                </button>
+              </div>
             </div>
-            <div class="col-12">
+
+            {/* Subject Input Container */}
+            <div class="col-12 relative">
               <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="subject">Subject</label>
-              <input 
-                class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary text-black dark:text-black font-bold placeholder-gray-400" 
-                name="subject" 
-                type="text" 
-              />
+              <div class="relative flex items-center">
+                <input 
+                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10" 
+                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
+                  name="subject" 
+                  type="text" 
+                />
+                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden transition-all">
+                  <BiXCircle class="h-5 w-5" />
+                </button>
+              </div>
             </div>
-            <div class="col-12">
-              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="message"
-                >Message <span class="text-red-600">*</span></label
-              >
-              <textarea 
-                class="form-textarea w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary text-black dark:text-black font-bold placeholder-gray-400" 
-                name="message" 
-                rows="4" 
-                required
-              ></textarea>
+
+            {/* Message Textarea Container */}
+            <div class="col-12 relative">
+              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="message">
+                Message <span class="text-red-600">*</span>
+              </label>
+              <div class="relative">
+                <textarea 
+                  class="form-textarea w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10" 
+                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
+                  name="message" 
+                  rows="4" 
+                  required
+                ></textarea>
+                <button type="button" class="clear-btn absolute right-3 top-3 text-gray-400 hover:text-red-500 hidden transition-all">
+                  <BiXCircle class="h-5 w-5" />
+                </button>
+              </div>
             </div>
+
             <div class="col-12">
-              <button class="btn btn-primary mt-2 transition duration-300 hover:shadow-lg hover:shadow-primary/20">Submit Now</button>
+              <button class="btn btn-primary mt-2 transition duration-300 hover:shadow-lg hover:shadow-primary/20 w-full sm:w-auto">
+                Submit Now
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
   </section>
+
+  {/* ⚡ SMART INPUT FUNCTIONALITY: ටයිප් කරන විට ❌ බටන් එක පෙන්වීමට සහ ක්ලියර් කිරීමට */}
+  <script is:inline>
+    document.addEventListener("DOMContentLoaded", () => {
+      const formContainers = document.querySelectorAll(".relative");
+
+      formContainers.forEach(container => {
+        const input = container.querySelector(".form-input, .form-textarea");
+        const clearBtn = container.querySelector(".clear-btn");
+
+        if (!input || !clearBtn) return;
+
+        // ටයිප් කරන විට ❌ බටන් එක පෙන්වීම/සැඟවීම
+        input.addEventListener("input", () => {
+          if (input.value.length > 0) {
+            clearBtn.classList.remove("hidden");
+          } else {
+            clearBtn.classList.add("hidden");
+          }
+        });
+
+        // ❌ බටන් එක ක්ලික් කළ විට අකුරු මැකී යාම
+        clearBtn.addEventListener("click", () => {
+          input.value = "";
+          clearBtn.classList.add("hidden");
+          input.focus(); // ආපසු Focus එක ලබා දීම
+        });
+      });
+    });
+  </script>
 </Base>
