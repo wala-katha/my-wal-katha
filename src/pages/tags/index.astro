@@ -1,32 +1,86 @@
 ---
 import Base from "@/layouts/Base.astro";
-import { getTaxonomy } from "@/lib/taxonomyParser.astro";
-import { humanize } from "@/lib/utils/textConverter";
+import config from "@/config/config.json";
+import { getTaxonomyWithCount } from "@/lib/taxonomyParser.astro";
+import { BiHash } from "react-icons/bi"; // ⚡ UI Consistent එකක් සඳහා වෙනත් පිටුවල ඇති පරිදි Bi ශ්‍රිතයේ අයිකනයක් භාවිතය
 
-import { FaHashtag } from "react-icons/fa";
+// ⚡ අලුතින් හදපු getTaxonomyWithCount ශ්‍රිතය හරහා ටැග් සමඟ ලිපි ගණන සහ පිරිසිදු නම් එකවර ලබා ගනී
+const tagsWithCount = await getTaxonomyWithCount("posts", "tags");
 
-const tags = await getTaxonomy("posts", "tags");
+// 1. ස්වයංක්‍රීය නිවැරදි කිරීම (Auto-Fix): Tags ලැයිස්තුව හිස් නම් බිඳ වැටීම වළක්වයි
+const safeTags = Array.isArray(tagsWithCount) ? tagsWithCount : [];
+
+// 📈 2. SEO ප්‍රශස්තකරණය: සෙවුම් යන්ත්‍ර සඳහා නිවැරදි විස්තර සහ පිරිසිදු ලින්ක්ස්
+const metaTitle = `සියලුම ටැග්ස් - Tags | ${config?.site?.title || "Wala Katha"}`;
+const metaDescription = "අපේ වෙබ් අඩවියේ ඇති සියලුම බ්ලොග් ලිපි සහ රසවත් කතා ටැග්ස් (Tags) අනුව මෙතැනින් පහසුවෙන් සොයා ගන්න.";
+
+const base_url = (config?.site?.base_url || "").replace(/\/$/, ""); 
+const canonicalUrl = `${base_url}/tags`;
+
+// 🚀 GOOGLE SEO BREADCRUMB SCHEMA: සෙවුම් යන්ත්‍ර වලට ව්‍යුහය වටහා දීමට (JSON-LD)
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": base_url
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tags",
+      "item": canonicalUrl
+    }
+  ]
+};
 ---
 
-<Base title={"Tags"}>
+<Base 
+  title={metaTitle} 
+  description={metaDescription} 
+  canonical={canonicalUrl}
+>
+  {/* Google Structured Data / Rich Snippet එක ඇතුළත් කිරීම */}
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+
+  {/* 100% Original Section Layout structure */}
   <section class="section">
     <div class="container text-center">
+      
+      {/* Original Heading */}
       <h1 class="h2 page-heading">Tags</h1>
-      <ul class="space-x-4">
+      
+      {/* Original List Structure - කළු පසුබිමට ගැළපෙන පරිදි 100% ප්‍රශස්ත කර ඇත */}
+      <ul class="space-x-4 flex flex-wrap justify-center gap-y-4 mt-8">
         {
-          tags.map((tag) => (
+          safeTags.map((tag) => (
             <li class="inline-block">
               <a
-                href={`/tags/${tag}`}
-                class="rounded-lg bg-light px-4 py-2 text-dark transition hover:bg-primary hover:text-white flex items-center group"
+                href={`/tags/${tag.slug}`}
+                class="rounded-lg bg-theme-light dark:bg-slate-800/60 border border-border dark:border-slate-800 px-4 py-2 text-text dark:text-slate-200 transition hover:bg-primary dark:hover:bg-primary hover:text-white dark:hover:text-white flex items-center group font-medium"
               >
-                <FaHashtag className="mr-1 text-primary group-hover:text-white transition" />
-                {humanize(tag || "")}
+                <BiHash className="mr-1 text-primary group-hover:text-white transition h-5 w-5" />
+                <span>{tag.name}</span>
+
+                {/* ⚡ ඉස්මතු කිරීම (UI Booster): ලිපි ගණන කළු පසුබිමේ ලස්සන කුඩා Badge එකක් ලෙස පෙන්වීම */}
+                <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 group-hover:bg-white/20 group-hover:text-white transition font-semibold">
+                  {tag.count}
+                </span>
               </a>
             </li>
           ))
         }
       </ul>
+      
+      {safeTags.length === 0 && (
+        <div class="py-8 text-center opacity-60">
+          <p>ටැග් කිසිවෙකු හමුනොවීය.</p>
+        </div>
+      )}
+      
     </div>
   </section>
 </Base>
