@@ -4,7 +4,7 @@ import Base from "@/layouts/Base.astro";
 import { markdownify } from "@/lib/utils/textConverter";
 import type { CollectionEntry } from "astro:content";
 import { getEntry } from "astro:content";
-import { BiSpreadsheet, BiEnvelope, BiPhoneCall, BiXCircle, BiCheckCircle } from "react-icons/bi"; // ⚡ සාර්ථක පණිවිඩය සඳහා BiCheckCircle එක් කළා
+import { BiSpreadsheet, BiEnvelope, BiPhoneCall, BiXCircle, BiCheckCircle } from "react-icons/bi";
 
 const entry = (await getEntry(
   "contact",
@@ -82,22 +82,28 @@ const contactPageSchema = {
         </div>
         
         <div class="sm:col-7 md:col-8">
-          {/* ⚡ SMART NOTICE BOX: පණිවිඩය සාර්ථකව ගිය විට පෙන්වන ලස්සන ස්තුති කිරීමේ කොටස */}
-          <div id="form-success-alert" class="hidden mb-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-start text-emerald-400">
-            <BiCheckCircle className="h-6 w-6 mr-3 flex-shrink-0 mt-0.5" />
+          {/* ⚡ SMART NOTICE BOX: පණිවිඩය සාර්ථකව ලැබුණු විට පෙන්වන කොටස */}
+          <div id="form-success-alert" class="hidden mb-6 p-4 rounded-lg bg-emerald-500/20 border border-emerald-500 flex items-start text-emerald-400">
+            <BiCheckCircle className="h-6 w-6 mr-3 flex-shrink-0 mt-0.5 text-emerald-400" />
             <div>
-              <p class="font-bold text-lg">පණිවිඩය සාර්ථකව ලැබුණා!</p>
-              <p class="text-sm opacity-90 mt-1">අප හා සම්බන්ධ වීම පිළිබඳව ස්තුතියි. ඔබගේ විමසීමට හැකි ඉක්මනින් පිළිතුරු සපයන්නෙමු.</p>
+              <p class="font-bold text-lg text-emerald-400">පණිවිඩය සාර්ථකව ලැබුණා!</p>
+              <p class="text-sm opacity-90 mt-1 text-emerald-300">අප හා සම්බන්ධ වීම පිළිබඳව ස්තුතියි. ඔබගේ විමසීමට හැකි ඉක්මනින් පිළිතුරු සපයන්නෙමු.</p>
             </div>
           </div>
 
-          {/* Form Action එක Formspree වෙතට කෙලින්ම සම්බන්ධ කළා */}
+          {/* Web3Forms API Endpoint එක සෘජුවම සම්බන්ධ කර ඇත */}
           <form
             id="smart-contact-form"
             class="contact-form row gy-3 justify-center"
             method="POST"
-            action="https://formspree.io/f/xanygbbz"
+            action="https://api.web3forms.com/submit"
           >
+            {/* 🎯 ඔබගේ නිල Gmail ලිපිනය සෘජුවම හඳුනා ගැනීමට Access Key එකක් මෙලෙස යොදනු ලැබේ */}
+            <input type="hidden" name="access_key" value="003975ba-3b03-4f93-b68a-cf872bc9776d" />
+            <input type="hidden" name="from_name" value="Wala Katha Web Support" />
+            <input type="hidden" name="subject" value="New Contact Message from WalaKatha" />
+            <input type="checkbox" name="botcheck" class="hidden" style="display: none;" />
+
             {/* Name Input */}
             <div class="lg:col-6 relative">
               <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="name">
@@ -105,13 +111,13 @@ const contactPageSchema = {
               </label>
               <div class="relative flex items-center">
                 <input
-                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10"
-                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
+                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400"
+                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important; background-color: #ffffff !important;"
                   name="name"
                   type="text"
                   required
                 />
-                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden transition-all">
+                <button type="button" class="clear-btn absolute right-3 text-gray-500 hover:text-red-500 hidden transition-all z-10">
                   <BiXCircle class="h-5 w-5" />
                 </button>
               </div>
@@ -124,13 +130,13 @@ const contactPageSchema = {
               </label>
               <div class="relative flex items-center">
                 <input
-                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10"
-                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
+                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400"
+                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important; background-color: #ffffff !important;"
                   name="email"
                   type="email"
                   required
                 />
-                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden transition-all">
+                <button type="button" class="clear-btn absolute right-3 text-gray-500 hover:text-red-500 hidden transition-all z-10">
                   <BiXCircle class="h-5 w-5" />
                 </button>
               </div>
@@ -138,15 +144,15 @@ const contactPageSchema = {
 
             {/* Subject Input */}
             <div class="col-12 relative">
-              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="subject">Subject</label>
+              <label class="mb-2 block text-text dark:text-slate-300 font-medium text-sm" for="custom_subject">Subject</label>
               <div class="relative flex items-center">
                 <input 
-                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10" 
-                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
-                  name="subject" 
+                  class="form-input w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400" 
+                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important; background-color: #ffffff !important;"
+                  name="custom_subject" 
                   type="text" 
                 />
-                <button type="button" class="clear-btn absolute right-3 text-gray-400 hover:text-red-500 hidden transition-all">
+                <button type="button" class="clear-btn absolute right-3 text-gray-500 hover:text-red-500 hidden transition-all z-10">
                   <BiXCircle class="h-5 w-5" />
                 </button>
               </div>
@@ -159,13 +165,13 @@ const contactPageSchema = {
               </label>
               <div class="relative">
                 <textarea 
-                  class="form-textarea w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10" 
-                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important;"
+                  class="form-textarea w-full rounded-lg bg-white dark:bg-white border border-border focus:border-primary focus:ring-1 focus:ring-primary pr-10 text-black placeholder-gray-400" 
+                  style="color: #000000 !important; font-weight: 700 !important; font-size: 16px !important; background-color: #ffffff !important;"
                   name="message" 
                   rows="4" 
                   required
                 ></textarea>
-                <button type="button" class="clear-btn absolute right-3 top-3 text-gray-400 hover:text-red-500 hidden transition-all">
+                <button type="button" class="clear-btn absolute right-3 top-3 text-gray-500 hover:text-red-500 hidden transition-all z-10">
                   <BiXCircle class="h-5 w-5" />
                 </button>
               </div>
@@ -182,7 +188,7 @@ const contactPageSchema = {
     </div>
   </section>
 
-  {/* ⚡ SMART FUNCTIONALITY: AJAX Form Submit & Clear Buttons */}
+  {/* ⚡ SMART LOGIC FOR INPUT FOCUS & ACTIONS */}
   <script is:inline>
     document.addEventListener("DOMContentLoaded", () => {
       const form = document.getElementById("smart-contact-form");
@@ -190,12 +196,16 @@ const contactPageSchema = {
       const submitBtn = document.getElementById("submit-btn");
       const formContainers = document.querySelectorAll(".relative");
 
-      // 1. Inputs ලියද්දී ❌ බටන් එක වැඩ කරවන කොටස
+      // 1. Inputs ලියද්දී ❌ බටන් එක පාලනය කිරීම සහ බලහත්කාරයෙන් Focus Color එක තැබීම
       formContainers.forEach(container => {
         const input = container.querySelector(".form-input, .form-textarea");
         const clearBtn = container.querySelector(".clear-btn");
 
         if (!input || !clearBtn) return;
+
+        // මොබයිල් බ්‍රවුසර් වල Focus එකේදී සිදුවන වර්ණ Override වීම් වැළැක්වීම
+        input.style.color = "#000000";
+        input.style.backgroundColor = "#ffffff";
 
         input.addEventListener("input", () => {
           if (input.value.length > 0) {
@@ -205,45 +215,49 @@ const contactPageSchema = {
           }
         });
 
-        clearBtn.addEventListener("click", () => {
+        clearBtn.addEventListener("click", (e) => {
+          e.preventDefault();
           input.value = "";
           clearBtn.classList.add("hidden");
           input.focus();
         });
       });
 
-      // 2. SMART AJAX SUBMIT: සයිට් එක Reload නොවී පණිවිඩය යැවීම සහ Notice එක පෙන්වීම
+      // 2. WEB3FORMS AJAX SUBMISSION LOGIC
       if (form) {
         form.addEventListener("submit", async (e) => {
-          e.preventDefault(); // Default Page Reload එක නවත්වයි
+          e.preventDefault();
           
           if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.textContent = "Sending...";
           }
 
-          const data = new FormData(form);
+          const formData = new FormData(form);
+          const object = Object.fromEntries(formData);
+          const json = JSON.stringify(object);
           
           try {
             const response = await fetch(form.action, {
               method: form.method,
-              body: data,
               headers: {
+                'Content-Type': 'application/json',
                 'Accept': 'application/json'
-              }
+              },
+              body: json
             });
 
-            if (response.ok) {
-              // සාර්ථක නම් Alert එක පෙන්වා Form එක Clear කරයි
+            const result = await response.json();
+
+            if (response.status === 200 || result.success) {
               if (successAlert) {
                 successAlert.classList.remove("hidden");
                 successAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }
               form.reset();
-              // සියලුම ❌ බටන් සඟවන්න
               document.querySelectorAll(".clear-btn").forEach(btn => btn.classList.add("hidden"));
             } else {
-              alert("පණිවිඩය යැවීමේදී ගැටලුවක් ඇතිවිය. කරුණාකර නැවත උත්සාහ කරන්න.");
+              alert(result.message || "පණිවිඩය යැවීමේදී ගැටලුවක් ඇතිවිය.");
             }
           } catch (error) {
             alert("ජාල සම්බන්ධතා දෝෂයක්. කරුණාකර අන්තර්ජාලය පරීක්ෂා කරන්න.");
