@@ -15,20 +15,38 @@ const currentPosts = sortedPosts.slice(0, config.settings.pagination);
 // 🎯 SEO උපරිම කිරීමට නිල URL එක සහ ප්‍රධාන තොරතුරු සකස් කිරීම
 const base_url = (config?.site?.base_url || "").replace(/\/$/, "");
 const canonicalUrl = base_url;
+const siteLogo = `${base_url}/images/logo.png`; 
 
-// 🚀 ADVANCED SEO: ගූගල් රොබෝලාට සයිට් එකේ ව්‍යුහය එක පාරින්ම වටහා දෙන නිල WebSite Schema එක
+// 🚀 ADVANCED SEO: නිල WebSite Schema එක (Search Action සහ Keywords සමඟ)
 const homePageSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": config?.site?.title || "Wala Katha",
-  "alternateName": ["සිංහල වල් කතා", "Sinhala Wal Katha", "Wela Katha"],
+  "alternateName": [
+    "සිංහල වල් කතා", 
+    "Sinhala Wal Katha", 
+    "Wela Katha", 
+    "Wal Katha", 
+    "Wala Katha Stories", 
+    "Sinhala Wela Katha",
+    "අලුත්ම වල් කතා"
+  ],
   "url": canonicalUrl,
-  "description": "නවතම සිංහල වල් කතා සහ වැල කතා කියවන්න. Sinhala wal katha stories and high quality digital updates.",
+  "description": "අලුත්ම සහ රසවත්ම සිංහල වල් කතා සහ වැල කතා කියවන්න. Daily updated high quality Sinhala wal katha stories, wela katha and digital updates.",
+  "image": siteLogo,
+  "publisher": {
+    "@type": "Organization",
+    "name": config?.site?.title || "Wala Katha",
+    "logo": {
+      "@type": "ImageObject",
+      "url": siteLogo
+    }
+  },
   "potentialAction": {
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": `${base_url}/search?q={search_term_string}`
+      "urlTemplate": `${base_url}/?search={search_term_string}`
     },
     "query-input": "required name=search_term_string"
   }
@@ -37,26 +55,105 @@ const homePageSchema = {
 
 <Base 
   title="සිංහල වල් කතා | Sinhala Wal Katha & Wela Katha Stories"
-  description="නවතම සිංහල වල් කතා, වැල කතා සහ රසවත් කෙටි කතා එකතුවක් එකම තැනකින් කියවන්න. Daily updated Sinhala wal katha and wela stories."
+  meta_title="සිංහල වල් කතා | Sinhala Wal Katha & Wela Katha Stories - WalaKatha"
+  description="නවතම සිංහල වල් කතා, වැල කතා, අලුත්ම කෙටි කතා සහ රසවත් කතා එකතුවක් එකම තැනකින් කියවන්න. Daily updated Sinhala wal katha and wela stories collection."
   canonical={canonicalUrl}
 >
-  {/* JSON-LD ව්‍යුහාත්මක දත්ත මුලින්ම ඇතුළත් කිරීම */}
+  {/* JSON-LD ව්‍යුහාත්මක දත්ත */}
   <script type="application/ld+json" set:html={JSON.stringify(homePageSchema)} />
 
-  {/* ⚡ TRUE DARK BACKGROUND FOR THE WHOLE PAGE (පෙනුම වෙනස් නොකර පසුබිම පමණක් කළු කරයි) */}
-  <section class="section pt-4 min-h-screen bg-neutral-950 text-slate-100 dark:bg-neutral-950 dark:text-slate-100 selection:bg-primary selection:text-white">
+  {/* ⚡ PREMIUM ULTRA-DARK BACKGROUND & HIGHLIGHT ENHANCEMENT */}
+  <style is:inline>
+    /* මුළු සයිට් එකම ලෝඩ් වෙද්දීම Flash නොවී කළු පසුබිම තබා ගැනීම */
+    html, body {
+      background-color: #050505 !important;
+      color: #f8fafc !important; 
+      scrollbar-color: #10b981 #050505; 
+      font-display: swap;
+    }
+    
+    /* 🧩 Astro Components ඇතුළත ඇති Cards වලට :global එක මඟින් ස්ටයිල් බලහත්කාරයෙන් කැවීම */
+    :global(.post-card), :global(.card), :global(.bg-body), :global(.bg-white) {
+      background-color: #0d0d0d !important;
+      border: 1px solid #1a1a1a !important;
+      border-radius: 14px !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    /* 🔥 ULTRA HIGHLIGHT EFFECT: පෝස්ට් කාඩ් මතින් යද්දී සුපිරි Emerald Glow එකක් සහ කාඩ් එක මදක් මතුවීම */
+    :global(.post-card:hover), :global(.card:hover) {
+      background-color: #121212 !important;
+      border-color: rgba(16, 185, 129, 0.5) !important;
+      transform: translateY(-5px) !important;
+      box-shadow: 0 12px 30px -10px rgba(16, 185, 129, 0.3) !important;
+    }
+    
+    /* අකුරු ඉස්මතු කිරීම සහ වර්ණ ගැළපීම */
+    :global(.post-card-title), :global(.post-card h3), :global(.post-card h3 a), :global(.post-card a) {
+      color: #ffffff !important;
+      transition: color 0.2s ease !important;
+    }
+    
+    :global(.post-card h3 a:hover), :global(.post-card a:hover) {
+      color: #34d399 !important;
+    }
+    
+    :global(.post-card p), :global(.text-muted) {
+      color: #a3a3a3 !important;
+    }
+
+    /* Layout Shift බග් එක මඟහැරවූ සුමට Image Hover Effect */
+    :global(.featured-slider img), :global(.post-card img) {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      border-radius: 10px !important;
+    }
+    :global(.featured-slider img:hover), :global(.post-card img:hover) {
+      box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4) !important;
+      filter: brightness(1.15) !important;
+    }
+    
+    /* සිංහල ෆොන්ට් Render වීම වඩාත් පැහැදිලි කිරීම */
+    p, h1, h2, h3, h4, a, span {
+      text-rendering: optimizeLegibility !important;
+      -webkit-font-smoothing: antialiased !important;
+      -moz-osx-font-smoothing: grayscale !important;
+    }
+
+    /* Pagination Buttons අඳුරු තීම් එකට ගැළපීම */
+    :global(.pagination a) {
+      background-color: #0d0d0d !important;
+      border: 1px solid #262626 !important;
+      color: #e5e5e5 !important;
+      transition: all 0.2s ease !important;
+    }
+    :global(.pagination a:hover), :global(.pagination .active a) {
+      background-color: #10b981 !important;
+      color: #050505 !important;
+      border-color: #10b981 !important;
+    }
+  </style>
+
+  {/* පසුබිම් තීම් එක සහ සිලෙක්ෂන් කලර්ස් */}
+  <section class="section pt-6 pb-12 min-h-screen bg-[#050505] text-slate-200 selection:bg-emerald-500 selection:text-neutral-950 tracking-wide leading-relaxed antialiased">
     <div class="container">
       
-      {/* 🚀 CRITICAL SEO FIX: සර්ච් එන්ජින් වලට පමණක් පෙනෙන, කියවීමට පහසු ප්‍රධාන H1 මාතෘකාව */}
-      <h1 class="sr-only">සිංහල වල් කතා | Sinhala Wal Katha & Wela Katha Stories - නවතම කතා එකතුව</h1>
+      {/* 🚀 PERFECT SEO TITLE BLOCK */}
+      <div class="text-center mb-8 border-b border-neutral-900/60 pb-6">
+        <h1 class="main-glowing-title block text-2xl md:text-4xl font-extrabold bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(16,185,129,0.25)] transition-colors duration-200 select-text tracking-wider">
+          සිංහල වල් කතා
+        </h1>
+        <p class="text-xs md:text-sm text-neutral-400 mt-2 block font-medium opacity-90">
+          Sinhala Wal Katha & Wela Katha Stories - නවතම කතා එකතුව
+        </p>
+      </div>
 
-      {/* පෝස්ට් ලිස්ට් එකට ඉහළින් ඔටෝ මාරු වෙන පින්තූර කැට ඇනිමේෂන් ස්ලයිඩරය */}
+      {/* Slider එක */}
       <FeaturedSlider posts={sortedPosts} />
 
-      {/* ප්‍රධාන පෝස්ට් ලිස්ට් එක (ග්‍රිඩ් එක) */}
+      {/* ප්‍රධාන පෝස්ට් ග්‍රිඩ් එක */}
       <Posts posts={currentPosts} className="mb-16" />
       
-      {/* පිටු මාරු කරන පටිය (Pagination) */}
+      {/* Pagination */}
       <Pagination currentPage={1} totalPages={totalPages} />
       
     </div>
