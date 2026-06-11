@@ -17,21 +17,10 @@ const base_url = (config?.site?.base_url || "").replace(/\/$/, "");
 const canonicalUrl = base_url;
 const siteLogo = `${base_url}/images/logo.png`; 
 
-// 🚀 ADVANCED INTEGRATED SCHEMA 2026 (Penalty-Free Structure)
+// 🚀 ADVANCED INTEGRATED SCHEMA 2026 (Penalty-Free Structure & Fully Connected Graph)
 const homePageSchema = {
   "@context": "https://schema.org",
   "@graph": [
-    {
-      "@type": "CollectionPage",
-      "@id": `${canonicalUrl}/#collection`,
-      "url": canonicalUrl,
-      "name": "සිංහල වල් කතා එකතුව | Latest Stories",
-      "description": "Daily updated Sinhala wal katha and wela stories collection.",
-      "about": {
-        "@type": "Thing",
-        "name": "Sinhala Literature & Stories"
-      }
-    },
     {
       "@type": "WebSite",
       "@id": `${base_url}/#website`,
@@ -44,15 +33,20 @@ const homePageSchema = {
         "Wal Katha", 
         "Wala Katha Stories", 
         "Sinhala Wela Katha",
-        "අලුත්ම වල් කතා"
+        "අලුත්ම වල් කතා",
+        "WalaKatha App"
       ],
-      "description": "අලුත්ම සහ රසවත්ම සිංහල වල් කතා සහ වැල කතා කියවන්න. Daily updated high quality Sinhala wal katha stories, wela katha and digital updates.",
+      "description": "අලුත්ම සහ රසවත්මසිංහල වල් කතා සහ වැල කතා කියවන්න. Daily updated high quality Sinhala wal katha stories, wela katha and digital updates.",
       "publisher": {
         "@type": "Organization",
+        "@id": `${base_url}/#organization`,
         "name": config?.site?.title || "Wala Katha",
+        "url": base_url,
         "logo": {
           "@type": "ImageObject",
-          "url": siteLogo
+          "@id": `${base_url}/#logo`,
+          "url": siteLogo,
+          "caption": config?.site?.title || "Wala Katha Logo"
         }
       },
       "potentialAction": {
@@ -62,6 +56,18 @@ const homePageSchema = {
           "urlTemplate": `${base_url}/?search={search_term_string}`
         },
         "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "CollectionPage",
+      "@id": `${canonicalUrl}/#collection`,
+      "url": canonicalUrl,
+      "name": "සිංහල වල් කතා එකතුව | Latest Stories",
+      "description": "Daily updated Sinhala wal katha and wela stories collection.",
+      "isPartOf": { "@id": `${base_url}/#website` },
+      "about": {
+        "@type": "Thing",
+        "name": "Sinhala Literature & Stories"
       }
     }
   ]
@@ -73,11 +79,12 @@ const homePageSchema = {
   meta_title="සිංහල වල් කතා | Sinhala Wal Katha & Wela Katha Stories - WalaKatha"
   description="නවතම සිංහල වල් කතා, වැල කතා, අලුත්ම කෙටි කතා සහ රසවත් කතා එකතුවක් එකම තැනකින් කියවන්න. Daily updated Sinhala wal katha and wela stories collection."
   canonical={canonicalUrl}
+  image={siteLogo}
 >
-  {/* JSON-LD ව්‍යුහාත්මක දත්ත (Search Engine Bots හට එකවර කියවීමට) */}
+  {/* JSON-LD ව්‍යුහාත්මක දත්ත (Search Engine Bots සඳහා) */}
   <script type="application/ld+json" set:html={JSON.stringify(homePageSchema)} />
 
-  {/* SOCIAL INJECTOR (Facebook/Telegram Preview සඳහා Core Meta Tags) */}
+  {/* CORE SOCIAL META INJECTOR (Fallback ආරක්ෂාව සඳහා සෘජුවම හිසට සම්බන්ධ කිරීම) */}
   <Fragment slot="head">
     <meta property="og:type" content="website" />
     <meta property="og:title" content="සිංහල වල් කතා | Sinhala Wal Katha & Wela Katha Stories" />
@@ -100,7 +107,20 @@ const homePageSchema = {
       font-display: swap;
     }
     
-    /* 🧩 Cards ස්ටයිල් බලහත්කාරයෙන් කළු කිරීම */
+    /* 🧩 100% PENALTY-FREE HIDDEN H1 STYLE (Google Safe Pattern) */
+    .invisible-seo-h1 {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+    
+    /* 🧩 Cards ස්ටයිල් පෙනුම වෙනස් නොකර පසුබිම පමණක් උපරිම කළු කිරීම */
     :global(.post-card), :global(.card), :global(.bg-body), :global(.bg-white) {
       background-color: #0d0d0d !important;
       border: 1px solid #1a1a1a !important;
@@ -108,7 +128,7 @@ const homePageSchema = {
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     
-    /* 🔥 ULTRA HIGHLIGHT EFFECT: කාඩ් උඩින් යද්දී Emerald Glow එකක් ඒම */
+    /* 🔥 ULTRA HIGHLIGHT EFFECT: පෝස්ට් කාඩ් මතින් යද්දී ඉතා සියුම් ආකර්ෂණීය Emerald Glow එකක් ඒම */
     :global(.post-card:hover), :global(.card:hover) {
       background-color: #121212 !important;
       border-color: rgba(16, 185, 129, 0.4) !important;
@@ -116,18 +136,20 @@ const homePageSchema = {
       box-shadow: 0 10px 25px -10px rgba(16, 185, 129, 0.25) !important;
     }
     
-    /* අකුරු වල පැහැදිලි බව ඉස්මතු කිරීම */
-    :global(.post-card-title), :global(.post-card h3), :global(.post-card h3 a), :global(.post-card a) {
+    /* කළු පසුබිම මත සිංහල අකුරු කියවීමේ පහසුව (Accessibility & Contrast) වැඩි කිරීම */
+    :global(.post-card-title), :global(.post-card h2), :global(.post-card h3), :global(.post-card h3 a), :global(.post-card a) {
       color: #ffffff !important;
+      font-weight: 700 !important;
       transition: color 0.2s ease !important;
     }
     
-    :global(.post-card h3 a:hover), :global(.post-card a:hover) {
+    :global(.post-card h2 a:hover), :global(.post-card h3 a:hover), :global(.post-card a:hover) {
       color: #34d399 !important;
     }
     
-    :global(.post-card p), :global(.text-muted) {
-      color: #a3a3a3 !important;
+    /* දින සහ වෙනත් කුඩා විස්තර වල පැහැදිලි බව වැඩි කිරීම */
+    :global(.post-card p), :global(.text-muted), :global(.post-meta), :global(.meta-items) {
+      color: #cbd5e1 !important;
     }
 
     :global(.featured-slider img), :global(.post-card img) {
@@ -165,15 +187,15 @@ const homePageSchema = {
     }
   </style>
 
-  {/* ප්‍රධාන සෙක්ෂන් එක */}
+  {/* ප්‍රධාන අන්තර්ගතය */}
   <main class="section pt-4 pb-12 min-h-screen bg-[#050505] text-slate-200 selection:bg-emerald-500 selection:text-neutral-950 antialiased">
     <div class="container">
       
-      {/* 🚀 2026 PENALTY-FREE HIDDEN H1 BLOCK 
-          සාමාන්‍ය මිනිස් ඇසට නොපෙනෙන නමුත් Google බොට්ස්ලාට 100% කියවිය හැකි නිවැරදි Tailwind ක්‍රමය */}
-      <div class="sr-only">
-        <h1>සිංහල වල් කතා | Sinhala Wal Katha Stories</h1>
-        <p>නවතම සිංහල වල් කතා, වැල කතා, සහ කෙටි රසවත් කතා එකතුව.</p>
+      {/* 🎯 2026 ABSOLUTE SECURE H1 BLOCK 
+          මිනිස් ඇසට 100% ක් නොපෙනෙන නමුත් Google රොබෝවරුන් පීනල්ටි නොදී කියවන නිවැරදිම CSS හැඩතලය */}
+      <div class="invisible-seo-h1">
+        <h1>සිංහල වල් කතා | Sinhala Wal Katha & Wela Katha Stories</h1>
+        <p>නවතම සිංහල වල් කතා, වැල කතා, අලුත්ම කෙටි කතා සහ රසවත් කතා එකතුවක් එකම තැනකින් කියවන්න.</p>
       </div>
 
       {/* Slider එක ඉහළින්ම මනාව දර්ශනය වේ */}
