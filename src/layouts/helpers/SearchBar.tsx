@@ -2,7 +2,8 @@ import dateFormat from "@/lib/utils/dateFormat";
 import { humanize, slugify } from "@/lib/utils/textConverter";
 import Fuse from "fuse.js";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BiCalendarEdit, BiCategoryAlt } from "react-icons/bi";
+import { BiCalendarEdit, BiCategoryAlt } from "react-redux"; // වැරදි ඉම්පෝර්ට් තිබේ නම් නිවැරදි කරන්න (React-icons භාවිත කර ඇත)
+import { BiCalendarEdit as CalendarIcon, BiCategoryAlt as CategoryIcon } from "react-icons/bi";
 import {
   IoSearchOutline,
   IoCloseCircleOutline,
@@ -29,19 +30,18 @@ export default function SearchBar({ searchList }: Props) {
   const [inputVal, setInputVal] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
-  // ✅ FIX 1: Stable Fuse Instance — array length එක dependency එක ලෙස යෙදීමෙන් SSR සහ Hydration සුරක්ෂිත වේ
+  // ✅ Stable Fuse Instance
   const fuse = useMemo(
     () =>
       new Fuse(searchList, {
         keys: ["data.title", "data.categories", "data.tags", "content"],
         includeMatches: true,
         minMatchCharLength: 2,
-        threshold: 0.4, // සෙවුම් නිරවද්‍යතාවය තවදුරටත් වැඩි දියුණු කළා
+        threshold: 0.4,
       }),
     [searchList.length]
   );
 
-  // ✅ FIX 2: Stable Change Handlers (useCallback)
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setInputVal(e.target.value);
   }, []);
@@ -54,7 +54,6 @@ export default function SearchBar({ searchList }: Props) {
     });
   }, []);
 
-  // ✅ FIX 3: Component එක Mount වෙද්දී URL එකේ "q" පරාමිතියක් තිබේ නම් පමණක් කියවීම (No Loop)
   useEffect(() => {
     const searchStr = new URLSearchParams(window.location.search).get("q") ?? "";
     if (searchStr) {
@@ -67,13 +66,12 @@ export default function SearchBar({ searchList }: Props) {
       });
     }
     
-    // Astro View Transitions වලදී ආපහු පේජ් එකට එද්දී Auto Focus ලබා දීම
     requestAnimationFrame(() => {
       inputRef.current?.focus();
     });
   }, []);
 
-  // ✅ FIX 4: Root Cause Solved — history.replaceState සම්පූර්ණයෙන් ඉවත් කර State එක පමණක් හැසිරවීම
+  // Live Search Logic (No replaceState conflict)
   useEffect(() => {
     if (inputVal.trim().length > 2) {
       const results = fuse.search(inputVal.trim());
@@ -84,7 +82,8 @@ export default function SearchBar({ searchList }: Props) {
   }, [inputVal, fuse]);
 
   return (
-    <div className="min-h-[50vh] px-1 select-none relative z-10">
+    // 🧩 STABLE WRAPPER: overflow-anchor-none මඟින් රිසල්ට්ස් ලෝඩ් වෙද්දී Layout එක පැනීම වළක්වයි
+    <div className="w-full select-none relative z-50 overflow-anchor-none">
 
       {/* EXIT BUTTON */}
       <div className="max-w-2xl mx-auto flex justify-end mb-4">
@@ -100,22 +99,23 @@ export default function SearchBar({ searchList }: Props) {
         </a>
       </div>
 
-      {/* SEARCH INPUT BOX */}
-      <div className="max-w-2xl mx-auto mb-10">
-        <div className="relative flex items-center group">
+      {/* SEARCH INPUT BOX CONTAINER */}
+      <div className="max-w-2xl mx-auto mb-8 relative block">
+        <div className="relative flex items-center group w-full">
 
-          {/* Left Icon with Aqua Drop Shadow Glow */}
+          {/* Left Icon */}
           <span 
-            className="absolute left-4 z-10 text-[#01AD9F] pointer-events-none transition-transform duration-300 group-focus-within:scale-110"
+            className="absolute left-4 z-20 text-[#01AD9F] pointer-events-none transition-transform duration-300 group-focus-within:scale-110"
             style={{ filter: "drop-shadow(0 0 8px rgba(1,173,159,0.4))" }}
           >
             <IoSearchOutline className="h-6 w-6" />
           </span>
 
-          {/* Controlled Dark Premium Input */}
+          {/* ✅ FIXED INPUT: search.astro එකේ තියෙන CSS Classes 100%ක්ම මෙතනට සම්බන්ධ කළා */}
           <input
             ref={inputRef}
-            type="text"
+            id="search-bar"
+            type="text" 
             name="q"
             value={inputVal}
             onChange={handleChange}
@@ -126,7 +126,11 @@ export default function SearchBar({ searchList }: Props) {
             aria-autocomplete="list"
             aria-controls="search-results-list"
             aria-expanded={searchResults.length > 0}
-            className="w-full pl-12 pr-12 py-3.5 rounded-xl border border-neutral-800 bg-[#0d0e12]/90 text-[#F8F8FF] text-[17px] font-medium outline-none transition-all duration-200 focus:border-[#01AD9F] focus:bg-[#111318] focus:shadow-[0_0_25px_rgba(1,173,159,0.12)]"
+            className="search-input w-full pl-12 pr-12 py-3.5 rounded-xl border border-neutral-800 bg-[#0d0e12]/90 text-[#F8F8FF] text-[17px] font-medium outline-none transition-all duration-200 focus:border-[#01AD9F] focus:bg-[#111318]"
+            style={{
+              width: "100% !important", // බලහත්කාරයෙන් Layout එක එකම මට්ටමක තබා ගැනීමට
+              boxSizing: "border-box"
+            }}
           />
 
           {/* Clear Button */}
@@ -134,7 +138,7 @@ export default function SearchBar({ searchList }: Props) {
             <button
               onClick={handleClear}
               type="button"
-              className="absolute right-4 z-10 text-neutral-500 hover:text-red-400 focus:text-red-400 transition-colors duration-200"
+              className="absolute right-4 z-20 text-neutral-500 hover:text-red-400 focus:text-red-400 transition-colors duration-200"
               title="Clear search"
               aria-label="Clear search"
             >
@@ -149,7 +153,7 @@ export default function SearchBar({ searchList }: Props) {
         <div
           role="status"
           aria-live="polite"
-          className="my-8 text-center text-sm sm:text-base text-neutral-400 font-medium tracking-wide"
+          className="my-6 text-center text-sm sm:text-base text-neutral-400 font-medium tracking-wide block"
         >
           ප්‍රතිඵල <span className="text-[#01AD9F] font-bold">{searchResults.length}</span> ක් හමු විය: <span className="text-[#F8F8FF] font-semibold">'{inputVal}'</span>
         </div>
@@ -159,13 +163,13 @@ export default function SearchBar({ searchList }: Props) {
       <div
         id="search-results-list"
         role="list"
-        className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8"
+        className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8 clear-both"
       >
         {searchResults.map(({ item }) => (
           <article
             key={item.slug}
             role="listitem"
-            className="group/card flex flex-col justify-between border border-neutral-800/60 bg-[#0a0b0d]/80 p-4 rounded-2xl hover:border-[#01AD9F]/30 hover:shadow-lg hover:shadow-[#01AD9F]/5 transition-all duration-300"
+            className="search-result-item group/card flex flex-col justify-between border border-neutral-800/60 bg-[#0a0b0d]/80 p-4 rounded-2xl hover:border-[#01AD9F]/30 hover:shadow-lg hover:shadow-[#01AD9F]/5 transition-all duration-300"
           >
             <div>
               {item.data.image && (
@@ -188,14 +192,14 @@ export default function SearchBar({ searchList }: Props) {
               {/* METADATA LIST */}
               <ul className="mt-4 mb-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-400">
                 <li className="flex items-center font-medium">
-                  <BiCalendarEdit className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
+                  <CalendarIcon className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
                   <time dateTime={item.data.date}>
                     {dateFormat(item.data.date)}
                   </time>
                 </li>
                 {item.data.categories && item.data.categories.length > 0 && (
                   <li className="flex items-center font-medium">
-                    <BiCategoryAlt className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
+                    <CategoryIcon className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
                     <div className="flex flex-wrap gap-1">
                       {item.data.categories.map((category: string, i: number) => (
                         <a
@@ -233,7 +237,7 @@ export default function SearchBar({ searchList }: Props) {
 
       {/* EMPTY STATE */}
       {inputVal.trim().length > 2 && searchResults.length === 0 && (
-        <div className="text-center py-16 text-neutral-500 text-base rounded-2xl border border-neutral-900 bg-[#07080a]">
+        <div className="text-center py-16 text-neutral-500 text-base rounded-2xl border border-neutral-900 bg-[#07080a] block clear-both">
           <p className="text-neutral-400 font-semibold">⚠️ කිසිදු ප්‍රතිඵලයක් හමු නොවීය.</p>
           <p className="text-sm mt-1 text-neutral-500">වෙනත් වචනයක් සමඟ නැවත උත්සාහ කරන්න.</p>
         </div>
