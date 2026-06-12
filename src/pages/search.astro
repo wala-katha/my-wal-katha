@@ -8,11 +8,18 @@ import { BiSearchAlt } from "react-icons/bi";
 // Retrieve all articles
 const posts = await getSinglePage("posts");
 
-// ✅ FIXED: React එකට දත්ත යවද්දී slug සහ id දෙකම ස්ථාවරව යන බව තහවුරු කළා
+// ✅ FIXED: item.body එක සම්පූර්ණයෙන්ම යවන්නේ නැතුව, title, categories සහ tags පමණක් යැවීමෙන් Crash වීම 100% වළකී
 const searchList = posts.map((item) => ({
   slug: item.slug || item.id || "",
-  data: item.data,
-  content: item.body || "",
+  data: {
+    title: item.data?.title || "Untitled",
+    categories: item.data?.categories || [],
+    tags: item.data?.tags || [],
+    image: item.data?.image || "",
+    date: item.data?.date || ""
+  },
+  // මුළු body එකම යවන්නේ නැතුව සර්ච් එකට සහ snippet එකට පෝස්ට් එකේ description එක හෝ මුල් අකුරු 150 පමණක් ආරක්ෂිතව ගනී
+  content: item.data?.description || (item.body ? item.body.slice(0, 150).replace(/[#*`_]/g, "") : "")
 }));
 
 // SEO 2026 — canonical URL & logo
@@ -172,7 +179,7 @@ const searchPageSchema = {
           කතාවේ නම, ලේඛකයා හෝ ඔබට මතක ඕනෑම වචනයක් පහත පෙට්ටියේ Type කරන්න.
         </p>
 
-        {/* ✅ FIXED: client:only="react" යෙදීමෙන් බ්‍රවුසර් එක ඇතුළේ සිදුවන Hydration Crash එක සම්පූර්ණයෙන්ම නැති වේ */}
+        {/* ✅ client:only="react" සමඟ සැහැල්ලු පිරිසිදු දත්ත පමණක් පාස් වේ */}
         <div class="text-left relative">
           <SearchBar client:only="react" searchList={searchList} />
         </div>
