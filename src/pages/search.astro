@@ -8,18 +8,11 @@ import { BiSearchAlt } from "react-icons/bi";
 // Retrieve all articles
 const posts = await getSinglePage("posts");
 
-// ✅ FIXED: item.body එක සම්පූර්ණයෙන්ම යවන්නේ නැතුව, title, categories සහ tags පමණක් යැවීමෙන් Crash වීම 100% වළකී
+// List of items to search in
 const searchList = posts.map((item) => ({
-  slug: item.slug || item.id || "",
-  data: {
-    title: item.data?.title || "Untitled",
-    categories: item.data?.categories || [],
-    tags: item.data?.tags || [],
-    image: item.data?.image || "",
-    date: item.data?.date || ""
-  },
-  // මුළු body එකම යවන්නේ නැතුව සර්ච් එකට සහ snippet එකට පෝස්ට් එකේ description එක හෝ මුල් අකුරු 150 පමණක් ආරක්ෂිතව ගනී
-  content: item.data?.description || (item.body ? item.body.slice(0, 150).replace(/[#*`_]/g, "") : "")
+  slug: item.id,
+  data: item.data,
+  content: item.body,
 }));
 
 // SEO 2026 — canonical URL & logo
@@ -28,7 +21,7 @@ const canonicalUrl = `${base_url}/search`;
 const siteLogo  = `${base_url}/images/logo.png`;
 const siteTitle = config?.site?.title || "WalaKatha";
 
-// 🚀 SEARCH PAGE SCHEMA 2026
+// 🚀 SEARCH PAGE SCHEMA 2026 — SearchAction + WebSite sameAs
 const searchPageSchema = {
   "@context": "https://schema.org",
   "@graph": [
@@ -117,6 +110,10 @@ const searchPageSchema = {
     <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
   </Fragment>
 
+  {/* ── STYLES ──
+      ✅ FIX: !important හෝ :global() input overrides නෑ
+      Container / hero styles පමණක් — React controlled input touch නොකෙරේ
+  ── */}
   <style>
     .search-hero-container {
       background: linear-gradient(135deg, #0d0d0d 0%, #080808 100%);
@@ -140,6 +137,7 @@ const searchPageSchema = {
       pointer-events: none;
     }
 
+    /* ✅ SEO-safe visually hidden H1 — Google safe pattern */
     .seo-visually-hidden {
       position: absolute;
       width: 1px;
@@ -179,9 +177,13 @@ const searchPageSchema = {
           කතාවේ නම, ලේඛකයා හෝ ඔබට මතක ඕනෑම වචනයක් පහත පෙට්ටියේ Type කරන්න.
         </p>
 
-        {/* ✅ client:only="react" සමඟ සැහැල්ලු පිරිසිදු දත්ත පමණක් පාස් වේ */}
+        {/* ✅ SearchBar — client:load, no wrapper CSS that touches input */}
         <div class="text-left relative">
-          <SearchBar client:only="react" searchList={searchList} />
+          {/* ✅ ROOT FIX: transition:persist — ClientRouter (View Transitions)
+               navigation/morph event වලදී React island unmount/remount වීම
+               නවතී. නැතිනම් state (inputVal) reset වී input "disappear" වෙනවා
+               type කරද්දී (3rd char → re-render → astro:page-load → reset). */}
+          <SearchBar client:load searchList={searchList} transition:persist="search-bar" />
         </div>
       </div>
 
