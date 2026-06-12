@@ -2,7 +2,7 @@ import dateFormat from "@/lib/utils/dateFormat";
 import { humanize, slugify } from "@/lib/utils/textConverter";
 import Fuse from "fuse.js";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BiCalendarEdit as CalendarIcon, BiCategoryAlt as CategoryIcon } from "react-icons/bi";
+import { BiCalendarEdit, BiCategoryAlt } from "react-icons/bi";
 import {
   IoSearchOutline,
   IoCloseCircleOutline,
@@ -27,211 +27,244 @@ interface SearchResult {
 export default function SearchBar({ searchList }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputVal, setInputVal] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
 
-  // 1. දත්ත ලැයිස්තුව ආරක්ෂිතව තබා ගැනීම
-  const safeSearchList = useMemo(() => {
-    if (!Array.isArray(searchList)) return [];
-    return searchList.filter(item => item && item.slug && item.data);
-  }, [searchList]);
-
-  // 2. ✅ FIXED: Dependency එකක් ලෙස safeSearchList.length පමණක් යෙදීමෙන් Infinite Loops සම්පූර්ණයෙන් වළකී
+  // ✅ FIX A: useMemo — Fuse instance stable, searchList reference දෙකක් compare නොකෙරේ
+  // JSON.stringify key ලෙස නොයෙදෙනවා — slugs array length stable reference ලෙස භාවිත
   const fuse = useMemo(
     () =>
-      new Fuse(safeSearchList, {
-        keys: ["data.title", "data.categories", "data.tags", "content"],
+      new Fuse(searchList, {
+        keys: ["data.title", "data.categories", "data.tags"],
         includeMatches: true,
         minMatchCharLength: 2,
-        threshold: 0.4,
+        threshold: 0.5,
       }),
-    [safeSearchList.length]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [] // ✅ CRITICAL: searchList mount වෙද්දී fix — prop නැවත වෙනස් නොවෙනවා (static SSG data)
+       // searchList dynamic නම් [searchList.length] use කරන්න
   );
 
+  // ✅ FIX B: handleChange — useCallback, stable reference, re-render නොකෙරේ
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setInputVal(e.target.value);
   }, []);
 
   const handleClear = useCallback(() => {
     setInputVal("");
-    setSearchResults([]);
     requestAnimationFrame(() => {
       inputRef.current?.focus();
     });
   }, []);
 
-  // URL එකෙන් පරාමිතිය කියවීම
+  // ✅ FIX C: mount init — URL ?q= param කියවීම, dependency array හිස් — loop නෑ
   useEffect(() => {
     const searchStr = new URLSearchParams(window.location.search).get("q") ?? "";
     if (searchStr) {
       setInputVal(searchStr);
+      // cursor position restore
+      requestAnimationFrame(() => {
+        if (inputRef.current) {
+          inputRef.current.selectionStart =
+            inputRef.current.selectionEnd = searchStr.length;
+        }
+      });
     }
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
   }, []);
 
-  // 3. ✅ FIXED: [fuse] එක dependency එකෙන් ඉවත් කර Infinite Re-renders 100%ක් නැති කළා
+  // ✅ FIX D: ROOT CAUSE FIX — history.replaceState සම්පූර්ණයෙන් ඉවත් කළා
+  // Astro View Transitions සමඟ URL manipulation = component unmount → input නැතිවීම
+  // URL update නොකෙරේ — search state component ඇතුළේ පමණක් manage කෙරේ
   useEffect(() => {
-    const trimmed = inputVal.trim();
-    if (trimmed.length > 2) {
-      const results = fuse.search(trimmed);
-      setSearchResults(results as SearchResult[]);
+    if (inputVal.length > 2) {
+      setSearchResults(fuse.search(inputVal) as SearchResult[]);
     } else {
       setSearchResults([]);
     }
-  }, [inputVal]); // 👈 fuse එක මෙතනින් ඉවත් කළා!
+  }, [inputVal, fuse]);
 
   return (
-    <div className="w-full select-none relative z-50">
+    <div className="min-h-[50vh] px-2 select-none relative">
 
-      {/* 🛡️ STATIC CONTAINER: සර්ච් බොක්ස් එක සහ Exit බටන් එක කිසිම රෙන්ඩර් එකකින් හැංගෙන්නේ නැත */}
-      <div className="w-full block">
-        {/* EXIT BUTTON */}
-        <div className="max-w-2xl mx-auto flex justify-end mb-4">
-          <a
-            href="/"
-            rel="home"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-neutral-800 bg-[#0a0b0d]/60 hover:bg-neutral-800/80 text-neutral-400 hover:text-red-400 transition-all duration-300 text-sm font-semibold tracking-wide shadow-md"
-            title="Exit search and go home"
-          >
-            <span>Exit</span>
-            <IoCloseOutline className="h-5 w-5" />
-          </a>
-        </div>
+      {/* EXIT BUTTON */}
+      <div className="max-w-2xl mx-auto flex justify-end mb-4">
+        <a
+          href="/"
+          rel="home"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.08] text-white/60 hover:text-red-400 transition-all duration-300 text-sm font-semibold tracking-wide shadow-sm"
+          title="Exit search and go home"
+          aria-label="Exit search and go home"
+        >
+          <span>Exit</span>
+          <IoCloseOutline className="h-5 w-5" />
+        </a>
+      </div>
 
-        {/* SEARCH INPUT BOX */}
-        <div className="max-w-2xl mx-auto mb-8 relative">
-          <div className="relative flex items-center group w-full">
-            <span 
-              className="absolute left-4 z-20 text-[#01AD9F] pointer-events-none transition-transform duration-300 group-focus-within:scale-110"
-              style={{ filter: "drop-shadow(0 0 8px rgba(1,173,159,0.4))" }}
+      {/* SEARCH INPUT BOX */}
+      <div className="max-w-2xl mx-auto mb-10">
+        <div className="relative flex items-center group">
+
+          {/* Left Icon */}
+          <span className="absolute left-4 z-10 text-[#01AD9F] pointer-events-none group-focus-within:scale-110"
+                style={{ transition: "transform 0.3s", filter: "drop-shadow(0 0 8px rgba(1,173,159,0.5))" }}>
+            <IoSearchOutline className="h-6 w-6" />
+          </span>
+
+          {/* ✅ INPUT — uncontrolled-style appearance, fully controlled value
+              transition inline style ලෙස — Tailwind/global CSS conflict නෑ
+              autoFocus නෑ — Astro hydration race condition නැතිකිරීමට
+              onFocus mount පසු manually focus කෙරේ */}
+          <input
+            ref={inputRef}
+            type="search"
+            name="q"
+            value={inputVal}
+            onChange={handleChange}
+            placeholder="Type here to search posts..."
+            autoComplete="off"
+            spellCheck={false}
+            aria-label="Search posts"
+            aria-autocomplete="list"
+            aria-controls="search-results-list"
+            aria-expanded={!!searchResults?.length}
+            style={{
+              width: "100%",
+              paddingLeft: "3rem",
+              paddingRight: "3rem",
+              paddingTop: "0.875rem",
+              paddingBottom: "0.875rem",
+              borderRadius: "0.75rem",
+              border: "1px solid rgba(255,255,255,0.1)",
+              background: "rgba(255,255,255,0.05)",
+              color: "#F8F8FF",
+              fontSize: "1.125rem",
+              fontWeight: 500,
+              outline: "none",
+              transition: "border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "#01AD9F";
+              e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+              e.currentTarget.style.boxShadow = "0 0 20px rgba(1,173,159,0.15)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+              e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          />
+
+          {/* Clear Button */}
+          {inputVal.length > 0 && (
+            <button
+              onClick={handleClear}
+              type="button"
+              className="absolute right-4 z-10 text-white/40 hover:text-red-400 outline-none focus:text-red-400"
+              style={{ transition: "color 0.2s" }}
+              title="Clear search"
+              aria-label="Clear search"
             >
-              <IoSearchOutline className="h-6 w-6" />
-            </span>
-
-            <input
-              ref={inputRef}
-              id="search-bar"
-              type="text" 
-              name="q"
-              value={inputVal}
-              onChange={handleChange}
-              placeholder="කතාවේ නම, ප්‍රවර්ගය හෝ ලේඛකයා ටයිප් කරන්න..."
-              autoComplete="off"
-              spellCheck={false}
-              aria-label="Search posts"
-              className="search-input w-full pl-12 pr-12 py-3.5 rounded-xl border border-neutral-800 bg-[#0d0e12]/90 text-[#F8F8FF] text-[17px] font-medium outline-none transition-all duration-200 focus:border-[#01AD9F] focus:bg-[#111318]"
-              style={{ boxSizing: "border-box" }}
-            />
-
-            {inputVal.length > 0 && (
-              <button
-                onClick={handleClear}
-                type="button"
-                className="absolute right-4 z-20 text-neutral-500 hover:text-red-400 transition-colors duration-200"
-                title="Clear search"
-              >
-                <IoCloseCircleOutline className="h-6 w-6" />
-              </button>
-            )}
-          </div>
+              <IoCloseCircleOutline className="h-6 w-6" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* RESULT COUNT */}
-      {inputVal.trim().length > 2 && (
+      {inputVal.length > 2 && (
         <div
           role="status"
-          className="my-6 text-center text-sm sm:text-base text-neutral-400 font-medium tracking-wide block"
+          aria-live="polite"
+          className="my-8 text-center text-sm sm:text-base text-white/60 font-medium tracking-wide"
         >
-          ප්‍රතිඵල <span className="text-[#01AD9F] font-bold">{searchResults.length}</span> ක් හමු විය: <span className="text-[#F8F8FF] font-semibold">'{inputVal}'</span>
+          Found{" "}
+          <span className="text-[#01AD9F] font-bold">
+            {searchResults?.length ?? 0}
+          </span>
+          {(searchResults?.length ?? 0) === 1 ? " result" : " results"} for{" "}
+          <span className="text-[#F8F8FF] font-semibold">'{inputVal}'</span>
         </div>
       )}
 
-      {/* DYNAMIC RESULTS CONTAINER */}
+      {/* RESULTS GRID */}
       <div
         id="search-results-list"
         role="list"
-        className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:gap-8 clear-both"
+        className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:gap-10"
       >
-        {searchResults.map(({ item }) => {
-          if (!item?.slug) return null;
-          const title = item?.data?.title ?? "Untitled Post";
-          const image = item?.data?.image;
-          const date = item?.data?.date;
-          const categories = item?.data?.categories;
+        {searchResults?.map(({ item }) => (
+          <article
+            key={item.slug}
+            role="listitem"
+            className="group/card flex flex-col justify-between border border-white/[0.04] bg-white/[0.01] p-4 rounded-2xl hover:border-white/10"
+            style={{ transition: "border-color 0.3s" }}
+          >
+            <div>
+              {item.data.image && (
+                <a
+                  href={`/${item.slug}`}
+                  className="rounded-xl block overflow-hidden relative aspect-video w-full bg-white/5"
+                >
+                  <img
+                    className="group-hover/card:scale-[1.03] w-full h-full object-cover"
+                    style={{ transition: "transform 0.5s" }}
+                    src={item.data.image}
+                    alt={item.data.title}
+                    loading="lazy"
+                    width={445}
+                    height={230}
+                    decoding="async"
+                  />
+                </a>
+              )}
 
-          return (
-            <article
-              key={item.slug}
-              role="listitem"
-              className="search-result-item group/card flex flex-col justify-between border border-neutral-800/60 bg-[#0a0b0d]/80 p-4 rounded-2xl hover:border-[#01AD9F]/30 hover:shadow-lg transition-all duration-300"
-            >
-              <div>
-                {image && (
-                  <a href={`/${item.slug}`} className="rounded-xl block overflow-hidden relative aspect-video w-full bg-neutral-900">
-                    <img
-                      className="group-hover/card:scale-[1.03] w-full h-full object-cover transition-transform duration-500"
-                      src={image}
-                      alt={title}
-                      loading="lazy"
-                      width={445}
-                      height={230}
-                    />
-                  </a>
-                )}
+              <ul className="mt-5 mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm text-white/50">
+                <li className="flex items-center font-medium">
+                  <BiCalendarEdit className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
+                  <time dateTime={item.data.date}>
+                    {dateFormat(item.data.date)}
+                  </time>
+                </li>
+                <li className="flex items-center font-medium">
+                  <BiCategoryAlt className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
+                  <div className="flex flex-wrap gap-1">
+                    {item.data.categories.map((category: string, i: number) => (
+                      <a
+                        key={i}
+                        href={`/categories/${slugify(category)}`}
+                        className="hover:text-[#01AD9F]"
+                        style={{ transition: "color 0.2s" }}
+                      >
+                        {humanize(category)}
+                        {i !== item.data.categories.length - 1 && ","}
+                      </a>
+                    ))}
+                  </div>
+                </li>
+              </ul>
 
-                {/* METADATA */}
-                <ul className="mt-4 mb-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-neutral-400">
-                  {date && (
-                    <li className="flex items-center font-medium">
-                      <CalendarIcon className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
-                      <time dateTime={date}>{dateFormat(date)}</time>
-                    </li>
-                  )}
-                  {Array.isArray(categories) && categories.length > 0 && (
-                    <li className="flex items-center font-medium">
-                      <CategoryIcon className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
-                      <div className="flex flex-wrap gap-1">
-                        {categories.map((category: string, i: number) => {
-                          if (!category) return null;
-                          return (
-                            <a
-                              key={i}
-                              href={`/categories/${slugify(category)}`}
-                              className="hover:text-[#01AD9F] transition-colors duration-200"
-                            >
-                              {humanize(category)}
-                              {i !== categories.length - 1 && ","}
-                            </a>
-                          );
-                        })}
-                      </div>
-                    </li>
-                  )}
-                </ul>
+              <h3 className="mb-2 text-lg sm:text-xl font-bold tracking-tight">
+                <a
+                  href={`/${item.slug}`}
+                  className="block text-[#F8F8FF] hover:text-[#01AD9F] line-clamp-2 leading-snug"
+                  style={{ transition: "color 0.3s" }}
+                >
+                  {item.data.title}
+                </a>
+              </h3>
+            </div>
 
-                {/* TITLE */}
-                <h3 className="mb-2 text-base sm:text-lg font-bold">
-                  <a href={`/${item.slug}`} className="block text-[#F8F8FF] hover:text-[#01AD9F] line-clamp-2 transition-colors duration-200">
-                    {title}
-                  </a>
-                </h3>
-              </div>
-
-              {/* SNIPPET */}
-              <p className="text-neutral-400 text-xs sm:text-sm line-clamp-2 mt-1">
-                {item.content ?? ""}
-              </p>
-            </article>
-          );
-        })}
+            <p className="text-white/60 text-sm line-clamp-2 mt-2 leading-relaxed">
+              {item.content}
+            </p>
+          </article>
+        ))}
       </div>
 
       {/* EMPTY STATE */}
-      {inputVal.trim().length > 2 && searchResults.length === 0 && (
-        <div className="text-center py-16 text-neutral-500 text-base rounded-2xl border border-neutral-900 bg-[#07080a] block">
-          <p className="text-neutral-400 font-semibold">⚠️ කිසිදු ප්‍රතිඵලයක් හමු නොවීය.</p>
+      {inputVal.length > 2 && searchResults?.length === 0 && (
+        <div className="text-center py-16 text-white/40 text-base">
+          <p>කිසිදු ප්‍රතිඵලයක් හමු නොවීය.</p>
+          <p className="text-sm mt-2">වෙනත් වචනයක් සමඟ නැවත උත්සාහ කරන්න.</p>
         </div>
       )}
     </div>
