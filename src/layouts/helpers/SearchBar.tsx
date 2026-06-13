@@ -115,7 +115,7 @@ export default function SearchBar({ searchList }: Props) {
               onFocus mount පසු manually focus කෙරේ */}
           <input
             ref={inputRef}
-            type="search"
+            type="text"
             name="q"
             value={inputVal}
             onChange={handleChange}
@@ -221,23 +221,25 @@ export default function SearchBar({ searchList }: Props) {
                 <li className="flex items-center font-medium">
                   <BiCalendarEdit className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
                   <time dateTime={item.data.date}>
-                    {dateFormat(item.data.date)}
+                    {item.data.date ? dateFormat(item.data.date) : ""}
                   </time>
                 </li>
                 <li className="flex items-center font-medium">
                   <BiCategoryAlt className="mr-1.5 h-4 w-4 text-[#01AD9F]" />
                   <div className="flex flex-wrap gap-1">
-                    {item.data.categories.map((category: string, i: number) => (
-                      <a
-                        key={i}
-                        href={`/categories/${slugify(category)}`}
-                        className="hover:text-[#01AD9F]"
-                        style={{ transition: "color 0.2s" }}
-                      >
-                        {humanize(category)}
-                        {i !== item.data.categories.length - 1 && ","}
-                      </a>
-                    ))}
+                    {(item.data.categories ?? [])
+                      .filter((c: unknown) => typeof c === "string" && c.length > 0)
+                      .map((category: string, i: number, arr: string[]) => (
+                        <a
+                          key={i}
+                          href={`/categories/${slugify(category)}`}
+                          className="hover:text-[#01AD9F]"
+                          style={{ transition: "color 0.2s" }}
+                        >
+                          {humanize(category)}
+                          {i !== arr.length - 1 && ","}
+                        </a>
+                      ))}
                   </div>
                 </li>
               </ul>
@@ -254,7 +256,7 @@ export default function SearchBar({ searchList }: Props) {
             </div>
 
             <p className="text-white/60 text-sm line-clamp-2 mt-2 leading-relaxed">
-              {item.content}
+              {typeof item.content === "string" ? item.content : ""}
             </p>
           </article>
         ))}
