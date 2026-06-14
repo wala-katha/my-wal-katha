@@ -9,12 +9,10 @@ import "@/styles/main.css";
 import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
 
-// font families - extract font names for Font component (filter out type keys)
 const fontEntries = Object.entries(theme.fonts.font_family).filter(
   ([key]) => !key.includes("_type"),
 );
 
-// types for frontmatters
 export interface Props {
   title?: string;
   meta_title?: string;
@@ -24,44 +22,62 @@ export interface Props {
   canonical?: string;
 }
 
-// distructure frontmatters
 const { title, meta_title, description, image, noindex, canonical } = Astro.props;
 
-// --- 🧠 100% ACCURATE SMART SEO AUTO-FILL LOGIC ---
 const calculatedTitle = plainify(
-  meta_title && meta_title.trim() !== "" 
-    ? meta_title 
-    : title && title.trim() !== "" 
-      ? `${title} - Wal Katha` 
+  meta_title && meta_title.trim() !== ""
+    ? meta_title
+    : title && title.trim() !== ""
+      ? `${title} - Wal Katha`
       : config.site.title
 );
 
 const calculatedDescription = plainify(
-  description && description.trim() !== "" 
-    ? description 
+  description && description.trim() !== ""
+    ? description
     : config.metadata.meta_description
 );
 
-// Auto-fill Keywords for Search Engines
 const siteKeywords = "Wal Katha, wala katha, wela katha, walkatha, සිංහල වැල කතා, sinhala wal katha, Wela kathaa, Sex Katha, Sex Stories, Wal Stories, Sinhala Sex, Sinhala Porn, Free Download, Sri Lanka, new wela katha, wal katha 9, sinhala wela katha, wal Katha sinhalen, Ammai Puthai, Paule wela Katha, Sinhala wal wala wela katha, amma katha, family katha, suparima katha, walma, wal katha kari katha, eha gedara, akka katha, malli katha, seeya katha, husband katha, wife katha, hora katha, New Wal Katha blogs, wal chithra katha, wal katha free, sinhala sex katha, sinhala wal katha blog, nangita hukala, campus, amma malli, akka, birinda, wife lingika paula, rasama, rasa wal katha";
 
-// Dynamic Canonical URL calculation safely avoiding double slashes
-const cleanBaseUrl = config.site.base_url.endsWith('/') ? config.site.base_url.slice(0, -1) : config.site.base_url;
-const currentCanonical = canonical ? canonical : `${cleanBaseUrl}${Astro.url.pathname}`;
+const cleanBaseUrl = config.site.base_url.endsWith("/")
+  ? config.site.base_url.slice(0, -1)
+  : config.site.base_url;
 
-// Meta Image URL clean formatting logic
-const finalImageUrl = image 
-  ? (image.startsWith('http') ? image : `${cleanBaseUrl}${image.startsWith('/') ? image : '/' + image}`) 
-  : `${cleanBaseUrl}${config.metadata.meta_image.startsWith('/') ? config.metadata.meta_image : '/' + config.metadata.meta_image}`;
+const currentCanonical = canonical
+  ? canonical
+  : `${cleanBaseUrl}${Astro.url.pathname}`;
+
+const finalImageUrl = image
+  ? image.startsWith("http")
+    ? image
+    : `${cleanBaseUrl}${image.startsWith("/") ? image : "/" + image}`
+  : `${cleanBaseUrl}${config.metadata.meta_image.startsWith("/") ? config.metadata.meta_image : "/" + config.metadata.meta_image}`;
 ---
 
 <!doctype html>
-<html lang="en" class="bg-[#010203]">
+<html lang="si" class="bg-[#010203]">
   <head>
+    <!-- ✅ Charset & Viewport FIRST (render critical) -->
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=5"
+    />
+
+    <!-- ✅ DNS Prefetch + Preconnect (reduces font/resource latency) -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- ✅ Favicon -->
     <link rel="shortcut icon" href={config.site.favicon} />
+
+    <!-- ✅ Theme & Generator -->
     <meta name="theme-name" content="bookworm-light-astro" />
     <meta name="msapplication-TileColor" content="#010203" />
-    
     <meta name="theme-color" content="#010203" />
     <meta
       name="theme-color"
@@ -73,10 +89,9 @@ const finalImageUrl = image
       media="(prefers-color-scheme: dark)"
       content="#010203"
     />
-    
     <meta name="generator" content={Astro.generator} />
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
+    <!-- ✅ Font preload (critical - above fold) -->
     {
       fontEntries.map(([key]) => {
         const cssVar = `--font-${key}` as any;
@@ -84,25 +99,25 @@ const finalImageUrl = image
       })
     }
 
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=5"
-    />
-
+    <!-- ✅ Title & Canonical -->
     <title>{calculatedTitle}</title>
-
     <link rel="canonical" href={currentCanonical} />
 
-    {noindex ? <meta name="robots" content="noindex,nofollow" /> : <meta name="robots" content="index,follow,max-image-preview:large" />}
+    <!-- ✅ Robots -->
+    {
+      noindex ? (
+        <meta name="robots" content="noindex,nofollow" />
+      ) : (
+        <meta name="robots" content="index,follow,max-image-preview:large" />
+      )
+    }
 
+    <!-- ✅ Core SEO Meta -->
     <meta name="description" content={calculatedDescription} />
     <meta name="keywords" content={siteKeywords} />
-
-    <ClientRouter />
-
     <meta name="author" content={config.metadata.meta_author} />
 
-    {/* OPEN GRAPH META DATA */}
+    <!-- ✅ Open Graph -->
     <meta property="og:title" content={calculatedTitle} />
     <meta property="og:description" content={calculatedDescription} />
     <meta property="og:type" content="website" />
@@ -112,15 +127,32 @@ const finalImageUrl = image
     <meta property="og:image:secure_url" content={finalImageUrl} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content={config.site.title} />
 
-    {/* TWITTER CARDS SEO */}
+    <!-- ✅ Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={calculatedTitle} />
     <meta name="twitter:description" content={calculatedDescription} />
     <meta name="twitter:image" content={finalImageUrl} />
-    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- ✅ View Transitions (deferred - non-blocking) -->
+    <ClientRouter />
+
+    <!-- ✅ Critical inline CSS to prevent render-blocking flash -->
+    <style>
+      html,
+      body {
+        background-color: #010203;
+        color: #f8f8ff;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
   </head>
-  
-  <body class="bg-[#010203] text-[#F8F8FF] min-h-screen flex flex-col antialiased selection:bg-[#01AD9F]/30 selection:text-[#01AD9F]">
+
+  <body
+    class="bg-[#010203] text-[#F8F8FF] min-h-screen flex flex-col antialiased selection:bg-[#01AD9F]/30 selection:text-[#01AD9F]"
+  >
     <TwSizeIndicator />
     <Header />
     <main id="main-content" class="min-h-[60vh] flex-1">
