@@ -44,17 +44,20 @@ jobs:
               sharpen: authorSharpen,
             },
             {
+              // ✅ Slider: display 882px → 900px serve (2x retina නෙමෙයි)
               dir: 'public/images/slider',
-              width: 1200, height: 450,
+              width: 900, height: 338,
               fit: 'cover',
               quality: 100, lossless: true,
               sharpen: sliderSharpen,
             },
             {
+              // ✅ Posts: width 400px (display ~197px, 2x retina)
+              // height auto — portrait/landscape ratio maintain
               dir: 'public/images/posts',
-              width: 1200, height: null,
+              width: 400, height: null,
               fit: 'inside',
-              quality: 100, lossless: true,
+              quality: 90, lossless: false,
               sharpen: postSharpen,
             },
           ];
@@ -67,13 +70,12 @@ jobs:
               const input = dir + '/' + file;
               const out = dir + '/' + file.replace(/\.[^.]+$/, '.webp');
               try {
-                const resizeOpts = {
-                  fit,
-                  kernel: sharp.kernel.lanczos3,
-                  withoutEnlargement: true,
-                };
                 await sharp(input)
-                  .resize(width, height ?? undefined, resizeOpts)
+                  .resize(width, height ?? undefined, {
+                    fit,
+                    kernel: sharp.kernel.lanczos3,
+                    withoutEnlargement: true,
+                  })
                   .sharpen(sharpen)
                   .modulate({ saturation: 1.1, brightness: 1.02 })
                   .linear(1.05, -5)
@@ -110,5 +112,5 @@ jobs:
           git add public/images/slider/*.webp || true
           git add public/images/posts/*.webp || true
           git add public/images/logo.webp || true
-          git diff --staged --quiet || git commit -m "Auto: 4K-sharp WebP optimize all images"
+          git diff --staged --quiet || git commit -m "Auto: correct display-size WebP optimize"
           git push
