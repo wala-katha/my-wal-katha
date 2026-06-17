@@ -30,27 +30,37 @@ jobs:
           const sharp = require('sharp');
           import { readdirSync, existsSync } from 'fs';
 
-          // ✅ උපරිම පැහැදිලි බව සඳහා sharpen settings
           const authorSharpen = { sigma: 1.2, m1: 1.5, m2: 0.7, x1: 2, y2: 10, y3: 20 };
           const sliderSharpen = { sigma: 0.8, m1: 1.2, m2: 0.5, x1: 2, y2: 10, y3: 20 };
+          const postSharpen   = { sigma: 0.8, m1: 1.0, m2: 0.5, x1: 2, y2: 10, y3: 20 };
           const logoSharpen   = { sigma: 1.5, m1: 2.0, m2: 0.8, x1: 2, y2: 10, y3: 20 };
 
           const folders = [
             {
               dir: 'public/images/authors',
               width: 120, height: 120,
+              fit: 'cover',
               quality: 100, lossless: true,
               sharpen: authorSharpen,
             },
             {
               dir: 'public/images/slider',
               width: 1200, height: 450,
+              fit: 'cover',
               quality: 100, lossless: true,
               sharpen: sliderSharpen,
             },
+            {
+              // ✅ Posts: fit inside — crop නොකරනවා, full image preserve
+              dir: 'public/images/posts',
+              width: 800, height: 600,
+              fit: 'inside',
+              quality: 100, lossless: true,
+              sharpen: postSharpen,
+            },
           ];
 
-          for (const { dir, width, height, quality, lossless, sharpen } of folders) {
+          for (const { dir, width, height, fit, quality, lossless, sharpen } of folders) {
             if (!existsSync(dir)) continue;
             for (const file of readdirSync(dir)) {
               if (/\.(jpg|jpeg|png)$/i.test(file)) {
@@ -58,15 +68,12 @@ jobs:
                 const out = dir + '/' + file.replace(/\.[^.]+$/, '.webp');
                 await sharp(input)
                   .resize(width, height, {
-                    fit: 'cover',
+                    fit,
                     kernel: sharp.kernel.lanczos3,
                     withoutEnlargement: true,
                   })
-                  // ✅ Unsharp mask — edges sharp කිරීම
                   .sharpen(sharpen)
-                  // ✅ Vibrance + clarity boost
                   .modulate({ saturation: 1.1, brightness: 1.02 })
-                  // ✅ Contrast micro boost
                   .linear(1.05, -5)
                   .webp({ quality, lossless, effort: 6 })
                   .toFile(out);
@@ -75,7 +82,6 @@ jobs:
             }
           }
 
-          // ✅ Logo — aspect ratio 300x50 exact + maximum sharpness
           if (existsSync('public/images/logo.png')) {
             await sharp('public/images/logo.png')
               .resize(300, 50, {
@@ -98,6 +104,7 @@ jobs:
           git config user.email "actions@github.com"
           git add public/images/authors/*.webp || true
           git add public/images/slider/*.webp || true
+          git add public/images/posts/*.webp || true
           git add public/images/logo.webp || true
           git diff --staged --quiet || git commit -m "Auto: 4K-sharp WebP optimize all images"
           git push
