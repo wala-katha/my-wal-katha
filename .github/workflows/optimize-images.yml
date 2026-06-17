@@ -1,4 +1,4 @@
-name: Optimize Author Images
+name: Optimize All Images
 
 on:
   push:
@@ -51,8 +51,6 @@ jobs:
               sharpen: sliderSharpen,
             },
             {
-              // ✅ Posts — original aspect ratio maintain කරනවා
-              // crop නොකරනවා, width පමණයි resize
               dir: 'public/images/posts',
               width: 1200, height: null,
               fit: 'inside',
@@ -63,16 +61,17 @@ jobs:
 
           for (const { dir, width, height, fit, quality, lossless, sharpen } of folders) {
             if (!existsSync(dir)) continue;
-            for (const file of readdirSync(dir)) {
-              if (/\.(jpg|jpeg|png)$/i.test(file)) {
-                const input = dir + '/' + file;
-                const out = dir + '/' + file.replace(/\.[^.]+$/, '.webp');
+            const files = readdirSync(dir);
+            for (const file of files) {
+              if (!/\.(jpg|jpeg|png)$/i.test(file)) continue;
+              const input = dir + '/' + file;
+              const out = dir + '/' + file.replace(/\.[^.]+$/, '.webp');
+              try {
                 const resizeOpts = {
                   fit,
                   kernel: sharp.kernel.lanczos3,
                   withoutEnlargement: true,
                 };
-                if (height) resizeOpts.height = height;
                 await sharp(input)
                   .resize(width, height ?? undefined, resizeOpts)
                   .sharpen(sharpen)
@@ -81,6 +80,8 @@ jobs:
                   .webp({ quality, lossless, effort: 6 })
                   .toFile(out);
                 console.log('Done:', input, '->', out);
+              } catch (e) {
+                console.error('Failed:', input, e.message);
               }
             }
           }
@@ -105,9 +106,9 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add public/images/authors/*.webp || true
-          git add public/images/slider/*.webp || true
-          git add public/images/posts/*.webp || true
+          git add "public/images/authors/*.webp" || true
+          git add "public/images/slider/*.webp" || true
+          git add public/images/posts/ || true
           git add public/images/logo.webp || true
           git diff --staged --quiet || git commit -m "Auto: 4K-sharp WebP optimize all images"
           git push
