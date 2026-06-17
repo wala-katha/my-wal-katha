@@ -1,4 +1,4 @@
-name: Optimize All Images
+name: Optimize Author Images
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
           npm init -y
           npm install sharp
 
-      - name: Optimize all images
+      - name: Resize all images
         run: |
           node --input-type=module << 'EOF'
           import { createRequire } from 'module';
@@ -30,13 +30,27 @@ jobs:
           const sharp = require('sharp');
           import { readdirSync, existsSync } from 'fs';
 
+          // ✅ උපරිම පැහැදිලි බව සඳහා sharpen settings
+          const authorSharpen = { sigma: 1.2, m1: 1.5, m2: 0.7, x1: 2, y2: 10, y3: 20 };
+          const sliderSharpen = { sigma: 0.8, m1: 1.2, m2: 0.5, x1: 2, y2: 10, y3: 20 };
+          const logoSharpen   = { sigma: 1.5, m1: 2.0, m2: 0.8, x1: 2, y2: 10, y3: 20 };
+
           const folders = [
-            { dir: 'public/images/authors', width: 50, height: 50 },
-            { dir: 'public/images/slider', width: 900, height: 338 },
-            { dir: 'public/images/posts', width: 750, height: 500 },
+            {
+              dir: 'public/images/authors',
+              width: 120, height: 120,
+              quality: 100, lossless: true,
+              sharpen: authorSharpen,
+            },
+            {
+              dir: 'public/images/slider',
+              width: 1200, height: 450,
+              quality: 100, lossless: true,
+              sharpen: sliderSharpen,
+            },
           ];
 
-          for (const { dir, width, height } of folders) {
+          for (const { dir, width, height, quality, lossless, sharpen } of folders) {
             if (!existsSync(dir)) continue;
             for (const file of readdirSync(dir)) {
               if (/\.(jpg|jpeg|png)$/i.test(file)) {
@@ -48,21 +62,20 @@ jobs:
                     kernel: sharp.kernel.lanczos3,
                     withoutEnlargement: true,
                   })
-                  .sharpen({
-                    sigma: 1.2,
-                    m1: 1.5,
-                    m2: 0.7,
-                    x1: 2.0,
-                    y2: 10.0,
-                    y3: 20.0,
-                  })
-                  .webp({ quality: 100, lossless: true, effort: 6 })
+                  // ✅ Unsharp mask — edges sharp කිරීම
+                  .sharpen(sharpen)
+                  // ✅ Vibrance + clarity boost
+                  .modulate({ saturation: 1.1, brightness: 1.02 })
+                  // ✅ Contrast micro boost
+                  .linear(1.05, -5)
+                  .webp({ quality, lossless, effort: 6 })
                   .toFile(out);
                 console.log('Done:', input, '->', out);
               }
             }
           }
 
+          // ✅ Logo — aspect ratio 300x50 exact + maximum sharpness
           if (existsSync('public/images/logo.png')) {
             await sharp('public/images/logo.png')
               .resize(300, 50, {
@@ -70,7 +83,9 @@ jobs:
                 background: { r: 0, g: 0, b: 0, alpha: 0 },
                 kernel: sharp.kernel.lanczos3,
               })
-              .sharpen({ sigma: 0.8 })
+              .sharpen(logoSharpen)
+              .modulate({ saturation: 1.1, brightness: 1.02 })
+              .linear(1.05, -5)
               .webp({ quality: 100, lossless: true, effort: 6 })
               .toFile('public/images/logo.webp');
             console.log('Done: logo.png -> logo.webp');
@@ -83,7 +98,6 @@ jobs:
           git config user.email "actions@github.com"
           git add public/images/authors/*.webp || true
           git add public/images/slider/*.webp || true
-          git add public/images/posts/*.webp || true
           git add public/images/logo.webp || true
-          git diff --staged --quiet || git commit -m "Auto: optimize images with sharpening"
+          git diff --staged --quiet || git commit -m "Auto: 4K-sharp WebP optimize all images"
           git push
