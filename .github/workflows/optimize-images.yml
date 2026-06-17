@@ -32,7 +32,7 @@ jobs:
 
           const authorSharpen = { sigma: 1.2, m1: 1.5, m2: 0.7, x1: 2, y2: 10, y3: 20 };
           const sliderSharpen = { sigma: 0.8, m1: 1.2, m2: 0.5, x1: 2, y2: 10, y3: 20 };
-          const postSharpen   = { sigma: 0.8, m1: 1.0, m2: 0.5, x1: 2, y2: 10, y3: 20 };
+          const postSharpen   = { sigma: 0.8, m1: 1.2, m2: 0.5, x1: 2, y2: 10, y3: 20 };
           const logoSharpen   = { sigma: 1.5, m1: 2.0, m2: 0.8, x1: 2, y2: 10, y3: 20 };
 
           const folders = [
@@ -51,9 +51,10 @@ jobs:
               sharpen: sliderSharpen,
             },
             {
-              // ✅ Posts: fit inside — crop නොකරනවා, full image preserve
+              // ✅ Posts — original aspect ratio maintain කරනවා
+              // crop නොකරනවා, width පමණයි resize
               dir: 'public/images/posts',
-              width: 800, height: 600,
+              width: 1200, height: null,
               fit: 'inside',
               quality: 100, lossless: true,
               sharpen: postSharpen,
@@ -66,12 +67,14 @@ jobs:
               if (/\.(jpg|jpeg|png)$/i.test(file)) {
                 const input = dir + '/' + file;
                 const out = dir + '/' + file.replace(/\.[^.]+$/, '.webp');
+                const resizeOpts = {
+                  fit,
+                  kernel: sharp.kernel.lanczos3,
+                  withoutEnlargement: true,
+                };
+                if (height) resizeOpts.height = height;
                 await sharp(input)
-                  .resize(width, height, {
-                    fit,
-                    kernel: sharp.kernel.lanczos3,
-                    withoutEnlargement: true,
-                  })
+                  .resize(width, height ?? undefined, resizeOpts)
                   .sharpen(sharpen)
                   .modulate({ saturation: 1.1, brightness: 1.02 })
                   .linear(1.05, -5)
