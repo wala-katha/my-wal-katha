@@ -29,26 +29,37 @@ const demoSlides = [
 ];
 ---
 
-<div class="relative w-full overflow-hidden rounded-xl bg-[#010203] mb-8 border border-white/10" id="astro-featured-slider">
-  <div class="flex transition-transform duration-500 ease-in-out" id="slider-wrapper" style="width: 400%;">
+<div
+  class="relative w-full overflow-hidden rounded-xl bg-[#010203] mb-8 border border-white/10"
+  id="featured-slider"
+>
+  <!-- Slides -->
+  <div
+    class="flex transition-transform duration-500 ease-in-out will-change-transform"
+    id="slider-track"
+  >
     {demoSlides.map((slide, index) => (
-      <div class="w-full flex-shrink-0 relative" style="width: 25%;">
-        <a href={`/blog/${slide.id}/`} class="block w-full h-full group" aria-label={`Read story: ${slide.title}`}>
-          <div class="relative w-full aspect-[16/8] sm:aspect-[21/8] md:aspect-[24/8] bg-[#010203] overflow-hidden">
+      <div class="w-full flex-shrink-0 relative">
+        <a
+          href={`/blog/${slide.id}/`}
+          class="block w-full h-full group"
+          aria-label={`Read story: ${slide.title}`}
+        >
+          <div class="relative w-full aspect-[16/9] sm:aspect-[21/9] overflow-hidden bg-[#010203]">
             <img
               src={slide.image}
               alt={slide.title}
-              width={900}
-              height={338}
+              width="900"
+              height="506"
               loading={index === 0 ? "eager" : "lazy"}
-              decoding={index === 0 ? "sync" : "async"}
+              decoding="async"
               fetchpriority={index === 0 ? "high" : "low"}
-              class="w-full h-full object-cover object-center transition duration-500 group-hover:scale-[1.02]"
+              class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
             />
           </div>
 
           <div class="absolute bottom-3 left-4 z-10">
-            <span class="bg-[#FFCC00] text-[#010203] px-2.5 py-1 text-[11px] sm:text-xs font-black rounded uppercase tracking-wider shadow-md">
+            <span class="bg-[#FFCC00] text-[#010203] px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded uppercase tracking-wider shadow-md">
               {humanize(slide.category)}
             </span>
           </div>
@@ -57,91 +68,106 @@ const demoSlides = [
     ))}
   </div>
 
+  <!-- Dots -->
   <div class="absolute bottom-3 right-4 flex gap-1.5 z-20">
     {demoSlides.map((_, index) => (
       <button
-        class={`w-2 h-2 rounded-full transition-all duration-300 slider-dot ${index === 0 ? 'bg-[#01AD9F] scale-125' : 'bg-white/40'}`}
+        class="w-2 h-2 rounded-full bg-white/40 transition-all duration-300 dot"
         data-index={index}
         aria-label={`Go to slide ${index + 1}`}
-      ></button>
+      />
     ))}
   </div>
 </div>
 
-<script>
-  function initSlider() {
-    const slider = document.getElementById('astro-featured-slider');
-    const wrapper = document.getElementById('slider-wrapper');
-    const dots = document.querySelectorAll('.slider-dot');
+<script is:inline>
+  const SLIDE_COUNT = 4;
+  const INTERVAL = 4000;
 
-    if (!slider || !wrapper || dots.length === 0) return;
+  function initFeaturedSlider() {
+    const track = document.getElementById("slider-track");
+    const root = document.getElementById("featured-slider");
+    const dots = Array.from(document.querySelectorAll(".dot"));
 
-    let currentIndex = 0;
-    const totalSlides = dots.length;
-    const intervalTime = 4000;
-    let slideInterval: any;
+    if (!track || !root || dots.length === 0) return;
 
-    function updateSlider(index: number) {
-      currentIndex = index;
-      wrapper.style.transform = `translateX(-${index * 25}%)`;
+    let index = 0;
+    let timer = null;
 
-      dots.forEach((dot, i) => {
-        if (i === index) {
-          dot.classList.add('bg-[#01AD9F]', 'scale-125');
-          dot.classList.remove('bg-white/40');
-        } else {
-          dot.classList.remove('bg-[#01AD9F]', 'scale-125');
-          dot.classList.add('bg-white/40');
-        }
+    function update(i) {
+      index = i;
+
+      // move slider (clean % based)
+      track.style.transform = `translateX(-${i * 100}%)`;
+
+      // dots update
+      dots.forEach((dot, d) => {
+        dot.classList.toggle("bg-[#01AD9F]", d === i);
+        dot.classList.toggle("scale-125", d === i);
+        dot.classList.toggle("bg-white/40", d !== i);
       });
     }
 
-    function startInterval() {
-      slideInterval = setInterval(() => {
-        const nextIndex = (currentIndex + 1) % totalSlides;
-        updateSlider(nextIndex);
-      }, intervalTime);
+    function next() {
+      update((index + 1) % SLIDE_COUNT);
     }
 
-    function stopInterval() {
-      clearInterval(slideInterval);
+    function start() {
+      stop();
+      timer = setInterval(next, INTERVAL);
     }
 
+    function stop() {
+      if (timer) clearInterval(timer);
+    }
+
+    // dot click
     dots.forEach((dot) => {
-      dot.addEventListener('click', (e) => {
-        stopInterval();
-        const index = parseInt((e.target as HTMLElement).getAttribute('data-index') || '0');
-        updateSlider(index);
-        startInterval();
+      dot.addEventListener("click", (e) => {
+        const i = Number(dot.dataset.index);
+        update(i);
+        start();
       });
     });
 
-    let touchStartX = 0;
-    let touchEndX = 0;
+    // touch support (optimized)
+    let startX = 0;
 
-    slider.addEventListener('touchstart', (e) => {
-      touchStartX = (e as TouchEvent).changedTouches[0].screenX;
-      stopInterval();
-    }, { passive: true });
+    root.addEventListener(
+      "touchstart",
+      (e) => {
+        startX = e.touches[0].clientX;
+        stop();
+      },
+      { passive: true }
+    );
 
-    slider.addEventListener('touchend', (e) => {
-      touchEndX = (e as TouchEvent).changedTouches[0].screenX;
-      const diff = touchStartX - touchEndX;
-      if (Math.abs(diff) > 50) {
-        const nextIndex = diff > 0
-          ? (currentIndex + 1) % totalSlides
-          : (currentIndex - 1 + totalSlides) % totalSlides;
-        updateSlider(nextIndex);
-      }
-      startInterval();
-    }, { passive: true });
+    root.addEventListener(
+      "touchend",
+      (e) => {
+        const endX = e.changedTouches[0].clientX;
+        const diff = startX - endX;
 
-    slider.addEventListener('mouseenter', stopInterval);
-    slider.addEventListener('mouseleave', startInterval);
+        if (Math.abs(diff) > 50) {
+          update(diff > 0 ? (index + 1) % SLIDE_COUNT : (index - 1 + SLIDE_COUNT) % SLIDE_COUNT);
+        }
 
-    startInterval();
+        start();
+      },
+      { passive: true }
+    );
+
+    // pause on hover
+    root.addEventListener("mouseenter", stop);
+    root.addEventListener("mouseleave", start);
+
+    // start
+    update(0);
+    start();
+
+    // cleanup for Astro navigation
+    document.addEventListener("astro:before-swap", () => stop());
   }
 
-  document.addEventListener('astro:page-load', initSlider);
-  initSlider();
+  document.addEventListener("astro:page-load", initFeaturedSlider);
 </script>
