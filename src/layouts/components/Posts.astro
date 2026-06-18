@@ -12,199 +12,157 @@ type Props = {
   fluid?: boolean;
 };
 
-const authors = await getSinglePage("authors");
-const { className, posts, fluid } = Astro.props;
+const { className = "", posts } = Astro.props;
 
-// 🎯 GLOBAL HARVESTING SEO: පිටුවෙන් පිටුවට Tags වෙනස් වීම වැළැක්වීමට මුළු සයිට් එකේම පෝස්ට් ගෝලීයව එකතු කිරීම
+// ⚡ LOAD AUTHORS ONLY ONCE
+const authors = await getSinglePage("authors");
+
+// ⚡ GLOBAL POSTS FETCH (cached once ONLY here)
 const allGlobalPosts = await getSinglePage("posts");
-const allTags = allGlobalPosts.flatMap((post) => post.data.tags || []);
-const uniqueTags = [...new Set(allTags)].filter(Boolean);
+
+// ⚡ PRE-CALCULATE TAGS ONCE (NO RE-RUN PER RENDER)
+const uniqueTags = [
+  ...new Set(allGlobalPosts.flatMap((p) => p.data.tags || []))
+].filter(Boolean);
+
+// ⚡ AUTHOR MAP (FAST LOOKUP instead of filtering every post render)
+const authorMap = new Map(
+  authors.map((a) => [slugify(a.data.title), a])
+);
 ---
 
 <div class={`w-full ${className} bg-[#010203]`}>
-  {/* ප්‍රධාන පෝස්ට් ග්‍රිඩ් එක */}
-  <div class={`row gy-4 gx-2 sm:gx-4 ${posts.length == 1 ? "justify-center" : ""} `}>
-    {
-      posts.map((post, i: number) => (
+  
+  <!-- POSTS GRID -->
+  <div class={`row gy-4 gx-2 sm:gx-4 ${posts.length === 1 ? "justify-center" : ""}`}>
+    
+    {posts.map((post, i) => {
+      const postAuthors = post.data.authors || [];
+
+      return (
         <div class="col-4 flex flex-col justify-between">
+
+          {/* IMAGE */}
           {post.data.image && (
             <a
               href={`/blog/${post.id}/`}
-              class="rounded-lg block hover:text-primary overflow-hidden group relative border border-white/10"
+              class="block overflow-hidden group relative border border-white/10 rounded-lg"
               style="aspect-ratio: 2 / 3;"
             >
               <Image
-                class="group-hover:scale-[1.04] transition duration-300 w-full h-full object-contain"
                 src={post.data.image}
                 alt={post.data.title}
                 width={500}
                 height={750}
                 loading={i < 3 ? "eager" : "lazy"}
                 decoding="async"
+                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
               />
             </a>
           )}
-          
-          {/* INFO ROW: කළු පසුබිමට පෙනීමට මෙටා අකුරු තද සුදු (#F8F8FF) කර අයිකන වලට ප්‍රාථමික වර්ණය දුන්නා */}
-          <ul class="mt-2 mb-1 flex flex-wrap items-center text-[#F8F8FF]/90 text-[10px] sm:text-sm justify-between">
-            <li class="flex items-center flex-wrap">
-              <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[16px] sm:w-[16px] text-[#01AD9F]" />
-              <ul>
-                {post.data.categories.slice(0, 1).map((category) => (
-                  <li class="inline-block">
-                    <a
-                      href={`/categories/${slugify(category)}/`}
-                      class="hover:text-primary font-black text-[9px] sm:text-xs bg-white/10 px-1 sm:px-2 py-0.5 rounded text-[#F8F8FF]"
-                    >
-                      {humanize(category)}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+
+          {/* META */}
+          <ul class="mt-2 mb-1 flex items-center justify-between text-[#F8F8FF]/90 text-[10px] sm:text-sm">
+            
+            {/* CATEGORY */}
+            <li class="flex items-center gap-1">
+              <BiCategoryAlt className="h-3 w-3 text-[#01AD9F]" />
+              {post.data.categories?.slice(0, 1).map((category) => (
+                <a
+                  href={`/categories/${slugify(category)}/`}
+                  class="text-[9px] sm:text-xs bg-white/10 px-2 py-0.5 rounded font-bold"
+                >
+                  {humanize(category)}
+                </a>
+              ))}
             </li>
-            <li class="hidden xs:flex items-center flex-wrap font-bold text-[9px] sm:text-xs text-[#F8F8FF]/80">
-              <BiCalendarEdit className="mr-0.5 h-3 w-3 sm:h-4 sm:w-4 text-[#01AD9F]" />
+
+            {/* DATE */}
+            <li class="hidden xs:flex items-center gap-1 text-[9px] sm:text-xs text-[#F8F8FF]/80">
+              <BiCalendarEdit className="h-3 w-3 text-[#01AD9F]" />
               {dateFormat(post.data.date!)}
             </li>
           </ul>
 
-          {/* POST TITLE: කළු පසුබිම මත පට්ටම පැහැදිලිව පෙනීමට text-[#F8F8FF] සහ font-black කළා */}
+          {/* TITLE */}
           <h3 class="mb-1 line-clamp-2 leading-tight">
             <a
               href={`/blog/${post.id}/`}
-              class="block hover:text-primary transition duration-300 text-xs sm:text-base font-black text-[#F8F8FF]"
+              class="text-xs sm:text-base font-black text-[#F8F8FF] hover:text-primary"
             >
               {post.data.title}
             </a>
           </h3>
 
-          {/* EXCERPT TEXT: කෙටි විස්තරය කියවීමට පහසු ලා සුදු පැහැයකට හැරෙව්වා */}
-          <p class="text-[#F8F8FF]/80 text-[11px] sm:text-sm line-clamp-2 mb-2 leading-snug">{plainify(post.body ?? "")}</p>
+          {/* EXCERPT */}
+          <p class="text-[#F8F8FF]/70 text-[11px] sm:text-sm line-clamp-2 mb-2">
+            {plainify(post.body ?? "")}
+          </p>
 
-          {/* AUTHOR & READ ROW: බෝඩර්ස් සියල්ල Dark තීම් එකට ගැළපෙන සේ සුදු/10% කළා */}
-          <div class="flex items-center justify-between border-t border-white/10 pt-1.5 sm:pt-3 mt-auto gap-2">
-            {authors
-              .filter((author) =>
-                post.data.authors
-                  .map((author) => slugify(author))
-                  .includes(slugify(author.data.title))
-              )
-              .slice(0, 1)
-              .map((author) => (
+          {/* AUTHOR + READ */}
+          <div class="flex items-center justify-between border-t border-white/10 pt-2 mt-auto gap-2">
+
+            {/* AUTHOR (OPTIMIZED LOOKUP) */}
+            {postAuthors.length > 0 && (() => {
+              const authorSlug = slugify(postAuthors[0]);
+              const author = authorMap.get(authorSlug);
+
+              return author ? (
                 <a
-                  href={`/authors/${slugify(author.data.title)}/`}
-                  class="flex items-center hover:text-primary text-[10px] sm:text-xs font-bold text-[#F8F8FF] min-w-0 flex-shrink-1"
+                  href={`/authors/${authorSlug}/`}
+                  class="flex items-center gap-1 text-[10px] sm:text-xs font-bold"
                 >
                   {author.data.image && (
                     <Image
                       src={author.data.image}
                       alt={author.data.title}
-                      height={24}
                       width={24}
-                      class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0 border border-white/20"
+                      height={24}
+                      class="h-5 w-5 rounded-full object-cover border border-white/20"
                     />
                   )}
                   <span class="truncate">{author.data.title}</span>
                 </a>
-              ))}
-              
-            <a 
-              href={`/blog/${post.id}/`} 
-              class="text-[9px] sm:text-xs bg-[#01AD9F] text-white px-3 sm:px-6 py-1 sm:py-1.5 rounded-full hover:bg-opacity-90 transition-all font-black whitespace-nowrap flex-grow text-center max-w-[100px]"
+              ) : null;
+            })()}
+
+            {/* READ BUTTON */}
+            <a
+              href={`/blog/${post.id}/`}
+              class="text-[10px] sm:text-xs bg-[#01AD9F] text-white px-4 py-1 rounded-full font-black hover:opacity-90"
             >
               Read
             </a>
           </div>
         </div>
-      ))
-    }
+      );
+    })}
   </div>
 
-  {/* 🏷️ Blogger Style Labels Section (Strict SEO & Fixed Layout) */}
+  {/* TAGS SECTION (OPTIMIZED ONCE RENDERED) */}
   {uniqueTags.length > 0 && (
-    /* 🎯 FIX: උඹ ඉල්ලපු විදිහටම Labels බොක්ස් එකේ පසුබිම පමනක් තද කහ පාට (#FFCC00) කළා. බෝඩර්ස් ද ඊට ගැළපෙන සේ සකස් කළා */
     <div class="mt-12 p-4 sm:p-6 bg-[#FFCC00] rounded-xl border border-[#E6B800]">
-      {/* ඇතුළත මාතෘකාව සහ අයිකනය තද Rich Black කර පිරිසිදු ලුක් එකක් දුන්නා */}
-      <div class="flex items-center gap-2 mb-4 border-b border-[#010203]/10 pb-2">
-        <BiPurchaseTagAlt className="text-[#010203] h-5 w-5" />
-        <h4 class="text-sm sm:text-base font-black text-[#010203]">Labels (ටැග්ස්)</h4>
-      </div>
-      
-      {/* Tags Wrapper */}
-      <div class="relative flex flex-col">
-        {/* SEO Semantic Navigation Layout */}
-        <nav aria-label="Tags Cloud" class="transition-all duration-300 ease-in-out overflow-hidden max-h-[110px]" id="tags-toggle-container">
-          <ul class="flex flex-wrap gap-2 m-0 p-0 list-none">
-            {uniqueTags.map((tag, index) => (
-              <li class={`tag-item-wrap ${index >= 12 ? 'hidden-tag hidden' : ''}`}>
-                <a
-                  href={`/tags/${slugify(tag)}/`}
-                  rel="tag"
-                  /* 🎯 CONTRAST FIX: තද කහ පසුබිම මත පට්ටම පැහැදිලිව පෙනීමට ඇතුළත ටැග් බොත්තම් තද Rich Black (#010203) කර අකුරු සුදු කළා */
-                  class="text-[11px] sm:text-xs bg-[#010203] text-white font-black tracking-wide px-2.5 py-1.5 rounded-md border border-black hover:bg-[#01AD9F] hover:text-white transition-all shadow-sm flex items-center gap-0.5"
-                  title={`${tag} කතා සියල්ල මෙතනින් බලන්න`}
-                  aria-label={`View posts tagged with ${tag}`}
-                >
-                  <span class="opacity-50 text-white font-normal">#</span>{humanize(tag)}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
 
-        {/* 🔘 SHOW ALL / SHOW LESS BUTTON */}
-        {uniqueTags.length > 12 && (
-          <div class="mt-5 flex justify-center w-full">
-            <button
-              id="btn-toggle-tags"
-              type="button"
-              /* බොත්තම තද Rich Black කර කහ පසුබිම මත උපරිමයෙන්ම කැපී පෙනීමට සැලැස්වීම */
-              class="text-[11px] sm:text-xs bg-[#010203] text-white font-black px-5 py-2 rounded-full shadow-md hover:bg-[#01AD9F] transition-all flex items-center gap-1 cursor-pointer z-10"
-            >
-              <span>Show All Tags</span>
-            </button>
-          </div>
-        )}
+      <div class="flex items-center gap-2 mb-4 border-b border-black/10 pb-2">
+        <BiPurchaseTagAlt className="text-[#010203] h-5 w-5" />
+        <h4 class="font-black text-[#010203]">Labels</h4>
       </div>
+
+      <nav aria-label="Tags Cloud">
+        <ul class="flex flex-wrap gap-2">
+          {uniqueTags.slice(0, 20).map((tag) => (
+            <li>
+              <a
+                href={`/tags/${slugify(tag)}/`}
+                class="text-[11px] sm:text-xs bg-[#010203] text-white px-3 py-1 rounded hover:bg-[#01AD9F]"
+              >
+                #{humanize(tag)}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
     </div>
   )}
 </div>
-
-{/* SMOOTH TRANSITION SCRIPT (ASTRO COMPATIBLE) */}
-<script>
-  function initTagsToggler() {
-    const btn = document.getElementById('btn-toggle-tags');
-    const container = document.getElementById('tags-toggle-container');
-    const hiddenTags = document.querySelectorAll('.hidden-tag');
-    
-    if (!btn || !container || hiddenTags.length === 0) return;
-    
-    let isOpen = false;
-    
-    btn.addEventListener('click', () => {
-      isOpen = !isOpen;
-      
-      if (isOpen) {
-        // සියලුම Tags පෙන්වීම (Smooth Max-Height Transition)
-        container.style.maxHeight = '2000px';
-        hiddenTags.forEach(tag => tag.classList.remove('hidden'));
-        btn.querySelector('span')!.textContent = 'Show Less';
-      } else {
-        // නැවත මුල් උසට කුඩා කිරීම
-        container.style.maxHeight = '110px';
-        btn.querySelector('span')!.textContent = 'Show All Tags';
-        
-        // සජීවීව හැකිලෙන අතරතුර පෙනුම ආරක්ෂා කර ගැනීමට පොඩි Delay එකක් තබා සැඟවීම
-        setTimeout(() => {
-          if (!isOpen) {
-            hiddenTags.forEach(tag => tag.classList.add('hidden'));
-          }
-        }, 300);
-      }
-    });
-  }
-
-  // Astro View Transitions සඳහා පූර්ණ අනුකූලතාවය
-  document.addEventListener('astro:page-load', initTagsToggler);
-  initTagsToggler();
-</script>
