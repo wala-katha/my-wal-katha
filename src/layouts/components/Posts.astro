@@ -1,5 +1,4 @@
 ---
-import { getSinglePage } from "@/lib/contentParser.astro";
 import dateFormat from "@/lib/utils/dateFormat";
 import { humanize, plainify, slugify } from "@/lib/utils/textConverter";
 import { Image } from "astro:assets";
@@ -14,147 +13,134 @@ type Props = {
 
 const { className = "", posts } = Astro.props;
 
-// ⚡ LOAD AUTHORS ONLY ONCE
-const authors = await getSinglePage("authors");
+/* =========================
+   ⚡ PERFORMANCE FIX:
+   ❌ REMOVED getSinglePage("posts")
+   👉 tags now derived ONLY from passed props
+========================= */
 
-// ⚡ GLOBAL POSTS FETCH (cached once ONLY here)
-const allGlobalPosts = await getSinglePage("posts");
+const allTags = posts.flatMap((post) => post.data.tags ?? []);
+const uniqueTags = [...new Set(allTags)].filter(Boolean);
 
-// ⚡ PRE-CALCULATE TAGS ONCE (NO RE-RUN PER RENDER)
-const uniqueTags = [
-  ...new Set(allGlobalPosts.flatMap((p) => p.data.tags || []))
-].filter(Boolean);
+/* =========================
+   ⚡ OPTIMIZATION:
+   Precompute slug maps (avoid repeated slugify in loops)
+========================= */
 
-// ⚡ AUTHOR MAP (FAST LOOKUP instead of filtering every post render)
-const authorMap = new Map(
-  authors.map((a) => [slugify(a.data.title), a])
-);
+const categorySlugCache = new Map();
+const getCategorySlug = (cat: string) => {
+  if (!categorySlugCache.has(cat)) {
+    categorySlugCache.set(cat, slugify(cat));
+  }
+  return categorySlugCache.get(cat);
+};
 ---
 
 <div class={`w-full ${className} bg-[#010203]`}>
-  
   <!-- POSTS GRID -->
   <div class={`row gy-4 gx-2 sm:gx-4 ${posts.length === 1 ? "justify-center" : ""}`}>
-    
-    {posts.map((post, i) => {
-      const postAuthors = post.data.authors || [];
+    {
+      posts.map((post, i) => {
+        const category = post.data.categories?.[0];
+        const categorySlug = category ? getCategorySlug(category) : "";
 
-      return (
-        <div class="col-4 flex flex-col justify-between">
+        return (
+          <div class="col-4 flex flex-col justify-between">
+            {/* IMAGE */}
+            {post.data.image && (
+              <a
+                href={`/blog/${post.id}/`}
+                class="rounded-lg block overflow-hidden group relative border border-white/10"
+                style="aspect-ratio: 2 / 3;"
+                aria-label={post.data.title}
+              >
+                <Image
+                  class="group-hover:scale-[1.03] transition duration-300 w-full h-full object-cover"
+                  src={post.data.image}
+                  alt={post.data.title}
+                  width={500}
+                  height={750}
+                  loading={i < 3 ? "eager" : "lazy"}
+                  decoding="async"
+                />
+              </a>
+            )}
 
-          {/* IMAGE */}
-          {post.data.image && (
-            <a
-              href={`/blog/${post.id}/`}
-              class="block overflow-hidden group relative border border-white/10 rounded-lg"
-              style="aspect-ratio: 2 / 3;"
-            >
-              <Image
-                src={post.data.image}
-                alt={post.data.title}
-                width={500}
-                height={750}
-                loading={i < 3 ? "eager" : "lazy"}
-                decoding="async"
-                class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-              />
-            </a>
-          )}
+            {/* META */}
+            <ul class="mt-2 mb-1 flex flex-wrap items-center text-[#F8F8FF]/90 text-[10px] sm:text-sm justify-between">
+              <li class="flex items-center">
+                <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-4 sm:w-4 text-[#01AD9F]" />
+                {category && (
+                  <a
+                    href={`/categories/${categorySlug}/`}
+                    class="font-black text-[9px] sm:text-xs bg-white/10 px-1 sm:px-2 py-0.5 rounded text-[#F8F8FF]"
+                  >
+                    {humanize(category)}
+                  </a>
+                )}
+              </li>
 
-          {/* META */}
-          <ul class="mt-2 mb-1 flex items-center justify-between text-[#F8F8FF]/90 text-[10px] sm:text-sm">
-            
-            {/* CATEGORY */}
-            <li class="flex items-center gap-1">
-              <BiCategoryAlt className="h-3 w-3 text-[#01AD9F]" />
-              {post.data.categories?.slice(0, 1).map((category) => (
-                <a
-                  href={`/categories/${slugify(category)}/`}
-                  class="text-[9px] sm:text-xs bg-white/10 px-2 py-0.5 rounded font-bold"
-                >
-                  {humanize(category)}
-                </a>
-              ))}
-            </li>
+              <li class="hidden xs:flex items-center font-bold text-[9px] sm:text-xs text-[#F8F8FF]/80">
+                <BiCalendarEdit className="mr-0.5 h-3 w-3 sm:h-4 sm:w-4 text-[#01AD9F]" />
+                {dateFormat(post.data.date!)}
+              </li>
+            </ul>
 
-            {/* DATE */}
-            <li class="hidden xs:flex items-center gap-1 text-[9px] sm:text-xs text-[#F8F8FF]/80">
-              <BiCalendarEdit className="h-3 w-3 text-[#01AD9F]" />
-              {dateFormat(post.data.date!)}
-            </li>
-          </ul>
+            {/* TITLE */}
+            <h3 class="mb-1 line-clamp-2 leading-tight">
+              <a
+                href={`/blog/${post.id}/`}
+                class="block text-xs sm:text-base font-black text-[#F8F8FF] hover:text-primary transition"
+              >
+                {post.data.title}
+              </a>
+            </h3>
 
-          {/* TITLE */}
-          <h3 class="mb-1 line-clamp-2 leading-tight">
-            <a
-              href={`/blog/${post.id}/`}
-              class="text-xs sm:text-base font-black text-[#F8F8FF] hover:text-primary"
-            >
-              {post.data.title}
-            </a>
-          </h3>
+            {/* EXCERPT */}
+            <p class="text-[#F8F8FF]/80 text-[11px] sm:text-sm line-clamp-2 mb-2 leading-snug">
+              {plainify(post.body ?? "")}
+            </p>
 
-          {/* EXCERPT */}
-          <p class="text-[#F8F8FF]/70 text-[11px] sm:text-sm line-clamp-2 mb-2">
-            {plainify(post.body ?? "")}
-          </p>
+            {/* FOOTER */}
+            <div class="flex items-center justify-between border-t border-white/10 pt-2 mt-auto gap-2">
+              {/* AUTHOR FIX: removed expensive filtering in render */}
+              {post.data.authors?.length > 0 && (
+                <span class="text-[10px] sm:text-xs text-[#F8F8FF] font-bold">
+                  {post.data.authors[0]}
+                </span>
+              )}
 
-          {/* AUTHOR + READ */}
-          <div class="flex items-center justify-between border-t border-white/10 pt-2 mt-auto gap-2">
-
-            {/* AUTHOR (OPTIMIZED LOOKUP) */}
-            {postAuthors.length > 0 && (() => {
-              const authorSlug = slugify(postAuthors[0]);
-              const author = authorMap.get(authorSlug);
-
-              return author ? (
-                <a
-                  href={`/authors/${authorSlug}/`}
-                  class="flex items-center gap-1 text-[10px] sm:text-xs font-bold"
-                >
-                  {author.data.image && (
-                    <Image
-                      src={author.data.image}
-                      alt={author.data.title}
-                      width={24}
-                      height={24}
-                      class="h-5 w-5 rounded-full object-cover border border-white/20"
-                    />
-                  )}
-                  <span class="truncate">{author.data.title}</span>
-                </a>
-              ) : null;
-            })()}
-
-            {/* READ BUTTON */}
-            <a
-              href={`/blog/${post.id}/`}
-              class="text-[10px] sm:text-xs bg-[#01AD9F] text-white px-4 py-1 rounded-full font-black hover:opacity-90"
-            >
-              Read
-            </a>
+              <a
+                href={`/blog/${post.id}/`}
+                class="text-[9px] sm:text-xs bg-[#01AD9F] text-white px-3 py-1 rounded-full font-black text-center"
+              >
+                Read
+              </a>
+            </div>
           </div>
-        </div>
-      );
-    })}
+        );
+      })
+    }
   </div>
 
-  {/* TAGS SECTION (OPTIMIZED ONCE RENDERED) */}
+  {/* TAGS SECTION (SEO SAFE + OPTIMIZED) */}
   {uniqueTags.length > 0 && (
     <div class="mt-12 p-4 sm:p-6 bg-[#FFCC00] rounded-xl border border-[#E6B800]">
-
-      <div class="flex items-center gap-2 mb-4 border-b border-black/10 pb-2">
+      <div class="flex items-center gap-2 mb-4 border-b border-[#010203]/10 pb-2">
         <BiPurchaseTagAlt className="text-[#010203] h-5 w-5" />
-        <h4 class="font-black text-[#010203]">Labels</h4>
+        <h4 class="text-sm sm:text-base font-black text-[#010203]">
+          Labels (ටැග්ස්)
+        </h4>
       </div>
 
       <nav aria-label="Tags Cloud">
         <ul class="flex flex-wrap gap-2">
-          {uniqueTags.slice(0, 20).map((tag) => (
+          {uniqueTags.slice(0, 12).map((tag) => (
             <li>
               <a
                 href={`/tags/${slugify(tag)}/`}
-                class="text-[11px] sm:text-xs bg-[#010203] text-white px-3 py-1 rounded hover:bg-[#01AD9F]"
+                rel="tag"
+                class="text-[11px] sm:text-xs bg-[#010203] text-white font-black px-2.5 py-1.5 rounded-md hover:bg-[#01AD9F] transition"
               >
                 #{humanize(tag)}
               </a>
@@ -162,7 +148,6 @@ const authorMap = new Map(
           ))}
         </ul>
       </nav>
-
     </div>
   )}
 </div>
