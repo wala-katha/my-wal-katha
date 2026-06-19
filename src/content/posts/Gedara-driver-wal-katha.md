@@ -59,14 +59,4 @@ categories: ["wala-katha"]
 
 ඔන්න ඔය විදිහට තමයි මමඩ්‍රියිවර්ට කියල හුකවගත්තෙ යාලුවනේ හබීත් නැති එකේ ඩ්‍රයිවර් මගේ අනියම් පෙම උනා. මම හරිම සතුටින් කාලය ගත කරනව දැන්.
 
-<div style="background: rgba(1, 173, 159, 0.08); border-left: 4px solid #01AD9F; padding: 12px 16px; border-radius: 6px; margin: 20px 0; color: #e5e7eb; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
-  <span style="display: inline-block; width: 8px; height: 8px; background-color: #01AD9F; border-radius: 50%; box-shadow: 0 0 0 0 rgba(1, 173, 159, 0.7); animation: pulseDot 1.5s infinite ease-in-out;"></span>
-  <style>
-    @keyframes pulseDot {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(1, 173, 159, 0.7); }
-      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(1, 173, 159, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(1, 173, 159, 0); }
-    }
-  </style>
-  <span><strong>විශේෂ සටහන:</strong> මෙම නිර්මාණයේ සම්පූර්ණ අයිතිය සහ කතෘභාගය එහි <a href="/copyright/" style="color: #01AD9F; font-weight: 600; text-decoration: underline;">මුල් රචකයාට හිමිවේ</a>.</span>
-</div>
+> 💡 **විශේෂ සටහන:** මෙම නිර්මාණයේ සම්පූර්ණ අයිතිය සහ කතෘභාගය එහි [මුල් රචකයාට හිමිවේ](/copyright/).
