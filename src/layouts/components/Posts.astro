@@ -26,20 +26,21 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
   <div class={`row gy-4 gx-2 sm:gx-4 ${posts.length == 1 ? "justify-center" : ""} `}>        
     {        
       posts.map((post, i: number) => (        
-        <div class="col-4 flex flex-col justify-between">        
+        <div class="col-4 flex flex-col justify-between h-full bg-[#08090a] rounded-xl p-2 sm:p-3 border border-white/5 shadow-xl hover:border-white/10 transition-all duration-300">        
+          
           {post.data.image && (        
             <a        
               href={`/blog/${post.id}/`}        
-              /* ✅ FIXED: aspect-ratio එක බ්ලොක් නොකර auto කර, පින්තූරයේ සැබෑ සයිස් එක ලොකුවට පෙනෙන්න ඉඩ හැරියා */        
-              class="rounded-lg block hover:text-primary overflow-hidden group relative border border-white/10 aspect-auto w-full"        
+              class="rounded-lg block overflow-hidden group relative border border-white/10 w-full bg-[#111]"        
+              style="aspect-ratio: 3 / 4; width: 100%; display: block;" 
             >        
+              {/* ✅ 2026 IMAGE OPTIMIZATION: object-cover දැමීමෙන් පින්තූරය crop නොවී ලස්සනට ලොකුවට auto-scale වේ */}
               <Image        
-                /* ✅ FIXED: object-contain අයින් කර h-auto සහ w-full යෙදීමෙන් පින්තූරය crop නොවී උපරිම ලොකුවෙන් Grid එක පුරා විහිදේ */        
-                class="group-hover:scale-[1.04] transition duration-300 w-full h-auto object-cover block"        
+                class="group-hover:scale-[1.05] transition-transform duration-500 w-full h-full object-cover object-center"        
                 src={post.data.image}        
                 alt={post.data.title}        
-                width={600}  {/* පළල සහ උස තව ටිකක් වැඩි කළා පැහැදිලිව පෙනීමට */}        
-                height={900}        
+                width={600}        
+                height={800}        
                 loading={i < 3 ? "eager" : "lazy"}        
                 decoding="async"        
               />        
@@ -47,7 +48,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
           )}        
                   
           {/* INFO ROW */}        
-          <ul class="mt-2 mb-1 flex flex-wrap items-center text-[#F8F8FF]/90 text-[10px] sm:text-sm justify-between">        
+          <ul class="mt-3 mb-1 flex flex-wrap items-center text-[#F8F8FF]/90 text-[10px] sm:text-sm justify-between w-full">        
             <li class="flex items-center flex-wrap">        
               <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[16px] sm:w-[16px] text-[#01AD9F]" />        
               <ul>        
@@ -55,7 +56,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                   <li class="inline-block">        
                     <a        
                       href={`/categories/${slugify(category)}/`}        
-                      class="hover:text-primary font-black text-[9px] sm:text-xs bg-white/10 px-1 sm:px-2 py-0.5 rounded text-[#F8F8FF]"        
+                      class="hover:text-primary font-black text-[9px] sm:text-xs bg-white/10 px-1.5 sm:px-2 py-0.5 rounded text-[#F8F8FF]"        
                     >        
                       {humanize(category)}        
                     </a>        
@@ -70,7 +71,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
           </ul>        
         
           {/* POST TITLE */}        
-          <h3 class="mb-1 line-clamp-2 leading-tight">        
+          <h3 class="mt-1 mb-1 line-clamp-2 leading-tight">        
             <a        
               href={`/blog/${post.id}/`}        
               class="block hover:text-primary transition duration-300 text-xs sm:text-base font-black text-[#F8F8FF]"        
@@ -80,10 +81,10 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
           </h3>        
         
           {/* EXCERPT TEXT */}        
-          <p class="text-[#F8F8FF]/80 text-[11px] sm:text-sm line-clamp-2 mb-2 leading-snug">{plainify(post.body ?? "")}</p>        
+          <p class="text-[#F8F8FF]/70 text-[11px] sm:text-sm line-clamp-2 mb-3 leading-snug">{plainify(post.body ?? "")}</p>        
         
           {/* AUTHOR & READ ROW */}        
-          <div class="flex items-center justify-between border-t border-white/10 pt-1.5 sm:pt-3 mt-auto gap-2">        
+          <div class="flex items-center justify-between border-t border-white/10 pt-2 sm:pt-3 mt-auto gap-2 w-full">        
             {authors        
               .filter((author) =>        
                 post.data.authors        
@@ -111,7 +112,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                       
             <a         
               href={`/blog/${post.id}/`}         
-              class="text-[9px] sm:text-xs bg-[#01AD9F] text-white px-3 sm:px-6 py-1 sm:py-1.5 rounded-full hover:bg-opacity-90 transition-all font-black whitespace-nowrap flex-grow text-center max-w-[100px]"        
+              class="text-[10px] sm:text-xs bg-[#01AD9F] text-white px-3 sm:px-5 py-1 sm:py-1.5 rounded-full hover:bg-opacity-90 transition-all font-black whitespace-nowrap text-center"        
             >        
               Read        
             </a>        
@@ -121,7 +122,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
     }        
   </div>        
         
-  {/* 🏷️ Blogger Style Labels Section */}        
+  {/* 🏷️ Labels Section */}        
   {uniqueTags.length > 0 && (        
     <div class="mt-12 p-4 sm:p-6 bg-[#FFCC00] rounded-xl border border-[#E6B800]">        
       <div class="flex items-center gap-2 mb-4 border-b border-[#010203]/10 pb-2">        
