@@ -7,7 +7,9 @@ layout: "Base"
 draft: false
 ---
 
-<div style="text-align: center; font-style: italic; color: #01AD9F; margin-top: -10px; margin-bottom: 25px; font-weight: 500;">
+![Copyright & Credit Policy](/images/Copyright%20%26%20Credit%20Policy.png)
+
+<div style="text-align: center; font-style: italic; color: #01AD9F; margin-top: 15px; margin-bottom: 25px; font-weight: 500;">
   ~ බුද්ධිමය ශ්‍රමයට සහ නිර්මාණශීලීත්වයට සැමවිටම ගරු කරන්නෙමු ~
 </div>
 
@@ -28,7 +30,7 @@ draft: false
 
 * **අයිතීන්ට ගරු කිරීම:** අප වෙබ් අඩවිය කිසිදු විටෙක අනුන්ගේ බුද්ධිමය ශ්‍රමයෙන් අනීතික ලාභ ලැබීමට උත්සාහ නොකරයි. සැමවිටම මුල් රචකයාගේ අයිතිය අභිබවා නොයයි.
 * **නිසි කතෘභාගය (Credits):** අප සතු හෝ බාහිරින් සොයාගන්නා තොරතුරු මත පදනම්ව, මුල් කතුවරයාගේ නම හෝ ඔවුන්ගේ නිල සමාජ මාධ්‍ය ගිණුම් සබැඳියාවන් පෝස්ට් එකෙහි පැහැදිලිව ප්‍රදර්ශනය කරනු ලැබේ.
-* **ක්ෂණික ක්‍රියාමාර්ග:** නියමිත අයිතිකරු විසින් සිදුකරනු ලබන ඕනෑම නීත්‍යානුකූල ඉල්ලීමකදී, අන්තර්ගතයන් වහාම ඉවත් කිරීමට හෝ වෙනස් කිරීමට අප නීතිමය වශයෙන් බැඳී සිටිමු.
+* **ක්ෂණික ක්‍රියාමාර්ග:** นියමිත අයිතිකරු විසින් සිදුකරනු ලබන ඕනෑම නීත්‍යානුකූල ඉල්ලීමකදී, අන්තර්ගතයන් වහාම ඉවත් කිරීමට හෝ වෙනස් කිරීමට අප නීතිමය වශයෙන් බැඳී සිටිමු.
 
 ---
 
@@ -42,7 +44,7 @@ draft: false
 
 ---
 
-### ❓ නිතර අසන ප්‍රශ්න (FAQ)
+### ❓ นිතර අසන ප්‍රශ්න (FAQ)
 
 <details style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
   <summary style="font-size: 1.1rem; font-weight: 600; color: #01AD9F; list-style: none; display: flex; justify-content: space-between; align-items: center;">
@@ -98,6 +100,6 @@ draft: false
     <span style="color: #01AD9F; font-size: 1.2rem;">▼</span>
   </summary>
   <div style="margin-top: 12px; color: #e5e7eb; line-height: 1.7; border-top: 1px solid #1f2937; padding-top: 10px;">
-    නැත. අප වෙබ් අඩවියේ පළවන කිසිදු කතාවක් හෝ නවකතාවක් මුදලට විකිණීමක් හෝ වෙනත් බාහිර වාණිජමය ප්‍රකාශන (Commercial Publications) සඳහා කිසිසේත්ම පාවිච්චි කරනු නොලැබේ. මේවා තෙවන පාර්ශවයන්ගෙන් ආරක්ෂා කිරීමටද අප බැඳී සිටිමු.
+    නැත. අප වෙබ් අඩවියේ පළවන කිසිදු කතාවක් හෝ නවකතාවක් මුදලට විකිණීමක් හෝ වෙනත් බාහිර වාණිජමය ප්‍රකාශන (Commercial Publications) සඳහා කිසිසේත්ම පාවිච්චි කරනු නොලැබේ. මේවා තෙවන පාර්ශවයන්ගෙන් ආරක්ෂා කිරීමටද අප bedtime සිටිමු.
   </div>
 </details>
