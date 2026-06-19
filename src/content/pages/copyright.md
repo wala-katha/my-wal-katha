@@ -42,11 +42,11 @@ draft: false
 
 ---
 
-### ❓ นිතර අසන ප්‍රශ්න (FAQ)
+### ❓ නිතර අසන ප්‍රශ්න (FAQ)
 
 <details style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
   <summary style="font-size: 1.1rem; font-weight: 600; color: #01AD9F; list-style: none; display: flex; justify-content: space-between; align-items: center;">
-    <span>🤔 මගේ නිර්මාණයක් මගේ අවසරයකින් تොරව මෙහි පළකර ඇතිනම් මා කළ යුත්තේ කුමක්ද?</span>
+    <span>🤔 මගේ නිර්මාණයක් මගේ අවසරයකින් තොරව මෙහි පළකර ඇතිනම් මා කළ යුත්තේ කුමක්ද?</span>
     <span style="color: #01AD9F; font-size: 1.2rem;">▼</span>
   </summary>
   <div style="margin-top: 12px; color: #e5e7eb; line-height: 1.7; border-top: 1px solid #1f2937; padding-top: 10px;">
