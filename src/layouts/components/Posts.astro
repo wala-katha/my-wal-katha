@@ -21,29 +21,29 @@ const allTags = allGlobalPosts.flatMap((post) => post.data.tags || []);
 const uniqueTags = [...new Set(allTags)].filter(Boolean);        
 ---        
         
-{/* ✅ FIXED: max-w-[1600px] දක්වා පළල වැඩි කර මුළු කාඩ් ග්‍රිඩ් එකම තිරය පුරා විශාල කර පෙන්වයි */}
+{/* ✅ FIXED: max-w-[1600px] දක්වා පළල වැඩි කර මුළු කාඩ් 3 ග්‍රිඩ් එකම තිරය පුරා විශාල කර පෙන්වයි */}
 <div class={`w-full mx-auto max-w-[1600px] px-2 sm:px-4 ${className} bg-[#010203]`}>        
-  {/* ප්‍රධාන පෝස්ට් ග්‍රිඩ් එක — col-6 මඟින් පේළියකට කාඩ් 2 බැගින් පින්තූර ඉතා විශාලව පෙන්වයි */}        
-  <div class={`row gy-5 gx-3 md:gx-4 ${posts.length == 1 ? "justify-center" : ""} `}>        
+  {/* ප්‍රධාන පෝස්ට් ග්‍රිඩ් එක — gx-1.5 මඟින් කාඩ් අතර අනවශ්‍ය හිස් ඉඩ මකා කාඩ් එකට උපරිම පළල ලබා දේ */}        
+  <div class={`row gy-5 gx-1.5 md:gx-3 ${posts.length == 1 ? "justify-center" : ""} `}>        
     {        
       posts.map((post, i: number) => (        
-        <div class="col-12 sm:col-6 flex flex-col justify-between">        
+        <div class="col-4 flex flex-col justify-between">        
           {post.data.image && (        
             <a        
               href={`/blog/${post.id}/`}        
-              class="rounded-xl block hover:text-primary overflow-hidden group relative border border-white/10 shadow-2xl transition duration-300 w-full"        
-              /* ✅ FIXED: aspect-[16/9] මඟින් පින්තූරය වඩාත් පළල් (Wider Landscape) කර ලස්සනට පෙන්වයි */
-              style="aspect-ratio: 16 / 9;"
+              class="rounded-xl block hover:text-primary overflow-hidden group relative border border-white/10 shadow-2xl transition duration-300"        
+              /* ✅ FIXED: aspect-[2/3] මඟින් පින්තූරය තව ටිකක් පළල් (Wider) කර, Crop වීම වළක්වා ලොකුවට පෙන්වයි */
+              style="aspect-ratio: 2 / 3;"
               title={`${post.data.title} සම්පූර්ණ කතාව කියවන්න`}
             >        
-              {/* ✅ SEO & VISUAL FIXED: පින්තූර බොඳවීම වැළැක්වීමට width/height අගයන් 800x450 ලෙස විශාල කළා */}
+              {/* ✅ SEO & VISUAL FIXED: Crop නොවී පිරී ඉතිරී පෙනීමට object-cover object-top සමඟ සයිස් එක 650x975 දක්වා ප්‍රශස්ත කළා */}
               <Image        
-                class="group-hover:scale-[1.04] transition duration-500 w-full h-full object-cover object-center"        
+                class="group-hover:scale-[1.04] transition duration-500 w-full h-full object-cover object-top"        
                 src={post.data.image}        
                 alt={`${post.data.title} - Sinhala Wal Katha Photo`}        
-                width={800} 
-                height={450}        
-                loading={i < 2 ? "eager" : "lazy"}        
+                width={650} 
+                height={975}        
+                loading={i < 3 ? "eager" : "lazy"}        
                 decoding="async"        
               />        
               {/* Image Overlay */}
@@ -78,7 +78,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
           <h3 class="mb-1.5 line-clamp-2 leading-tight">        
             <a        
               href={`/blog/${post.id}/`}        
-              class="block hover:text-primary transition duration-300 text-[13px] sm:text-lg lg:text-2xl font-black text-[#F8F8FF]"        
+              class="block hover:text-primary transition duration-300 text-[12px] sm:text-base lg:text-xl font-black text-[#F8F8FF]"        
               title={post.data.title}
             >        
               {post.data.title}        
@@ -86,7 +86,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
           </h3>        
         
           {/* EXCERPT TEXT */}        
-          <p class="text-[#F8F8FF]/70 text-[11px] sm:text-base line-clamp-2 mb-2 leading-snug">{plainify(post.body ?? "")}</p>        
+          <p class="text-[#F8F8FF]/70 text-[10px] sm:text-sm line-clamp-2 mb-2 leading-snug">{plainify(post.body ?? "")}</p>        
         
           {/* AUTHOR & READ ROW */}        
           <div class="flex items-center justify-between border-t border-white/10 pt-2 sm:pt-3 mt-auto gap-2">        
@@ -100,16 +100,16 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
               .map((author) => (        
                 <a        
                   href={`/authors/${slugify(author.data.title)}/`}        
-                  class="flex items-center hover:text-primary text-[10px] sm:text-sm font-bold text-[#F8F8FF] min-w-0 flex-shrink-1"        
+                  class="flex items-center hover:text-primary text-[9px] sm:text-xs font-bold text-[#F8F8FF] min-w-0 flex-shrink-1"        
                   title={`${author.data.title} ලේඛකයාගේ සියලුම කතා`}
                 >        
                   {author.data.image && (        
                     <Image        
                       src={author.data.image}        
                       alt={author.data.title}        
-                      height={28}        
-                      width={28}        
-                      class="mr-1 h-4 w-4 sm:h-6 sm:w-6 rounded-full object-cover flex-shrink-0 border border-white/20"        
+                      height={24}        
+                      width={24}        
+                      class="mr-1 h-3.5 w-3.5 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0 border border-white/20"        
                     />        
                   )}        
                   <span class="truncate">{author.data.title}</span>        
@@ -118,7 +118,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                       
             <a         
               href={`/blog/${post.id}/`}         
-              class="text-[10px] sm:text-sm bg-[#01AD9F] text-white px-4 sm:px-7 py-1 sm:py-2 rounded-full hover:bg-opacity-90 transition-all font-black whitespace-nowrap flex-grow text-center max-w-[110px]"        
+              class="text-[9px] sm:text-xs bg-[#01AD9F] text-white px-3 sm:px-6 py-1 sm:py-2 rounded-full hover:bg-opacity-90 transition-all font-black whitespace-nowrap flex-grow text-center max-w-[95px]"        
               aria-label={`Read full story: ${post.data.title}`}
             >        
               Read        
@@ -184,7 +184,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
             
     let isOpen = false;        
             
-    btn.addEventListener('click', () => {        
+    const handleToggle = () => {        
       isOpen = !isOpen;        
               
       if (isOpen) {        
@@ -201,7 +201,10 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
           }        
         }, 300);        
       }        
-    });        
+    };        
+    
+    btn.removeEventListener('click', handleToggle);
+    btn.addEventListener('click', handleToggle);        
   }        
         
   document.addEventListener('astro:page-load', initTagsToggler);        
