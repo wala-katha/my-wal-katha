@@ -1,4 +1,4 @@
----        
+---
 import { getSinglePage } from "@/lib/contentParser.astro";        
 import dateFormat from "@/lib/utils/dateFormat";        
 import { humanize, plainify, slugify } from "@/lib/utils/textConverter";        
@@ -15,7 +15,7 @@ type Props = {
 const authors = await getSinglePage("authors");        
 const { className, posts, fluid } = Astro.props;        
         
-// 🎯 GLOBAL HARVESTING SEO: පිටුවෙන් පිටුවට Tags වෙනස් වීම වැළැක්වීමට මුළු සයිට් එකේම පෝස්ට් ගෝලීයව එකතු කිරීම        
+// 🎯 GLOBAL HARVESTING SEO
 const allGlobalPosts = await getSinglePage("posts");        
 const allTags = allGlobalPosts.flatMap((post) => post.data.tags || []);        
 const uniqueTags = [...new Set(allTags)].filter(Boolean);        
@@ -30,22 +30,23 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
           {post.data.image && (        
             <a        
               href={`/blog/${post.id}/`}        
-              class="rounded-lg block hover:text-primary overflow-hidden group relative border border-white/10"        
-              style="aspect-ratio: 2 / 3;"        
+              /* ✅ FIXED: aspect-ratio එක බ්ලොක් නොකර auto කර, පින්තූරයේ සැබෑ සයිස් එක ලොකුවට පෙනෙන්න ඉඩ හැරියා */        
+              class="rounded-lg block hover:text-primary overflow-hidden group relative border border-white/10 aspect-auto w-full"        
             >        
               <Image        
-                class="group-hover:scale-[1.04] transition duration-300 w-full h-full object-contain"        
+                /* ✅ FIXED: object-contain අයින් කර h-auto සහ w-full යෙදීමෙන් පින්තූරය crop නොවී උපරිම ලොකුවෙන් Grid එක පුරා විහිදේ */        
+                class="group-hover:scale-[1.04] transition duration-300 w-full h-auto object-cover block"        
                 src={post.data.image}        
                 alt={post.data.title}        
-                width={500}        
-                height={750}        
+                width={600}  {/* පළල සහ උස තව ටිකක් වැඩි කළා පැහැදිලිව පෙනීමට */}        
+                height={900}        
                 loading={i < 3 ? "eager" : "lazy"}        
                 decoding="async"        
               />        
             </a>        
           )}        
                   
-          {/* INFO ROW: කළු පසුබිමට පෙනීමට මෙටා අකුරු තද සුදු (#F8F8FF) කර අයිකන වලට ප්‍රාථමික වර්ණය දුන්නා */}        
+          {/* INFO ROW */}        
           <ul class="mt-2 mb-1 flex flex-wrap items-center text-[#F8F8FF]/90 text-[10px] sm:text-sm justify-between">        
             <li class="flex items-center flex-wrap">        
               <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[16px] sm:w-[16px] text-[#01AD9F]" />        
@@ -68,7 +69,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
             </li>        
           </ul>        
         
-          {/* POST TITLE: කළු පසුබිම මත පට්ටම පැහැදිලිව පෙනීමට text-[#F8F8FF] සහ font-black කළා */}        
+          {/* POST TITLE */}        
           <h3 class="mb-1 line-clamp-2 leading-tight">        
             <a        
               href={`/blog/${post.id}/`}        
@@ -78,10 +79,10 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
             </a>        
           </h3>        
         
-          {/* EXCERPT TEXT: කෙටි විස්තරය කියවීමට පහසු ලා සුදු පැහැයකට හැරෙව්වා */}        
+          {/* EXCERPT TEXT */}        
           <p class="text-[#F8F8FF]/80 text-[11px] sm:text-sm line-clamp-2 mb-2 leading-snug">{plainify(post.body ?? "")}</p>        
         
-          {/* AUTHOR & READ ROW: බෝඩර්ස් සියල්ල Dark තීම් එකට ගැළපෙන සේ සුදු/10% කළා */}        
+          {/* AUTHOR & READ ROW */}        
           <div class="flex items-center justify-between border-t border-white/10 pt-1.5 sm:pt-3 mt-auto gap-2">        
             {authors        
               .filter((author) =>        
@@ -120,19 +121,15 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
     }        
   </div>        
         
-  {/* 🏷️ Blogger Style Labels Section (Strict SEO & Fixed Layout) */}        
+  {/* 🏷️ Blogger Style Labels Section */}        
   {uniqueTags.length > 0 && (        
-    /* 🎯 FIX: උඹ ඉල්ලපු විදිහටම Labels බොක්ස් එකේ පසුබිම පමනක් තද කහ පාට (#FFCC00) කළා. බෝඩර්ස් ද ඊට ගැළපෙන සේ සකස් කළා */        
     <div class="mt-12 p-4 sm:p-6 bg-[#FFCC00] rounded-xl border border-[#E6B800]">        
-      {/* ඇතුළත මාතෘකාව සහ අයිකනය තද Rich Black කර පිරිසිදු ලුක් එකක් දුන්නා */}        
       <div class="flex items-center gap-2 mb-4 border-b border-[#010203]/10 pb-2">        
         <BiPurchaseTagAlt className="text-[#010203] h-5 w-5" />        
         <h4 class="text-sm sm:text-base font-black text-[#010203]">Labels (ටැග්ස්)</h4>        
       </div>        
               
-      {/* Tags Wrapper */}        
       <div class="relative flex flex-col">        
-        {/* SEO Semantic Navigation Layout */}        
         <nav aria-label="Tags Cloud" class="transition-all duration-300 ease-in-out overflow-hidden max-h-[110px]" id="tags-toggle-container">        
           <ul class="flex flex-wrap gap-2 m-0 p-0 list-none">        
             {uniqueTags.map((tag, index) => (        
@@ -140,7 +137,6 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                 <a        
                   href={`/tags/${slugify(tag)}/`}        
                   rel="tag"        
-                  /* 🎯 CONTRAST FIX: තද කහ පසුබිම මත පට්ටම පැහැදිලිව පෙනීමට ඇතුළත ටැග් බොත්තම් තද Rich Black (#010203) කර අකුරු සුදු කළා */        
                   class="text-[11px] sm:text-xs bg-[#010203] text-white font-black tracking-wide px-2.5 py-1.5 rounded-md border border-black hover:bg-[#01AD9F] hover:text-white transition-all shadow-sm flex items-center gap-0.5"        
                   title={`${tag} කතා සියල්ල මෙතනින් බලන්න`}        
                   aria-label={`View posts tagged with ${tag}`}        
@@ -152,13 +148,11 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
           </ul>        
         </nav>        
         
-        {/* 🔘 SHOW ALL / SHOW LESS BUTTON */}        
         {uniqueTags.length > 12 && (        
           <div class="mt-5 flex justify-center w-full">        
             <button        
               id="btn-toggle-tags"        
               type="button"        
-              /* බොත්තම තද Rich Black කර කහ පසුබිම මත උපරිමයෙන්ම කැපී පෙනීමට සැලැස්වීම */        
               class="text-[11px] sm:text-xs bg-[#010203] text-white font-black px-5 py-2 rounded-full shadow-md hover:bg-[#01AD9F] transition-all flex items-center gap-1 cursor-pointer z-10"        
             >        
               <span>Show All Tags</span>        
@@ -170,7 +164,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
   )}        
 </div>        
         
-{/* SMOOTH TRANSITION SCRIPT (ASTRO COMPATIBLE) */}        
+{/* SMOOTH TRANSITION SCRIPT */}        
 <script>        
   function initTagsToggler() {        
     const btn = document.getElementById('btn-toggle-tags');        
@@ -185,16 +179,13 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
       isOpen = !isOpen;        
               
       if (isOpen) {        
-        // සියලුම Tags පෙන්වීම (Smooth Max-Height Transition)        
         container.style.maxHeight = '2000px';        
         hiddenTags.forEach(tag => tag.classList.remove('hidden'));        
         btn.querySelector('span')!.textContent = 'Show Less';        
       } else {        
-        // නැවත මුල් උසට කුඩා කිරීම        
         container.style.maxHeight = '110px';        
         btn.querySelector('span')!.textContent = 'Show All Tags';        
                 
-        // සජීවීව හැකිලෙන අතරතුර පෙනුම ආරක්ෂා කර ගැනීමට පොඩි Delay එකක් තබා සැඟවීම        
         setTimeout(() => {        
           if (!isOpen) {        
             hiddenTags.forEach(tag => tag.classList.add('hidden'));        
@@ -204,7 +195,6 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
     });        
   }        
         
-  // Astro View Transitions සඳහා පූර්ණ අනුකූලතාවය        
   document.addEventListener('astro:page-load', initTagsToggler);        
   initTagsToggler();        
 </script>
