@@ -15,76 +15,73 @@ type Props = {
 const authors = await getSinglePage("authors");        
 const { className, posts, fluid } = Astro.props;        
         
-// 🎯 GLOBAL HARVESTING SEO
+// 🎯 GLOBAL HARVESTING SEO: පිටුවෙන් පිටුවට Tags වෙනස් වීම වැළැක්වීමට මුළු සයිට් එකේම පෝස්ට් ගෝලීයව එකතු කිරීම        
 const allGlobalPosts = await getSinglePage("posts");        
 const allTags = allGlobalPosts.flatMap((post) => post.data.tags || []);        
 const uniqueTags = [...new Set(allTags)].filter(Boolean);        
 ---        
         
 <div class={`w-full ${className} bg-[#010203]`}>        
-  {/* ප්‍රධාන පෝස්ට් ග්‍රිඩ් එක */}        
-  <div class={`row gy-4 gx-2 sm:gx-4 ${posts.length == 1 ? "justify-center" : ""} `}>        
+  {/* 🚀 2026 ULTRA-MODERN RESPONSIVE CSS GRID — පේළියට 3 බැගින් ලස්සනට ලොකුවට හැඩගැසේ */}        
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full">        
     {        
       posts.map((post, i: number) => (        
-        <div class="col-4 flex flex-col justify-between h-full bg-[#08090a] rounded-xl p-2 sm:p-3 border border-white/5 shadow-xl hover:border-white/10 transition-all duration-300">        
+        <article class="flex flex-col justify-between bg-[#080a0f]/40 p-3 sm:p-4 rounded-xl border border-white/5 hover:border-white/10 transition-all duration-300 group">        
           
           {post.data.image && (        
             <a        
               href={`/blog/${post.id}/`}        
-              class="rounded-lg block overflow-hidden group relative border border-white/10 w-full bg-[#111]"        
-              style="aspect-ratio: 3 / 4; width: 100%; display: block;" 
+              class="w-full rounded-lg block overflow-hidden relative border border-white/10 aspect-[3/4] bg-[#050505]"        
             >        
-              {/* ✅ 2026 IMAGE OPTIMIZATION: object-cover දැමීමෙන් පින්තූරය crop නොවී ලස්සනට ලොකුවට auto-scale වේ */}
               <Image        
-                class="group-hover:scale-[1.05] transition-transform duration-500 w-full h-full object-cover object-center"        
+                class="group-hover:scale-[1.03] transition duration-500 w-full h-full object-cover object-top"        
                 src={post.data.image}        
-                alt={post.data.title}        
+                alt={`${post.data.title} - Sinhala Wal Katha`}        
                 width={600}        
                 height={800}        
                 loading={i < 3 ? "eager" : "lazy"}        
+                fetchpriority={i < 3 ? "high" : "low"}
                 decoding="async"        
               />        
             </a>        
           )}        
                   
           {/* INFO ROW */}        
-          <ul class="mt-3 mb-1 flex flex-wrap items-center text-[#F8F8FF]/90 text-[10px] sm:text-sm justify-between w-full">        
-            <li class="flex items-center flex-wrap">        
-              <BiCategoryAlt className="mr-0.5 h-3 w-3 sm:h-[16px] sm:w-[16px] text-[#01AD9F]" />        
-              <ul>        
+          <ul class="mt-3 mb-2 flex flex-wrap items-center text-[#F8F8FF]/90 text-[11px] sm:text-xs justify-between gap-1">        
+            <li class="flex items-center">        
+              <BiCategoryAlt className="mr-1 h-3.5 w-3.5 text-[#01AD9F]" />        
+              <div class="flex flex-wrap gap-1">        
                 {post.data.categories.slice(0, 1).map((category) => (        
-                  <li class="inline-block">        
-                    <a        
-                      href={`/categories/${slugify(category)}/`}        
-                      class="hover:text-primary font-black text-[9px] sm:text-xs bg-white/10 px-1.5 sm:px-2 py-0.5 rounded text-[#F8F8FF]"        
-                    >        
-                      {humanize(category)}        
-                    </a>        
-                  </li>        
+                  <a        
+                    href={`/categories/${slugify(category)}/`}        
+                    class="hover:bg-[#01AD9F] hover:text-white transition-all font-black text-[10px] sm:text-xs bg-white/10 px-2 py-0.5 rounded text-[#F8F8FF]"        
+                  >        
+                    {humanize(category)}
+                  </a>        
                 ))}        
-              </ul>        
+              </div>        
             </li>        
-            <li class="hidden xs:flex items-center flex-wrap font-bold text-[9px] sm:text-xs text-[#F8F8FF]/80">        
-              <BiCalendarEdit className="mr-0.5 h-3 w-3 sm:h-4 sm:w-4 text-[#01AD9F]" />        
+            <li class="flex items-center font-bold text-[10px] sm:text-xs text-[#F8F8FF]/70">        
+              <BiCalendarEdit className="mr-1 h-3.5 w-3.5 text-[#01AD9F]" />        
               {dateFormat(post.data.date!)}        
             </li>        
           </ul>        
         
           {/* POST TITLE */}        
-          <h3 class="mt-1 mb-1 line-clamp-2 leading-tight">        
+          <h3 class="mb-2 line-clamp-2 leading-snug">        
             <a        
               href={`/blog/${post.id}/`}        
-              class="block hover:text-primary transition duration-300 text-xs sm:text-base font-black text-[#F8F8FF]"        
+              class="block hover:text-[#01AD9F] transition duration-300 text-sm sm:text-base lg:text-lg font-black text-[#F8F8FF]"        
             >        
               {post.data.title}        
             </a>        
           </h3>        
         
           {/* EXCERPT TEXT */}        
-          <p class="text-[#F8F8FF]/70 text-[11px] sm:text-sm line-clamp-2 mb-3 leading-snug">{plainify(post.body ?? "")}</p>        
+          <p class="text-[#F8F8FF]/75 text-[11px] sm:text-sm line-clamp-2 mb-3 leading-relaxed">{plainify(post.body ?? "")}</p>        
         
           {/* AUTHOR & READ ROW */}        
-          <div class="flex items-center justify-between border-t border-white/10 pt-2 sm:pt-3 mt-auto gap-2 w-full">        
+          <div class="flex items-center justify-between border-t border-white/5 pt-3 mt-auto gap-2">        
             {authors        
               .filter((author) =>        
                 post.data.authors        
@@ -95,15 +92,15 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
               .map((author) => (        
                 <a        
                   href={`/authors/${slugify(author.data.title)}/`}        
-                  class="flex items-center hover:text-primary text-[10px] sm:text-xs font-bold text-[#F8F8FF] min-w-0 flex-shrink-1"        
+                  class="flex items-center hover:text-[#01AD9F] text-[11px] sm:text-xs font-bold text-[#F8F8FF] min-w-0 flex-shrink-1"        
                 >        
                   {author.data.image && (        
                     <Image        
                       src={author.data.image}        
                       alt={author.data.title}        
-                      height={24}        
-                      width={24}        
-                      class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0 border border-white/20"        
+                      height={28}        
+                      width={28}        
+                      class="mr-1.5 h-5 w-5 sm:h-6 sm:w-6 rounded-full object-cover flex-shrink-0 border border-white/20"        
                     />        
                   )}        
                   <span class="truncate">{author.data.title}</span>        
@@ -112,17 +109,17 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                       
             <a         
               href={`/blog/${post.id}/`}         
-              class="text-[10px] sm:text-xs bg-[#01AD9F] text-white px-3 sm:px-5 py-1 sm:py-1.5 rounded-full hover:bg-opacity-90 transition-all font-black whitespace-nowrap text-center"        
+              class="text-[11px] sm:text-xs bg-[#01AD9F] text-white px-4 sm:px-6 py-1.5 rounded-full hover:bg-opacity-90 transition-all font-black whitespace-nowrap text-center"        
             >        
-              Read        
+              Read Story
             </a>        
           </div>        
-        </div>        
+        </article>        
       ))        
     }        
   </div>        
         
-  {/* 🏷️ Labels Section */}        
+  {/* 🏷️ Blogger Style Labels Section */}        
   {uniqueTags.length > 0 && (        
     <div class="mt-12 p-4 sm:p-6 bg-[#FFCC00] rounded-xl border border-[#E6B800]">        
       <div class="flex items-center gap-2 mb-4 border-b border-[#010203]/10 pb-2">        
@@ -165,7 +162,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
   )}        
 </div>        
         
-{/* SMOOTH TRANSITION SCRIPT */}        
+{/* SMOOTH TRANSITION SCRIPT (ASTRO COMPATIBLE) */}        
 <script>        
   function initTagsToggler() {        
     const btn = document.getElementById('btn-toggle-tags');        
