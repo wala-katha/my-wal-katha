@@ -59,4 +59,6 @@ categories: ["wala-katha"]
 
 ඔන්න ඔය විදිහට තමයි මමඩ්‍රියිවර්ට කියල හුකවගත්තෙ යාලුවනේ හබීත් නැති එකේ ඩ්‍රයිවර් මගේ අනියම් පෙම උනා. මම හරිම සතුටින් කාලය ගත කරනව දැන්.
 
-> **විශේෂ සටහන:** මෙම වල් කතාවේ සම්පුර්ණ ගෞරවය එහි [මුල් රචකයාට හිමිවේ](https://www.xn--3zc2b5bl5c6a.com/p/blog-page_31.html).
+<div style="background: rgba(1, 173, 159, 0.08); border-left: 4px solid #01AD9F; padding: 12px 16px; border-radius: 6px; margin: 20px 0; color: #e5e7eb; font-size: 0.95rem;">
+  💡 <strong>විශේෂ සටහන:</strong> මෙම නිර්මාණයේ සම්පූර්ණ අයිතිය සහ කතෘභාගය එහි <a href="/copyright/" style="color: #01AD9F; font-weight: 600; text-decoration: underline;">මුල් රචකයාට හිමිවේ</a>.
+</div>
