@@ -24,7 +24,7 @@ layout: "../../layouts/Base.astro"
 
 ඔබ අපගේ වෙබ් අඩවියේ පළ වූ කිසියම් කතාවක හෝ ලිපියක මුල් රචකයා වන්නේ නම්, එම අන්තර්ගතය වෙබ් අඩවියෙන් ඉවත් කිරීමට හෝ එහි ඔබගේ නම (Credit) නිවැරදිව සඳහන් කිරීමට අවශ්‍ය නම්, කරුණාකර පහත මාධ්‍ය ඔස්සේ අපව සම්බන්ධ කරගන්න:
 
-* **Email:** [datahoru.onions@gmail.com](mailto:datahoru.onions@gmail.com)
+* **Email:** [datahoru.onions@gmail.com](mailto:walkatha.com@gmail.com)
 * **දුරකථන අංකය:** Coming Soon
 * **Contact Page:** [Contact Page එකට මෙතනින් යන්න](https://walkatha.pages.dev/contact/)
 
