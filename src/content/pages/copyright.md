@@ -15,14 +15,14 @@ draft: false
 
 **walkatha.pages.dev**
 
-අපගේ වෙබ් අඩවියේ ප්‍රදර්ශනය වන කතා, නවකතා, ලිපි හා අනෙකුත් නිර්මාණාත්මක අන්තර්ගතයන්ගෙන් බහුතරයක්, අන්තර්ජාලයේ විවෘතව පොදු පරිහරණය සඳහා ප්‍රවේශ විය හැකි විවිධ සමාජ මාධ්‍ය ජාල, බ්ලොග් අඩවි සහ පොදු සංසද (Forums) මඟින් ලබා ගන්නා ලද ඒවා වේ. මෙවැනි බාහිර මුලාශ්‍රවලින් ලබාගන්නා සෑම නිර්මාණයකම, අප විසින් ඒවායේ මුල් රචකයා (Original Author) කවුදැයි හඳුනාගත් සැනින් ඉතා පැහැදිලිව සටහන් කිරීමට නිරන්තරයෙන් බැඳී සිටින්නෙමු.
+අපගේ වෙබ් අඩවියේ ප්‍රදර්ශනය වන කතා, නවකතා, ලිපි හා අනෙකුත් නිර්මාණාත්මක අන්තර්ගතයන්ගෙන් බහුතරයක්, අන්තර්ජාලයේ විවෘතව පොදු පරිහරණය සඳහා ප්‍රවේශ විය හැකි විවිධ සමාජ මාධ්‍ය ජාල, බ්ලොග් අඩවි සහ පොදු සංසද (Forums) มඟින් ලබා ගන්නා ලද ඒවා වේ. මෙවැනි බාහිර මුලාශ්‍රවලින් ලබාගන්නා සෑම නිර්මාණයකම, අප විසින් ඒවායේ මුල් රචකයා (Original Author) කවුදැයි හඳුනාගත් සැනින් ඉතා පැහැදිලිව සටහන් කිරීමට නිරන්තරයෙන් බැඳී සිටින්නෙමු.
 
 අපි සියලුම අන්තර්ගතයන්හි මුල් නිර්මාණකරුවන්ට සහ සම්බන්ධිත අයිතිකරුවන්ට උපරිම ගෞරවය දක්වන අතර, ඔවුන්ගේ බුද්ධිමය දේපළ අයිතීන් (Intellectual Property Rights) සුරැකීමට උපරිමයෙන් කැපවී සිටින්නෙමු.
 
 > 💡 **නිල ප්‍රකාශය (Official Disclaimer):**
 > "මෙම වෙබ් අඩවියේ පළවන ඕනෑම ප්‍රබන්ධ කතාවක හෝ ලිපියක සම්පූර්ණ කතෘභාගය, හිමිකාරිත්වය සහ රචනා අයිතිය එහි මුල් නිර්මාණකරු සතු වන අතර, අප විසින් සිදුකරනු ලබන්නේ පාඨකයන් උදෙසා එම නිර්මාණ එකම අවකාශයකින් නොමිලේ කියවීමට සැලැස්වීම පමණි."
 
-අපගේ එකම සහ ප්‍රධාන අරමුණ වන්නේ ශ්‍රී ලාංකීය ඩිජිටල් අවකාශය තුළ රසවත්, ගුණාත්මක සහ ප්‍රබල නිර්මාණ පරිශීලකයන් වෙත ඉතා පිරිසිදු මෘදුකාංග අත්දැකීමක් (Clean UI) ඔස්සේ semipa කිරීමයි. කිසිදු විටෙක කිසිවෙකුගේ අයිතිවාසිකම් hithamatha උල්ලංඡනය කිරීමක් (Copyright Infringement) සිදු නොවන සේ කටයුතු කිරීමට අපි සැමවිටම වගබලා ගන්නෙමු.
+අපගේ එකම සහ ප්‍රධාන අරමුණ වන්නේ ශ්‍රී ලාංකීය ඩිජිටල් අවකාශය තුළ රසවත්, ගුණාත්මක සහ ප්‍රබල නිර්මාණ පරිශීලකයන් වෙත ඉතා පිරිසිදු มෘදුකාංග අත්දැකීමක් (Clean UI) ඔස්සේ සමීප කිරීමයි. කිසිදු විටෙක කිසිවෙකුගේ අයිතිවාසිකම් හිතාමතා උල්ලංඡනය කිරීමක් (Copyright Infringement) සිදු නොවන සේ කටයුතු කිරීමට අපි සැමවිටම වගබලා ගන්නෙමු.
 
 ---
 
@@ -46,7 +46,7 @@ draft: false
 
 ### ❓ නිතර අසන ප්‍රශ්න (FAQ)
 
-<details style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
+<details name="walkatha-faq" style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
   <summary style="font-size: 1.1rem; font-weight: 600; color: #01AD9F; list-style: none; display: flex; justify-content: space-between; align-items: center;">
     <span>🤔 මගේ නිර්මාණයක් මගේ අවසරයකින් තොරව මෙහි පළකර ඇතිනම් මා කළ යුත්තේ කුමක්ද?</span>
     <span style="color: #01AD9F; font-size: 1.2rem;">▼</span>
@@ -56,7 +56,7 @@ draft: false
   </div>
 </details>
 
-<details style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
+<details name="walkatha-faq" style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
   <summary style="font-size: 1.1rem; font-weight: 600; color: #01AD9F; list-style: none; display: flex; justify-content: space-between; align-items: center;">
     <span>📝 කතාව මගේම කියා සනාථ කිරීමට මා විසින් ඉදිරිපත් කළ හැකි වෙනත් සාක්ෂි මොනවාද?</span>
     <span style="color: #01AD9F; font-size: 1.2rem;">▼</span>
@@ -69,12 +69,12 @@ draft: false
       <li>සමාජ මාධ්‍ය ජාලාවල ඔබ එම නමින්ම නිර්මාණ පළකරන බව පෙන්විය හැකි ඔබගේ නිල Profile එකෙහි සබැඳියාවක්.</li>
     </ul>
     <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 12px; border-radius: 4px; color: #fca5a5; font-size: 0.95rem; font-weight: 500;">
-      ⚠️ <strong>අවධානයට (Warning):</strong> ව්‍යාජ හිමිකම් පෑම් (False Claims) වැළැක්වීම සඳහා, ඉදිරිපත් කරන ලද මූලික තොරතුරු ප්‍රමාණවත් නොවන අවස්ථාවලදී, අදාළ කතාවේ අයිතිය තහවුරු කිරීමට තවත් අතිරේක සහ වඩාත් ශක්තිමත් සාක්ෂි (Stronger Ownership Proofs) ඉල්ලා සිටීමට අපගේ පරිපාලන කණ්ඩායමට පූර්ණ අයිතිය ඇත.
+      ⚠️ <strong>අවධානයට (Warning):</strong> ව්‍යාජ හිමිකම් පෑම් (False Claims) වැළැක්වීම සඳහා, ඉදිරිපත් කරන ලද මූලික තොරතුරු ප්‍රමාණවත් නොවන අවස්ථාවලදී, අදාළ කතාවේ අයිතිය තහවුරු කිරීමට තවත් අතිරේක සහ වඩාත් ශක්තිමත් සාක්ෂි (Stronger Ownership Proofs) ඉලා සිටීමට අපගේ පරිපාලන කණ්ඩායමට පූර්ණ අයිතිය ඇත.
     </div>
   </div>
 </details>
 
-<details style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
+<details name="walkatha-faq" style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
   <summary style="font-size: 1.1rem; font-weight: 600; color: #01AD9F; list-style: none; display: flex; justify-content: space-between; align-items: center;">
     <span>⏳ ඔබගේ ඉල්ලීමක් ඉටු කිරීමට අප කොපමණ කාලයක් ලබා ගන්නවාද?</span>
     <span style="color: #01AD9F; font-size: 1.2rem;">▼</span>
@@ -84,7 +84,7 @@ draft: false
   </div>
 </details>
 
-<details style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
+<details name="walkatha-faq" style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
   <summary style="font-size: 1.1rem; font-weight: 600; color: #01AD9F; list-style: none; display: flex; justify-content: space-between; align-items: center;">
     <span>🤝 අන්තර්ගතයන් ඉවත් කරන්නේ නැතුව මගේ නම සහ මගේ සයිට් එකේ ලින්ක් එක දාන්න පුළුවන්ද?</span>
     <span style="color: #01AD9F; font-size: 1.2rem;">▼</span>
@@ -94,12 +94,12 @@ draft: false
   </div>
 </details>
 
-<details style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
+<details name="walkatha-faq" style="background: #0d1117; padding: 16px; border-radius: 10px; margin-bottom: 14px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.3s ease;">
   <summary style="font-size: 1.1rem; font-weight: 600; color: #01AD9F; list-style: none; display: flex; justify-content: space-between; align-items: center;">
     <span>💰 මෙහි පළවන කතා වෙනත් වාණිජමය අරමුණු සඳහා පාවිච්චි කරනු ලබනවාද?</span>
     <span style="color: #01AD9F; font-size: 1.2rem;">▼</span>
   </summary>
   <div style="margin-top: 12px; color: #e5e7eb; line-height: 1.7; border-top: 1px solid #1f2937; padding-top: 10px;">
-    නැත. අප වෙබ් අඩවියේ පළවන කිසිදු කතාවක් හෝ නවකතාවක් මුදලට විකිණීමක් හෝ වෙනත් බාහිර වාණිජමය ප්‍රකාශන (Commercial Publications) සඳහා කිසිසේත්ම පාවිච්චි කරනු නොලැබේ. මේවා තෙවන පාර්ශවයන්ගෙන් ආරක්ෂා කිරීමටද අප bedtime සිටිමු.
+    නැත. අප වෙබ් අඩවියේ පළවන කිසිදු කතාවක් හෝ නවකතාවක් මුදලට විකිණීමක් හෝ වෙනත් බාහිර වාණිජමය ප්‍රකාශන (Commercial Publications) සඳහා කිසිසේත්ම පාවිච්චි කරනු නොලැබේ. මේවා තෙවන පාර්ශවයන්ගෙන් ආරක්ෂා කිරීමටද අප බැඳී සිටිමු.
   </div>
 </details>
