@@ -18,85 +18,105 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Sharp
+      - name: Install Sharp latest
         run: |
           mkdir -p /tmp/sharp-tool
           cd /tmp/sharp-tool
           npm init -y
-          npm install sharp
+          npm install sharp@latest
 
-      - name: Re-optimize ALL WebP + convert remaining JPG/PNG (max clarity)
+      - name: Convert JPG/PNG → WebP (world-best clarity)
         run: |
           node --input-type=module << 'EOF'
           import { createRequire } from 'module';
           const require = createRequire('/tmp/sharp-tool/package.json');
           const sharp = require('sharp');
-          import {
-            readdirSync, existsSync, unlinkSync, statSync
-          } from 'fs';
+          import { readdirSync, existsSync, unlinkSync, statSync } from 'fs';
           import { join } from 'path';
 
           // ═══════════════════════════════════════════════════════════════════
-          // CLARITY-FIRST PROFILES
-          // නීතිය: resize නොකරනවා (withoutEnlargement), modulate/linear නැහැ,
-          //         sharpen minimal, lossless=true සෑම විටම, effort=4 (speed>compression)
+          // Official Sharp API v0.34+ — සොයාගත් සියල්ල apply කළා
+          //
+          // lossless: true
+          //   → pixels 100% unchanged, mathematically exact
+          //   → quality parameter irrelevant (ignored in lossless)
+          //   → smartSubsample irrelevant (lossy only)
+          //   → preset irrelevant (lossy only)
+          //
+          // effort: 6
+          //   → lossless mode: file size optimize කරනවා, pixels same
+          //   → lossy mode: compression aggressive (blur risk) — අපි use නොකරන්නෙ
+          //
+          // smartDeblock: true  [v0.34.0+ නව feature]
+          //   → low contrast edges (borders, text edges) හි
+          //     JPEG artifact remove → clarity increase
+          //   → lossless encode කිරීමට පෙර source cleanup
+          //
+          // exact: true
+          //   → transparent pixels (PNG alpha) හි color data preserve
+          //   → logo/icon type images සඳහා critical
+          //
+          // keepIccProfile()
+          //   → source image color profile (Adobe RGB, P3, etc.) preserve
+          //   → browser හි exact color render
+          //   → .keepMetadata() වලට වඩා precise — ICC only
+          //
+          // autoOrient()  [v0.34.0+ නව feature]
+          //   → EXIF orientation data read කර physically rotate
+          //   → phone camera photos upside-down/sideways issue fix
+          //
+          // resize: withoutEnlargement: true
+          //   → source pixels කිසිවිටෙකත් upscale නොකරන්නෙ
+          //   → source > limit නම් පමණක් resize
+          //
+          // webp re-encode: නැහැ
+          //   → generation loss zero
           // ═══════════════════════════════════════════════════════════════════
 
           const PROFILE = {
 
-            // Author thumbnails — pixel-perfect, no resize beyond source
             'public/images/authors': {
-              maxWidth: 240,          // 2x for retina, but never upscale
-              maxHeight: 240,
-              fit: 'cover',
-              lossless: true,         // zero quality loss
-              nearLossless: false,
-              quality: 100,
-              effort: 3,              // low effort = less aggressive compression
-              // Subtle unsharp mask — recover JPEG compression softness only
-              sharpen: { sigma: 0.5, m1: 0.5, m2: 0.0, x1: 3, y2: 15, y3: 15 },
-            },
-
-            // Slider — full HD, lossless
-            'public/images/slider': {
-              maxWidth: 1920,
-              maxHeight: 720,
-              fit: 'inside',
-              lossless: true,
-              nearLossless: false,
-              quality: 100,
-              effort: 3,
-              sharpen: { sigma: 0.4, m1: 0.4, m2: 0.0, x1: 3, y2: 15, y3: 15 },
-            },
-
-            // Post images — near-lossless (visually lossless but smaller file)
-            'public/images/posts': {
-              maxWidth: 1200,
+              // Author face photos — pixel-perfect, original size
+              // Phone camera photos EXIF orientation fix included
+              maxWidth:  null,   // resize නැහැ — original pixels
               maxHeight: null,
-              fit: 'inside',
-              lossless: false,
-              nearLossless: true,     // WebP near-lossless = visually perfect
-              quality: 100,           // near-lossless quality=100 = best
-              effort: 3,
-              sharpen: { sigma: 0.4, m1: 0.4, m2: 0.0, x1: 3, y2: 15, y3: 15 },
+              lossless:  true,
+              effort:    6,
+              smartDeblock: true,
+              exact:     true,
+            },
+
+            'public/images/slider': {
+              // Hero/banner — 4K ready, full quality
+              maxWidth:  3840,   // 4K width max
+              maxHeight: null,
+              lossless:  true,
+              effort:    6,
+              smartDeblock: true,
+              exact:     false,
+            },
+
+            'public/images/posts': {
+              // Post thumbnails — HD, lossless
+              maxWidth:  1600,
+              maxHeight: null,
+              lossless:  true,
+              effort:    6,
+              smartDeblock: true,
+              exact:     false,
             },
           };
 
-          // Unknown folders — safe near-lossless
           const DEFAULT_PROFILE = {
-            maxWidth: 1920,
+            maxWidth:  3840,
             maxHeight: null,
-            fit: 'inside',
-            lossless: false,
-            nearLossless: true,
-            quality: 100,
-            effort: 3,
-            sharpen: { sigma: 0.4, m1: 0.4, m2: 0.0, x1: 3, y2: 15, y3: 15 },
+            lossless:  true,
+            effort:    6,
+            smartDeblock: true,
+            exact:     false,
           };
 
-          // ═══════════════════════════════════════════════════════════════════
-          // RECURSIVE FINDER — .jpg .jpeg .png .webp සියල්ල
-          // ═══════════════════════════════════════════════════════════════════
+          // ── Recursive finder — JPG/PNG ONLY ──────────────────────────────
           function findImages(dir) {
             const results = [];
             if (!existsSync(dir)) return results;
@@ -104,115 +124,107 @@ jobs:
               const full = join(dir, entry.name);
               if (entry.isDirectory()) {
                 results.push(...findImages(full));
-              } else if (/\.(jpg|jpeg|png|webp)$/i.test(entry.name)) {
+              } else if (/\.(jpg|jpeg|png)$/i.test(entry.name)) {
                 results.push(full);
               }
             }
             return results;
           }
 
-          // ═══════════════════════════════════════════════════════════════════
-          // PROFILE MATCHER
-          // ═══════════════════════════════════════════════════════════════════
+          // ── Profile matcher ───────────────────────────────────────────────
           function getProfile(filePath) {
             let best = null, bestLen = 0;
             for (const [key, prof] of Object.entries(PROFILE)) {
               if (filePath.startsWith(key) && key.length > bestLen) {
-                best = prof;
-                bestLen = key.length;
+                best = prof; bestLen = key.length;
               }
             }
             return best ?? DEFAULT_PROFILE;
           }
 
-          // ═══════════════════════════════════════════════════════════════════
-          // CONVERT / RE-OPTIMIZE
-          // ═══════════════════════════════════════════════════════════════════
+          // ── Convert ───────────────────────────────────────────────────────
           async function convert(input) {
-            const isWebP = /\.webp$/i.test(input);
-            // Output path: always .webp
-            const out = isWebP
-              ? input + '.tmp.webp'                          // temp file for in-place rewrite
-              : input.replace(/\.(jpg|jpeg|png)$/i, '.webp');
-
+            const out = input.replace(/\.(jpg|jpeg|png)$/i, '.webp');
             const prof = getProfile(input);
 
             try {
               const meta = await sharp(input).metadata();
-              const srcW = meta.width  ?? 9999;
-              const srcH = meta.height ?? 9999;
+              const srcW = meta.width  ?? 0;
+              const srcH = meta.height ?? 0;
 
-              // Only resize DOWN — never enlarge
-              const targetW = prof.maxWidth  ? Math.min(srcW, prof.maxWidth)  : undefined;
-              const targetH = prof.maxHeight ? Math.min(srcH, prof.maxHeight) : undefined;
+              // ── Pipeline ────────────────────────────────────────────────
+              let pipe = sharp(input)
+                // EXIF rotation fix — phone photos
+                .autoOrient()
+                // ICC color profile preserve — color accuracy
+                .keepIccProfile();
 
-              const needsResize = (targetW && targetW < srcW) || (targetH && targetH < srcH);
+              // Resize — source > limit නම් ONLY
+              const doW = prof.maxWidth  && srcW > prof.maxWidth;
+              const doH = prof.maxHeight && srcH > prof.maxHeight;
 
-              let pipe = sharp(input, { sequentialRead: true });
-
-              // ── Resize ONLY if source is larger than target ──
-              if (needsResize) {
-                pipe = pipe.resize(targetW, targetH ?? undefined, {
-                  fit: prof.fit,
-                  kernel: sharp.kernel.lanczos3,
-                  withoutEnlargement: true,
-                });
+              if (doW || doH) {
+                pipe = pipe.resize(
+                  prof.maxWidth  ?? undefined,
+                  prof.maxHeight ?? undefined,
+                  {
+                    fit:                'inside',
+                    kernel:             sharp.kernel.lanczos3,
+                    withoutEnlargement: true,
+                  }
+                );
               }
 
-              // ── Minimal unsharp mask (recover JPEG/WebP decode softness) ──
-              // ❌ NO modulate, NO linear — color/brightness unmodified
-              pipe = pipe.sharpen(prof.sharpen);
-
-              // ── WebP encode ──
+              // ── WebP encode — official best settings ────────────────────
               pipe = pipe.webp({
-                quality:      prof.quality,
-                lossless:     prof.lossless,
-                nearLossless: prof.nearLossless,
-                effort:       prof.effort,
-                smartSubsample: false,   // ❌ OFF — chroma subsampling = color blur
+                lossless:     true,    // pixel perfect
+                effort:       6,       // best file size, pixels unchanged
+                smartDeblock: true,    // edge artifact cleanup [v0.34+]
+                exact:        prof.exact,  // alpha channel color preserve
+                // smartSubsample: irrelevant (lossless only)
+                // nearLossless: irrelevant (lossless overrides)
+                // quality: irrelevant (lossless ignores it)
+                // preset: irrelevant (lossy only)
               });
 
               await pipe.toFile(out);
 
+              // ── Verify ──────────────────────────────────────────────────
               if (!existsSync(out) || statSync(out).size === 0) {
-                console.error(`❌  Output verify failed, original kept: ${input}`);
+                console.error(`❌  Verify failed, kept: ${input}`);
                 if (existsSync(out)) unlinkSync(out);
                 return;
               }
 
-              if (isWebP) {
-                // Replace original with re-optimized version
-                unlinkSync(input);
-                const { renameSync } = await import('fs');
-                renameSync(out, input);
-                console.log(`🔄  Re-optimized: ${input}`);
-              } else {
-                unlinkSync(input);
-                console.log(`✅  ${input}  →  ${out}`);
-              }
+              const inKB  = (statSync(input).size / 1024).toFixed(0);
+              const outKB = (statSync(out).size   / 1024).toFixed(0);
+              const pct   = (((statSync(input).size - statSync(out).size) / statSync(input).size) * 100).toFixed(1);
+
+              unlinkSync(input);
+              console.log(`✅  [${srcW}×${srcH}] ${inKB}KB → ${outKB}KB (${pct}% smaller) — ${out}`);
 
             } catch (e) {
-              console.error(`❌  Failed (original kept): ${input}  —  ${e.message}`);
+              console.error(`❌  Failed (original kept): ${input} — ${e.message}`);
               if (existsSync(out)) unlinkSync(out);
             }
           }
 
-          // ═══════════════════════════════════════════════════════════════════
-          // MAIN
-          // ═══════════════════════════════════════════════════════════════════
+          // ── Main ──────────────────────────────────────────────────────────
           const images = findImages('public');
-          console.log(`\n🖼  Found ${images.length} image(s) — starting clarity-optimized conversion…\n`);
-          for (const img of images) {
-            await convert(img);
+          if (images.length === 0) {
+            console.log('ℹ️  No JPG/PNG found — nothing to do.');
+          } else {
+            console.log(`\n🖼  Found ${images.length} image(s)…\n`);
+            for (const img of images) await convert(img);
+            console.log('\n✨  Done.\n');
           }
-          console.log('\n✨  All done.\n');
           EOF
 
-      - name: Commit results
+      - name: Commit
         run: |
           git config user.name  "actions-user"
           git config user.email "actions@github.com"
           git add -A public/
           git diff --staged --quiet && echo "Nothing to commit." || \
-            git commit -m "Auto: re-optimize WebP clarity (lossless/near-lossless, no color shift)"
+            git commit -m "Auto: JPG/PNG → lossless WebP (smartDeblock + ICC + autoOrient)"
           git push
