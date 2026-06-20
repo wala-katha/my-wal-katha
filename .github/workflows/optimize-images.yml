@@ -8,6 +8,9 @@ on:
 jobs:
   optimize:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - uses: actions/checkout@v4
 
@@ -15,156 +18,132 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Sharp in temp folder
+      - name: Install Sharp
         run: |
           mkdir -p /tmp/sharp-tool
           cd /tmp/sharp-tool
           npm init -y
           npm install sharp
 
-      - name: Auto-detect, convert & update all references
+      - name: Convert ALL images in public/ to WebP (smart recursive)
         run: |
           node --input-type=module << 'EOF'
           import { createRequire } from 'module';
           const require = createRequire('/tmp/sharp-tool/package.json');
           const sharp = require('sharp');
-          import { readdirSync, existsSync, unlinkSync, statSync, readFileSync, writeFileSync } from 'fs';
+          import {
+            readdirSync, existsSync, unlinkSync,
+            statSync, mkdirSync
+          } from 'fs';
+          import { join, extname, basename, dirname } from 'path';
 
-          // 🛡️ Favicon/icon files — browser compatibility සඳහා convert නොකරන files
-          const SKIP_REGEX = /(favicon|apple-touch-icon|icon-\d+|mstile|safari-pinned-tab|og-image)/i;
+          // ── Folder-specific settings ──────────────────────────────────────────
+          const PROFILE = {
+            'public/images/authors': {
+              width: 120, height: 120, fit: 'cover',
+              quality: 100, lossless: true,
+              sharpen: { sigma: 1.3, m1: 1.8, m2: 0.8, x1: 2, y2: 10, y3: 20 },
+            },
+            'public/images/slider': {
+              width: 1920, height: 720, fit: 'cover',
+              quality: 100, lossless: true,
+              sharpen: { sigma: 1.0, m1: 1.4, m2: 0.6, x1: 2, y2: 10, y3: 20 },
+            },
+            'public/images/posts': {
+              width: 1200, height: null, fit: 'inside',
+              quality: 95, lossless: false,
+              sharpen: { sigma: 0.9, m1: 1.3, m2: 0.55, x1: 2, y2: 10, y3: 20 },
+            },
+          };
 
-          const authorSharpen  = { sigma: 1.2, m1: 1.5, m2: 0.7, x1: 2, y2: 10, y3: 20 };
-          const sliderSharpen  = { sigma: 0.8, m1: 1.2, m2: 0.5, x1: 2, y2: 10, y3: 20 };
-          const postSharpen    = { sigma: 0.8, m1: 1.2, m2: 0.5, x1: 2, y2: 10, y3: 20 };
-          const logoSharpen    = { sigma: 1.5, m1: 2.0, m2: 0.8, x1: 2, y2: 10, y3: 20 };
-          const genericSharpen = { sigma: 0.6, m1: 1.0, m2: 0.4, x1: 2, y2: 10, y3: 20 };
+          // Default profile — public/ ඇතුළේ වෙන ඕනෑම folder/file
+          const DEFAULT_PROFILE = {
+            width: 1920, height: null, fit: 'inside',
+            quality: 95, lossless: false,
+            sharpen: { sigma: 0.9, m1: 1.3, m2: 0.55, x1: 2, y2: 10, y3: 20 },
+          };
 
-          // 🧠 SMART CONFIG: folder එක අනුව හරි settings auto-select කරනවා
-          function getImageConfig(relPath) {
-            const lower = relPath.toLowerCase();
-            if (lower.includes('/authors/')) {
-              return { width: 120, height: 120, fit: 'cover', quality: 100, lossless: true, sharpen: authorSharpen };
+          // ── Recursive file finder ────────────────────────────────────────────
+          function findImages(dir) {
+            const results = [];
+            if (!existsSync(dir)) return results;
+            for (const entry of readdirSync(dir, { withFileTypes: true })) {
+              const full = join(dir, entry.name);
+              if (entry.isDirectory()) {
+                results.push(...findImages(full));
+              } else if (/\.(jpg|jpeg|png)$/i.test(entry.name)) {
+                results.push(full);
+              }
             }
-            if (lower.includes('/slider/')) {
-              return { width: 900, height: 338, fit: 'cover', quality: 100, lossless: true, sharpen: sliderSharpen };
-            }
-            if (lower.includes('/posts/')) {
-              return { width: 400, height: null, fit: 'inside', quality: 90, lossless: false, sharpen: postSharpen };
-            }
-            if (lower === 'images/logo.png') {
-              return {
-                width: 300, height: 50, fit: 'contain', quality: 100, lossless: true, sharpen: logoSharpen,
-                background: { r: 0, g: 0, b: 0, alpha: 0 },
-              };
-            }
-            // 🆕 FALLBACK: අනාගතයේ add කරන ඕනෑම අලුත් folder/image එකක් —
-            // dimensions නොදන්නා නිසා resize කරන්නේ නැහැ, format + light compress පමණයි
-            return { width: null, height: null, fit: null, quality: 92, lossless: false, sharpen: genericSharpen };
+            return results;
           }
 
-          function listAllFiles(baseDir) {
-            if (!existsSync(baseDir)) return [];
-            return readdirSync(baseDir, { recursive: true })
-              .map((rel) => baseDir + '/' + rel)
-              .filter((full) => {
-                try { return statSync(full).isFile(); } catch { return false; }
-              });
+          // ── Get best matching profile ────────────────────────────────────────
+          function getProfile(filePath) {
+            // Longest matching prefix wins
+            let best = null, bestLen = 0;
+            for (const [key, prof] of Object.entries(PROFILE)) {
+              if (filePath.startsWith(key) && key.length > bestLen) {
+                best = prof;
+                bestLen = key.length;
+              }
+            }
+            return best ?? DEFAULT_PROFILE;
           }
 
-          // ============================================================
-          // STEP 1: public/ folder එක මුළුමනින්ම (subfolders ඇතුළුව)
-          // scan කර JPG/PNG සියල්ල හොයාගැනීම
-          // ============================================================
-          const allPublicFiles = listAllFiles('public');
-          const imageFiles = allPublicFiles.filter((f) => /\.(jpe?g|png)$/i.test(f));
-
-          const convertedMap = []; // { oldRel, newRel }
-
-          for (const inputFull of imageFiles) {
-            const baseName = inputFull.split('/').pop();
-            if (SKIP_REGEX.test(baseName)) {
-              console.log('Skipped (protected file):', inputFull);
-              continue;
-            }
-
-            const relPath = inputFull.replace(/^public\//, '');
-            const outputFull = inputFull.replace(/\.(jpe?g|png)$/i, '.webp');
-            const newRelPath = relPath.replace(/\.(jpe?g|png)$/i, '.webp');
-            const cfg = getImageConfig(relPath);
+          // ── Convert one image ────────────────────────────────────────────────
+          async function convert(input) {
+            const out = input.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+            const prof = getProfile(input);
 
             try {
-              let pipeline = sharp(inputFull);
-
-              if (cfg.width) {
-                pipeline = pipeline.resize(cfg.width, cfg.height ?? undefined, {
-                  fit: cfg.fit,
-                  background: cfg.background,
-                  kernel: sharp.kernel.lanczos3,
-                  withoutEnlargement: true,
+              let pipe = sharp(input, { sequentialRead: true })
+                .resize(
+                  prof.width,
+                  prof.height ?? undefined,
+                  {
+                    fit: prof.fit,
+                    kernel: sharp.kernel.lanczos3,
+                    withoutEnlargement: true,
+                  }
+                )
+                .sharpen(prof.sharpen)
+                .modulate({ saturation: 1.12, brightness: 1.02 })
+                .linear(1.06, -6)
+                .webp({
+                  quality: prof.quality,
+                  lossless: prof.lossless,
+                  effort: 6,
+                  smartSubsample: true,
                 });
-              }
 
-              await pipeline
-                .sharpen(cfg.sharpen)
-                .modulate({ saturation: 1.1, brightness: 1.02 })
-                .linear(1.05, -5)
-                .webp({ quality: cfg.quality, lossless: cfg.lossless, effort: 6 })
-                .toFile(outputFull);
+              await pipe.toFile(out);
 
-              if (existsSync(outputFull) && statSync(outputFull).size > 0) {
-                unlinkSync(inputFull);
-                convertedMap.push({ oldRel: relPath, newRel: newRelPath });
-                console.log('Converted:', relPath, '->', newRelPath);
+              if (existsSync(out) && statSync(out).size > 0) {
+                unlinkSync(input);
+                console.log(`✅  ${input}  →  ${out}`);
               } else {
-                console.error('WebP verification failed, keeping original:', inputFull);
+                console.error(`❌  WebP verify failed, original kept: ${input}`);
               }
             } catch (e) {
-              console.error('Failed (original kept):', inputFull, e.message);
+              console.error(`❌  Conversion failed (original kept): ${input}  —  ${e.message}`);
             }
           }
 
-          console.log(`\n✅ Total converted: ${convertedMap.length} images\n`);
-
-          // ============================================================
-          // STEP 2: src/ සහ public/ තුල ඇති code files වල පරණ
-          // .jpg/.png path references ස්වයංක්‍රීයව .webp බවට update කිරීම
-          // ============================================================
-          const TEXT_EXT_REGEX = /\.(astro|md|mdx|json|ts|tsx|js|jsx|css|html|jsonc|toml)$/i;
-          const codeFiles = [...listAllFiles('src'), ...listAllFiles('public')]
-            .filter((f) => TEXT_EXT_REGEX.test(f));
-
-          let updatedFilesCount = 0;
-
-          for (const file of codeFiles) {
-            let content;
-            try {
-              content = readFileSync(file, 'utf8');
-            } catch {
-              continue;
-            }
-
-            let changed = false;
-            for (const { oldRel, newRel } of convertedMap) {
-              if (content.includes(oldRel)) {
-                content = content.split(oldRel).join(newRel);
-                changed = true;
-              }
-            }
-
-            if (changed) {
-              writeFileSync(file, content, 'utf8');
-              updatedFilesCount++;
-              console.log('Updated references in:', file);
-            }
+          // ── Main ─────────────────────────────────────────────────────────────
+          const images = findImages('public');
+          console.log(`Found ${images.length} image(s) to convert…`);
+          for (const img of images) {
+            await convert(img);
           }
-
-          console.log(`\n✅ Total source files updated: ${updatedFilesCount}\n`);
+          console.log('Done.');
           EOF
 
-      - name: Commit optimized images and updated references
+      - name: Commit results
         run: |
-          git config user.name "github-actions"
+          git config user.name  "actions-user"
           git config user.email "actions@github.com"
-          git add -A
-          git diff --staged --quiet || git commit -m "Auto: convert images to WebP + update all code references"
+          git add -A public/
+          git diff --staged --quiet && echo "Nothing to commit." || \
+            git commit -m "Auto: convert images to WebP + update all code references"
           git push
