@@ -3,129 +3,133 @@ name: Optimize All Images
 on:
   push:
     branches: [main]
-    # ✅ 2026 OPTIMIZATION: පින්තූර ෆෝල්ඩරයට වෙනසක් වූ විට පමණක් ක්‍රියාත්මක වේ
-    paths:
-      - 'public/images/**'
   workflow_dispatch:
-
-# ✅ CRITICAL FIXED: GitHub Actions ලිවීමේ සහ මැකීමේ අවසරය
-permissions:
-  contents: write
 
 jobs:
   optimize:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22 # ✅ Node.js 22 LTS
+          node-version: 20
 
-      - name: Install Sharp Directly
-        run: npm install sharp
+      - name: Install Sharp in temp folder
+        run: |
+          mkdir -p /tmp/sharp-tool
+          cd /tmp/sharp-tool
+          npm init -y
+          npm install sharp
 
-      - name: Ultra Resolution Image Optimization & Auto Delete Original
+      - name: Resize all images and remove originals
         run: |
           node --input-type=module << 'EOF'
-          import sharp from 'sharp';
-          import { readdirSync, existsSync, unlinkSync } from 'fs'; 
+          import { createRequire } from 'module';
+          const require = createRequire('/tmp/sharp-tool/package.json');
+          const sharp = require('sharp');
+          import { readdirSync, existsSync, unlinkSync, statSync } from 'fs';
 
-          // ✅ 100% FIXED: මුළු කේතයම Async Scope එකක් ඇතුළට ගෙන ආවා (SyntaxError එක සම්පූර්ණයෙන්ම නැති වේ)
-          (async () => {
-            const authorSharpen = { sigma: 0.8, m1: 1.0, m2: 0.5, x1: 2, y2: 10, y3: 20 };
-            const sliderSharpen = { sigma: 0.6, m1: 1.0, m2: 0.4, x1: 2, y2: 10, y3: 20 };
-            const postSharpen   = { sigma: 0.7, m1: 1.2, m2: 0.5, x1: 2, y2: 10, y3: 20 };
-            const logoSharpen   = { sigma: 1.2, m1: 1.5, m2: 0.6, x1: 2, y2: 10, y3: 20 };
+          const authorSharpen = { sigma: 1.2, m1: 1.5, m2: 0.7, x1: 2, y2: 10, y3: 20 };
+          const sliderSharpen = { sigma: 0.8, m1: 1.2, m2: 0.5, x1: 2, y2: 10, y3: 20 };
+          const postSharpen   = { sigma: 0.8, m1: 1.2, m2: 0.5, x1: 2, y2: 10, y3: 20 };
+          const logoSharpen   = { sigma: 1.5, m1: 2.0, m2: 0.8, x1: 2, y2: 10, y3: 20 };
 
-            const folders = [
-              {
-                dir: 'public/images/authors',
-                width: 120, height: 120,
-                fit: 'cover',
-                quality: 100, lossless: true,
-                sharpen: authorSharpen,
-              },
-              {
-                dir: 'public/images/slider',
-                width: 1200, height: 450,
-                fit: 'cover',
-                quality: 95, lossless: false,
-                sharpen: sliderSharpen,
-              },
-              {
-                dir: 'public/images/posts',
-                width: 650, height: null,
-                fit: 'inside',
-                quality: 85, lossless: false,
-                sharpen: postSharpen,
-              },
-            ];
+          const folders = [
+            {
+              dir: 'public/images/authors',
+              width: 120, height: 120,
+              fit: 'cover',
+              quality: 100, lossless: true,
+              sharpen: authorSharpen,
+            },
+            {
+              dir: 'public/images/slider',
+              width: 900, height: 338,
+              fit: 'cover',
+              quality: 100, lossless: true,
+              sharpen: sliderSharpen,
+            },
+            {
+              dir: 'public/images/posts',
+              width: 400, height: null,
+              fit: 'inside',
+              quality: 90, lossless: false,
+              sharpen: postSharpen,
+            },
+          ];
 
-            for (const { dir, width, height, fit, quality, lossless, sharpen } of folders) {
-              if (!existsSync(dir)) continue;
-              const files = readdirSync(dir);
-              for (const file of files) {
-                if (!/\.(jpg|jpeg|png)$/i.test(file)) continue;
-                const input = dir + '/' + file;
-                const out = dir + '/' + file.replace(/\.[^.]+$/, '.webp');
-                try {
-                  // 1. පින්තූරය සාර්ථකව WebP බවට පරිවර්තනය කිරීම
-                  await sharp(input)
-                    .resize(width, height ?? undefined, {
-                      fit,
-                      kernel: sharp.kernel.lanczos3,
-                      withoutEnlargement: true,
-                    })
-                    .sharpen(sharpen)
-                    .modulate({ saturation: 1.05, brightness: 1.01 })
-                    .webp({ quality, lossless, effort: 6 })
-                    .toFile(out);
-                  
-                  console.log('Optimized to WebP:', out);
+          for (const { dir, width, height, fit, quality, lossless, sharpen } of folders) {
+            if (!existsSync(dir)) continue;
+            const files = readdirSync(dir);
+            for (const file of files) {
+              if (!/\.(jpg|jpeg|png)$/i.test(file)) continue;
+              const input = dir + '/' + file;
+              const out = dir + '/' + file.replace(/\.[^.]+$/, '.webp');
 
-                  // 2. WebP එක සෑදුණු පසු මුල් JPG/PNG ගොනුව මකා දැමීම
-                  if (existsSync(out)) {
-                    unlinkSync(input);
-                    console.log('Original deleted successfully:', input);
-                  }
-                } catch (e) {
-                  console.error('Failed to process:', input, e.message);
-                }
-              }
-            }
-
-            // Logo එක සඳහා ක්‍රියාවලිය
-            if (existsSync('public/images/logo.png')) {
               try {
-                await sharp('public/images/logo.png')
-                  .resize(300, 50, {
-                    fit: 'contain',
-                    background: { r: 0, g: 0, b: 0, alpha: 0 },
+                // ✅ Step 1: WebP file එක හදනවා
+                await sharp(input)
+                  .resize(width, height ?? undefined, {
+                    fit,
                     kernel: sharp.kernel.lanczos3,
+                    withoutEnlargement: true,
                   })
-                  .sharpen(logoSharpen)
-                  .webp({ quality: 100, lossless: true, effort: 6 })
-                  .toFile('public/images/logo.webp');
-                
-                unlinkSync('public/images/logo.png'); 
-                console.log('Logo PNG optimized and deleted.');
+                  .sharpen(sharpen)
+                  .modulate({ saturation: 1.1, brightness: 1.02 })
+                  .linear(1.05, -5)
+                  .webp({ quality, lossless, effort: 6 })
+                  .toFile(out);
+
+                // ✅ Step 2: WebP file එක සාර්ථකව හැදිලාද verify කරනවා
+                // (file තිබෙනවාද + size 0 නැත්නම් පමණයි delete කරනවා)
+                if (existsSync(out) && statSync(out).size > 0) {
+                  unlinkSync(input);
+                  console.log('Converted & removed original:', input, '->', out);
+                } else {
+                  console.error('WebP verification failed, keeping original:', input);
+                }
               } catch (e) {
-                console.error('Logo process failed:', e.message);
+                console.error('Failed (original kept):', input, e.message);
               }
             }
-          })();
+          }
+
+          // ✅ Logo — same smart conversion + cleanup
+          if (existsSync('public/images/logo.png')) {
+            const logoOut = 'public/images/logo.webp';
+            try {
+              await sharp('public/images/logo.png')
+                .resize(300, 50, {
+                  fit: 'contain',
+                  background: { r: 0, g: 0, b: 0, alpha: 0 },
+                  kernel: sharp.kernel.lanczos3,
+                })
+                .sharpen(logoSharpen)
+                .modulate({ saturation: 1.1, brightness: 1.02 })
+                .linear(1.05, -5)
+                .webp({ quality: 100, lossless: true, effort: 6 })
+                .toFile(logoOut);
+
+              if (existsSync(logoOut) && statSync(logoOut).size > 0) {
+                unlinkSync('public/images/logo.png');
+                console.log('Converted & removed original: logo.png -> logo.webp');
+              } else {
+                console.error('Logo WebP verification failed, keeping original.');
+              }
+            } catch (e) {
+              console.error('Logo conversion failed (original kept):', e.message);
+            }
+          }
           EOF
 
-      - name: Commit and Push Changes (WebP Added & Originals Deleted)
+      - name: Commit optimized images and removed originals
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # වෙනස්කම් Git එකට එක් කිරීම
-          git add public/images/
-          
-          # [skip ci] මඟින් නැවත ලූප් වීම් වළක්වයි
-          git diff --staged --quiet || (git commit -m "chore: auto convert images to webp and purge originals [skip ci]" && git push)
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -A public/images/authors
+          git add -A public/images/slider
+          git add -A public/images/posts
+          git add -A public/images/logo.webp public/images/logo.png || true
+          git diff --staged --quiet || git commit -m "Auto: optimize to WebP and remove original JPG/PNG"
+          git push
