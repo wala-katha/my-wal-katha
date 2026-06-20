@@ -31,7 +31,7 @@ jobs:
         run: |
           node --input-type=module << 'EOF'
           import sharp from 'sharp';
-          import { readdirSync, existsSync, unlinkSync } from 'fs'; // ✅ SMART FIXED: unlinkSync මඟින් ගොනු මැකීමේ හැකියාව ලබා ගනී
+          import { readdirSync, existsSync, unlinkSync } from 'fs'; 
 
           const authorSharpen = { sigma: 0.8, m1: 1.0, m2: 0.5, x1: 2, y2: 10, y3: 20 };
           const sliderSharpen = { sigma: 0.6, m1: 1.0, m2: 0.4, x1: 2, y2: 10, y3: 20 };
@@ -84,7 +84,7 @@ jobs:
                 
                 console.log('Optimized to WebP:', out);
 
-                // 2. ✅ SMART FIXED: WebP එක සාර්ථකව සෑදුණු පසු මුල් JPG/PNG ගොනුව වහාම මකා දැමීම
+                // 2. WebP එක සාර්ථකව සෑදුණු පසු මුල් JPG/PNG ගොනුව වහාම මකා දැමීම
                 if (existsSync(out)) {
                   unlinkSync(input);
                   console.log('Original deleted successfully:', input);
@@ -104,11 +104,11 @@ jobs:
                   background: { r: 0, g: 0, b: 0, alpha: 0 },
                   kernel: sharp.kernel.lanczos3,
                 })
-                .sharpen(logoSharpen)
+                .sharpen(logoSharpen) // ✅ FIXED: logoPush වෙනුවට නිවැරදි Variable එක වන logoSharpen යෙදුවා
                 .webp({ quality: 100, lossless: true, effort: 6 })
                 .toFile('public/images/logo.webp');
               
-              unlinkSync('public/images/logo.png'); // ✅ Logo PNG එකද සාර්ථකව මකා දමයි
+              unlinkSync('public/images/logo.png'); 
               console.log('Logo PNG optimized and deleted.');
             } catch (e) {
               console.error('Logo process failed:', e.message);
@@ -121,7 +121,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # ✅ SMART FIXED: අලුත් ගොනු (WebP) එකතු කරන අතරම මකා දැමූ ගොනු (JPG/PNG) ද Git එකට හඳුන්වා දීමට මුළු ෆෝල්ඩරයම add කරයි
+          # අලුත් ගොනු (WebP) එකතු කරන අතරම මකා දැමූ ගොනු (JPG/PNG) ද Git එකට හඳුන්වා දීමට මුළු ෆෝල්ඩරයම add කරයි
           git add public/images/
           
           # [skip ci] මඟින් අනවශ්‍ය ලූප් වීම් වළක්වයි
