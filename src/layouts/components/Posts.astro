@@ -20,120 +20,125 @@ const allTags = allGlobalPosts.flatMap((post) => post.data.tags || []);
 const uniqueTags = [...new Set(allTags)].filter(Boolean);
 ---
 
-{/* ✅ SEO FIXED: max-w-[1450px] සහ mx-auto මඟින් ඉතා විශාල තිරවලදී පවා ලේඅවුට් එක මැදට කර සුරක්ෂිතව තබාගනී */}
+{/* ✅ SEO & ACCESSIBILITY MAXIMIZED: මුළු ලේඅවුට් එකම වඩාත් ව්‍යුහගත කර ඇත */}
 <div class={`w-full mx-auto max-w-[1450px] px-2 sm:px-4 ${className} bg-[#010203]`}>
-  {/* ✅ UI FIXED: gx-2 sm:gx-4 මඟින් පෝස්ට් 2 අතර හිස් ඉඩ සමබර කර පින්තූර තවදුරටත් විශාලව පෙන්වයි */}
-  <div class={`row gy-5 gx-2 sm:gx-4 ${posts.length == 1 ? "justify-center" : ""} `}>
+  {/* ✅ SEMANTIC SEO: පෝස්ට් ලැයිස්තුවක් බව Google Bot හට හැඟවීමට grid එකක් ලෙස සකස් කළ සෙමැන්ටික් <ul> ව්‍යුහය */}
+  <ul class={`row gy-5 gx-2 sm:gx-4 m-0 p-0 list-none ${posts.length == 1 ? "justify-center" : ""} `}>
     {
-      posts.map((post, i: number) => (
-        <div class="col-6 flex flex-col justify-between">
-          {post.data.image && (
-            <a
-              href={`/blog/${post.id}/`}
-              class="rounded-xl block hover:text-primary overflow-hidden group relative border border-white/10 shadow-lg transition duration-300"
-              /* ✅ UI FIXED: 2/3 කට වඩා පෝස්ට් 2ක් ඇති විට ලස්සනට සහ දිගටිව පෙනෙන්නේ 4/5 හෝ 3/4 අනුපාතයයි (මෙහි 3/4 යොදා ඇත) */
-              style="aspect-ratio: 3 / 4;"
-              title={`${post.data.title} සම්පූර්ණ කතාව කියවන්න`}
-            >
-              {/* ✅ SEO & UI FIXED: object-cover සහ object-top මඟින් හිස් ඉඩ ඉවත් කර පින්තූරය කපා නොදමා Frame එක පුරවයි. sizes එකද 50vw ලෙස නිවැරදි කර ඇත. */}
-              <Image
-                class="group-hover:scale-[1.03] transition duration-500 w-full h-full object-cover object-top"
-                src={post.data.image}
-                alt={`${post.data.title} - Sinhala Wal Katha`}
-                width={650}
-                height={866}
-                sizes="(max-width: 768px) 50vw, 50vw"
-                loading={i < 2 ? "eager" : "lazy"}
-                decoding="async"
-              />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
-            </a>
-          )}
+      posts.map((post, i: number) => {
+        // ✅ PERFORMANCE OPTIMIZATION: .filter().slice() වෙනුවට වඩාත් වේගවත් .find() භාවිතය
+        const postAuthor = authors.find((author) =>
+          post.data.authors.map((a) => slugify(a)).includes(slugify(author.data.title))
+        );
 
-          <ul class="mt-3 mb-1 flex flex-wrap items-center text-[#F8F8FF]/90 text-[10px] sm:text-xs justify-between gap-1">
-            <li class="flex items-center flex-wrap">
-              <BiCategoryAlt className="mr-0.5 h-3.5 w-3.5 sm:h-[15px] sm:w-[15px] text-[#01AD9F]" />
-              <ul>
-                {post.data.categories.slice(0, 1).map((category) => (
-                  <li class="inline-block">
-                    <a
-                      href={`/categories/${slugify(category)}/`}
-                      class="hover:text-primary font-black text-[9px] sm:text-[11px] bg-white/10 px-1.5 sm:px-2 py-0.5 rounded text-[#F8F8FF]"
-                    >
-                      {humanize(category)}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </li>
-            <li class="hidden xs:flex items-center flex-wrap font-bold text-[9px] sm:text-[11px] text-[#F8F8FF]/70">
-              <BiCalendarEdit className="mr-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#01AD9F]" />
-              {dateFormat(post.data.date!)}
-            </li>
-          </ul>
-
-          <h3 class="mb-1.5 line-clamp-2 leading-tight">
-            <a
-              href={`/blog/${post.id}/`}
-              class="block hover:text-primary transition duration-300 text-[12px] sm:text-base lg:text-xl font-black text-[#F8F8FF]"
-              title={post.data.title}
-            >
-              {post.data.title}
-            </a>
-          </h3>
-
-          <p class="text-[#F8F8FF]/70 text-[10px] sm:text-sm line-clamp-2 mb-2 leading-snug">{plainify(post.body ?? "")}</p>
-
-          <div class="flex items-center justify-between border-t border-white/10 pt-2 sm:pt-3 mt-auto gap-2">
-            {authors
-              .filter((author) =>
-                post.data.authors
-                  .map((author) => slugify(author))
-                  .includes(slugify(author.data.title))
-              )
-              .slice(0, 1)
-              .map((author) => (
+        return (
+          <li class="col-6 flex flex-col justify-between">
+            <article class="w-full h-full flex flex-col justify-between">
+              {post.data.image && (
                 <a
-                  href={`/authors/${slugify(author.data.title)}/`}
-                  class="flex items-center hover:text-primary text-[9px] sm:text-xs font-bold text-[#F8F8FF] min-w-0 flex-shrink-1"
-                  title={`${author.data.title} ලේඛකයාගේ සියලුම කතා`}
+                  href={`/blog/${post.id}/`}
+                  class="rounded-xl block hover:text-primary overflow-hidden group relative border border-white/10 shadow-lg transition duration-300 w-full"
+                  /* ✅ CLS FIXED: 3/4 නිවැරදිම Aspect Ratio එක සඳහා Inline style එක තහවුරු කරන ලදී */
+                  style="aspect-ratio: 3 / 4;"
+                  title={`${post.data.title} සම්පූර්ණ කතාව කියවන්න`}
                 >
-                  {author.data.image && (
-                    /* ✅ Astro Image එකක් බවට පරිවර්තනය කර SEO/Performance උපරිම කරන ලදී */
-                    <Image
-                      src={author.data.image}
-                      alt={author.data.title}
-                      width={24}
-                      height={24}
-                      loading="lazy"
-                      decoding="async"
-                      class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0 border border-white/20"
-                    />
-                  )}
-                  <span class="truncate">{author.data.title}</span>
+                  {/* ✅ CLS & IMAGE OPTIMIZED: Aspect ratio එකට හරියනම ලෙස width 600 සහ height 800 (3:4) ලෙස නිවැරදි කරන ලදී */}
+                  <Image
+                    class="group-hover:scale-[1.03] transition duration-500 w-full h-full object-cover object-top"
+                    src={post.data.image}
+                    alt={`${post.data.title} - Sinhala Wal Katha`}
+                    width={600}
+                    height={800}
+                    sizes="(max-width: 768px) 50vw, 50vw"
+                    loading={i < 2 ? "eager" : "lazy"}
+                    decoding="async"
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
                 </a>
-              ))}
+              )}
 
-            {/* ✅ SEO FIXED: aria-label එකක් එක් කිරීමෙන් Google Bot හට කුමන පෝස්ට් එක දැයි වටහාගත හැක */}
-            <a
-              href={`/blog/${post.id}/`}
-              class="text-[9px] sm:text-xs bg-[#01AD9F] text-white px-3 sm:px-5 py-1.5 rounded-full hover:bg-opacity-90 transition-all font-black whitespace-nowrap flex-grow text-center max-w-[90px]"
-              aria-label={`Read full story: ${post.data.title}`}
-            >
-              Read
-            </a>
-          </div>
-        </div>
-      ))
+              {/* Meta details list */}
+              <ul class="mt-3 mb-1 flex flex-wrap items-center text-[#F8F8FF]/90 text-[10px] sm:text-xs justify-between gap-1 p-0 list-none">
+                <li class="flex items-center flex-wrap">
+                  <BiCategoryAlt className="mr-0.5 h-3.5 w-3.5 sm:h-[15px] sm:w-[15px] text-[#01AD9F]" />
+                  <ul class="inline-flex p-0 list-none">
+                    {post.data.categories.slice(0, 1).map((category) => (
+                      <li class="inline-block">
+                        <a
+                          href={`/categories/${slugify(category)}/`}
+                          class="hover:text-primary font-black text-[9px] sm:text-[11px] bg-white/10 px-1.5 sm:px-2 py-0.5 rounded text-[#F8F8FF]"
+                        >
+                          {humanize(category)}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+                <li class="hidden xs:flex items-center flex-wrap font-bold text-[9px] sm:text-[11px] text-[#F8F8FF]/70">
+                  <BiCalendarEdit className="mr-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#01AD9F]" />
+                  <time datetime={post.data.date ? new Date(post.data.date).toISOString() : undefined}>
+                    {dateFormat(post.data.date!)}
+                  </time>
+                </li>
+              </ul>
+
+              {/* Heading hierarchy optimized */}
+              <h3 class="mb-1.5 line-clamp-2 leading-tight">
+                <a
+                  href={`/blog/${post.id}/`}
+                  class="block hover:text-primary transition duration-300 text-[12px] sm:text-base lg:text-xl font-black text-[#F8F8FF]"
+                  title={post.data.title}
+                >
+                  {post.data.title}
+                </a>
+              </h3>
+
+              <p class="text-[#F8F8FF]/70 text-[10px] sm:text-sm line-clamp-2 mb-2 leading-snug">{plainify(post.body ?? "")}</p>
+
+              {/* Author row & button */}
+              <div class="flex items-center justify-between border-t border-white/10 pt-2 sm:pt-3 mt-auto gap-2">
+                {postAuthor && (
+                  <a
+                    href={`/authors/${slugify(postAuthor.data.title)}/`}
+                    class="flex items-center hover:text-primary text-[9px] sm:text-xs font-bold text-[#F8F8FF] min-w-0 flex-shrink-1"
+                    title={`${postAuthor.data.title} ලේඛකයාගේ සියලුම කතා`}
+                  >
+                    {postAuthor.data.image && (
+                      <Image
+                        src={postAuthor.data.image}
+                        alt={postAuthor.data.title}
+                        width={24}
+                        height={24}
+                        loading="lazy"
+                        decoding="async"
+                        class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0 border border-white/20"
+                      />
+                    )}
+                    <span class="truncate">{postAuthor.data.title}</span>
+                  </a>
+                )}
+
+                <a
+                  href={`/blog/${post.id}/`}
+                  class="text-[9px] sm:text-xs bg-[#01AD9F] text-white px-3 sm:px-5 py-1.5 rounded-full hover:bg-opacity-90 transition-all font-black whitespace-nowrap flex-grow text-center max-w-[90px]"
+                  aria-label={`Read full story: ${post.data.title}`}
+                >
+                  Read
+                </a>
+              </div>
+            </article>
+          </li>
+        );
+      })
     }
-  </div>
+  </ul>
 
-  {/* Tags section code remains identical and completely safe */}
+  {/* Tags section with fixed HTML valid tags hierarchy */}
   {uniqueTags.length > 0 && (
     <div class="mt-16 p-4 sm:p-6 bg-[#FFCC00] rounded-xl border border-[#E6B800]">
       <div class="flex items-center gap-2 mb-4 border-b border-[#010203]/10 pb-2">
         <BiPurchaseTagAlt className="text-[#010203] h-5 w-5" />
-        <h4 class="text-sm sm:text-base font-black text-[#010203]">Labels (ටැග්ස්)</h4>
+        <h2 class="text-sm sm:text-base font-black text-[#010203] m-0">Labels (ටැග්ස්)</h2>
       </div>
 
       <div class="relative flex flex-col">
