@@ -25,7 +25,7 @@ jobs:
           npm init -y
           npm install sharp
 
-      - name: Re-sharpen ALL WebP images in public/ (clarity maximized)
+      - name: Convert ALL images in public/ to WebP (smart recursive)
         run: |
           node --input-type=module << 'EOF'
           import { createRequire } from 'module';
@@ -33,92 +33,37 @@ jobs:
           const sharp = require('sharp');
           import {
             readdirSync, existsSync, unlinkSync,
-            statSync, renameSync, copyFileSync
+            statSync, mkdirSync
           } from 'fs';
-          import { join } from 'path';
-          import { tmpdir } from 'os';
-          import { randomBytes } from 'crypto';
+          import { join, extname, basename, dirname } from 'path';
 
-          // ════════════════════════════════════════════════════════════════════
-          // PROFILE TABLE
-          // • nearLossless:true  → visually lossless, generation-safe re-encode
-          // • sharpen: (sigma, flat, jagged) — Sharp v0.33 correct API
-          //     sigma  : blur radius (낮 = sharper edge detection)
-          //     flat   : sharpen flat areas (낮 = 0 best for photos)
-          //     jagged : sharpen jagged/edge areas (높 = maximum edge crispness)
-          // ════════════════════════════════════════════════════════════════════
+          // ── Folder-specific settings ──────────────────────────────────────────
           const PROFILE = {
-
             'public/images/authors': {
-              // Small avatar — upscale allowed, maximum sharpness
-              width: 240, height: 240,        // 2× render size for retina
-              fit: 'cover',
-              withoutEnlargement: false,       // upscale small originals
-              nearLossless: true,
-              quality: 100,
-              effort: 6,
-              // Aggressive sharpen: tight sigma, strong jagged
-              sharpenSigma: 0.5,
-              sharpenFlat: 0.3,
-              sharpenJagged: 3.5,
-              clarendon: false,
+              width: 120, height: 120, fit: 'cover',
+              quality: 100, lossless: true,
+              sharpen: { sigma: 1.3, m1: 1.8, m2: 0.8, x1: 2, y2: 10, y3: 20 },
             },
-
             'public/images/slider': {
-              // Hero/banner — preserve natural look, mild sharpen
-              width: 1920, height: 720,
-              fit: 'cover',
-              withoutEnlargement: true,
-              nearLossless: true,
-              quality: 100,
-              effort: 6,
-              sharpenSigma: 0.6,
-              sharpenFlat: 0.5,
-              sharpenJagged: 2.5,
-              clarendon: false,
+              width: 1920, height: 720, fit: 'cover',
+              quality: 100, lossless: true,
+              sharpen: { sigma: 1.0, m1: 1.4, m2: 0.6, x1: 2, y2: 10, y3: 20 },
             },
-
             'public/images/posts': {
-              // Post thumbnails — balance quality vs clarity
-              width: 1200, height: null,
-              fit: 'inside',
-              withoutEnlargement: true,
-              nearLossless: true,
-              quality: 100,
-              effort: 6,
-              sharpenSigma: 0.55,
-              sharpenFlat: 0.3,
-              sharpenJagged: 3.0,
-              clarendon: false,
+              width: 1200, height: null, fit: 'inside',
+              quality: 95, lossless: false,
+              sharpen: { sigma: 0.9, m1: 1.3, m2: 0.55, x1: 2, y2: 10, y3: 20 },
             },
           };
 
-          // Fallback for any other folder inside public/
+          // Default profile — public/ ඇතුළේ වෙන ඕනෑම folder/file
           const DEFAULT_PROFILE = {
-            width: 1920, height: null,
-            fit: 'inside',
-            withoutEnlargement: true,
-            nearLossless: true,
-            quality: 100,
-            effort: 6,
-            sharpenSigma: 0.55,
-            sharpenFlat: 0.3,
-            sharpenJagged: 3.0,
-            clarendon: false,
+            width: 1920, height: null, fit: 'inside',
+            quality: 95, lossless: false,
+            sharpen: { sigma: 0.9, m1: 1.3, m2: 0.55, x1: 2, y2: 10, y3: 20 },
           };
 
-          // ── Profile matcher (longest-prefix wins) ────────────────────────────
-          function getProfile(filePath) {
-            let best = null, bestLen = 0;
-            for (const [key, prof] of Object.entries(PROFILE)) {
-              if (filePath.startsWith(key) && key.length > bestLen) {
-                best = prof; bestLen = key.length;
-              }
-            }
-            return best ?? DEFAULT_PROFILE;
-          }
-
-          // ── Recursive finder: .webp AND legacy .jpg/.jpeg/.png ───────────────
+          // ── Recursive file finder ────────────────────────────────────────────
           function findImages(dir) {
             const results = [];
             if (!existsSync(dir)) return results;
@@ -126,101 +71,79 @@ jobs:
               const full = join(dir, entry.name);
               if (entry.isDirectory()) {
                 results.push(...findImages(full));
-              } else if (/\.(webp|jpg|jpeg|png)$/i.test(entry.name)) {
+              } else if (/\.(jpg|jpeg|png)$/i.test(entry.name)) {
                 results.push(full);
               }
             }
             return results;
           }
 
-          // ── Process one image ────────────────────────────────────────────────
-          async function process(input) {
-            const isLegacy = /\.(jpg|jpeg|png)$/i.test(input);
-            const outPath  = isLegacy
-              ? input.replace(/\.(jpg|jpeg|png)$/i, '.webp')
-              : input;   // webp → overwrite same file
+          // ── Get best matching profile ────────────────────────────────────────
+          function getProfile(filePath) {
+            // Longest matching prefix wins
+            let best = null, bestLen = 0;
+            for (const [key, prof] of Object.entries(PROFILE)) {
+              if (filePath.startsWith(key) && key.length > bestLen) {
+                best = prof;
+                bestLen = key.length;
+              }
+            }
+            return best ?? DEFAULT_PROFILE;
+          }
 
+          // ── Convert one image ────────────────────────────────────────────────
+          async function convert(input) {
+            const out = input.replace(/\.(jpg|jpeg|png)$/i, '.webp');
             const prof = getProfile(input);
 
-            // Safe temp file (same dir, avoid cross-device rename issues)
-            const tmp = input + '.tmp_' + randomBytes(4).toString('hex') + '.webp';
-
             try {
-              let pipe = sharp(input, { sequentialRead: true });
-
-              // Resize only if profile has a width
-              if (prof.width) {
-                pipe = pipe.resize(
+              let pipe = sharp(input, { sequentialRead: true })
+                .resize(
                   prof.width,
                   prof.height ?? undefined,
                   {
                     fit: prof.fit,
-                    kernel: sharp.kernel.lanczos3,       // highest quality downscale
-                    withoutEnlargement: prof.withoutEnlargement,
+                    kernel: sharp.kernel.lanczos3,
+                    withoutEnlargement: true,
                   }
-                );
+                )
+                .sharpen(prof.sharpen)
+                .modulate({ saturation: 1.12, brightness: 1.02 })
+                .linear(1.06, -6)
+                .webp({
+                  quality: prof.quality,
+                  lossless: prof.lossless,
+                  effort: 6,
+                  smartSubsample: true,
+                });
+
+              await pipe.toFile(out);
+
+              if (existsSync(out) && statSync(out).size > 0) {
+                unlinkSync(input);
+                console.log(`✅  ${input}  →  ${out}`);
+              } else {
+                console.error(`❌  WebP verify failed, original kept: ${input}`);
               }
-
-              // ✦ Unsharp mask — correct Sharp v0.33+ positional API
-              //   sharpen(sigma, flat, jagged)
-              pipe = pipe.sharpen(
-                prof.sharpenSigma,
-                prof.sharpenFlat,
-                prof.sharpenJagged
-              );
-
-              // ✦ Subtle saturation boost only (NO linear/brightness — keeps
-              //   natural look and avoids halos on re-encoded WebP)
-              pipe = pipe.modulate({ saturation: 1.08 });
-
-              // ✦ WebP encode
-              //   nearLossless=true → pixel-perfect visual quality
-              //   smartSubsample=true → better chroma fidelity
-              pipe = pipe.webp({
-                nearLossless: prof.nearLossless,
-                quality: prof.quality,
-                effort: prof.effort,
-                smartSubsample: true,
-              });
-
-              await pipe.toFile(tmp);
-
-              // Verify temp output
-              if (!existsSync(tmp) || statSync(tmp).size === 0) {
-                console.error(`❌  Output empty, skipping: ${input}`);
-                if (existsSync(tmp)) unlinkSync(tmp);
-                return;
-              }
-
-              // Atomic replace
-              if (existsSync(outPath)) unlinkSync(outPath);
-              renameSync(tmp, outPath);
-
-              // Remove legacy original if we created a new .webp name
-              if (isLegacy && existsSync(input)) unlinkSync(input);
-
-              console.log(`✅  ${input}  →  ${outPath}`);
-
             } catch (e) {
-              console.error(`❌  Failed (original kept): ${input}  —  ${e.message}`);
-              if (existsSync(tmp)) unlinkSync(tmp);
+              console.error(`❌  Conversion failed (original kept): ${input}  —  ${e.message}`);
             }
           }
 
           // ── Main ─────────────────────────────────────────────────────────────
           const images = findImages('public');
-          console.log(`\n🔍  Found ${images.length} image(s) …\n`);
+          console.log(`Found ${images.length} image(s) to convert…`);
           for (const img of images) {
-            await process(img);
+            await convert(img);
           }
-          console.log('\n✔  All done.');
+          console.log('Done.');
           EOF
 
-      - name: Commit sharpened images
+      - name: Commit results
         run: |
           git config user.name  "actions-user"
           git config user.email "actions@github.com"
           git add -A public/
           git diff --staged --quiet && echo "Nothing to commit." || \
-            git commit -m "Auto: re-sharpen WebP images for maximum clarity"
+            git commit -m "Auto: convert images to WebP + update all code references"
           git push
