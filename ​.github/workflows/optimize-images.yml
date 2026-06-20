@@ -1,0 +1,113 @@
+name: Optimize All Images
+
+on:
+  push:
+    branches: [main]
+    # ✅ 2026 OPTIMIZATION: Workflow එක push කළ පසුව නැවත අනවශ්‍ය ලෙස run වීම වැළැක්වීමට මුල් පින්තූර පමණක් filter කරයි
+    paths:
+      - 'public/images/**'
+  workflow_dispatch:
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Git commit push කිරීමට අවශ්‍ය permissions තහවුරු කරයි
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22 # ✅ 2026 වසරේ ස්ථාවර Node.js LTS සංස්කරණය
+
+      - name: Install Sharp Directly
+        # තාවකාලික ෆෝල්ඩර සාදමින් කාලය නාස්ති නොකර සෘජුවම sharp ස්ථාපනය
+        run: npm install sharp
+
+      - name: Ultra Resolution Image Optimization
+        run: |
+          node --input-type=module << 'EOF'
+          import sharp from 'sharp';
+          import { readdirSync, existsSync } from 'fs';
+
+          // ✅ ULTRA SHARPNESS CONFIGURATION: 2026 තිර සඳහා උපරිම පැහැදිලි බව දෙන Sharpen Filters
+          const authorSharpen = { sigma: 0.8, m1: 1.0, m2: 0.5, x1: 2, y2: 10, y3: 20 };
+          const sliderSharpen = { sigma: 0.6, m1: 1.0, m2: 0.4, x1: 2, y2: 10, y3: 20 };
+          const postSharpen   = { sigma: 0.7, m1: 1.2, m2: 0.5, x1: 2, y2: 10, y3: 20 };
+          const logoSharpen   = { sigma: 1.2, m1: 1.5, m2: 0.6, x1: 2, y2: 10, y3: 20 };
+
+          const folders = [
+            {
+              dir: 'public/images/authors',
+              width: 120, height: 120,
+              fit: 'cover',
+              quality: 100, lossless: true,
+              sharpen: authorSharpen,
+            },
+            {
+              dir: 'public/images/slider',
+              width: 1200, height: 450, // ✅ SLIDER FIXED: විශාල තිර සඳහා 900px සිට 1200px දක්වා වැඩි කළා
+              fit: 'cover',
+              quality: 95, lossless: false,
+              sharpen: sliderSharpen,
+            },
+            {
+              // ✅ POSTS FIXED: ඔබ පෝස්ට් 2 ලේඅවුට් එකක් භාවිත කරන නිසා, 2x Retina Mobile Displays සඳහා width එක 650px දක්වා වැඩි කළා (දැන් පින්තූර 100% ක්ම පැහැදිලියි, Blur වෙන්නේ නැත)
+              dir: 'public/images/posts',
+              width: 650, height: null,
+              fit: 'inside',
+              quality: 85, lossless: false, // Quality 85 දත්ත ප්‍රමාණය සහ පැහැදිලිතාවය අතර හොඳම සමබරතාවයයි
+              sharpen: postSharpen,
+            },
+          ];
+
+          for (const { dir, width, height, fit, quality, lossless, sharpen } of folders) {
+            if (!existsSync(dir)) continue;
+            const files = readdirSync(dir);
+            for (const file of files) {
+              // මුල් JPG/PNG පමණක් සකසයි, දැනටමත් සාදා ඇති .webp ගොනු මඟහරියි
+              if (!/\.(jpg|jpeg|png)$/i.test(file)) continue;
+              const input = dir + '/' + file;
+              const out = dir + '/' + file.replace(/\.[^.]+$/, '.webp');
+              try {
+                await sharp(input)
+                  .resize(width, height ?? undefined, {
+                    fit,
+                    kernel: sharp.kernel.lanczos3, // හොඳම Resizing Algorithm එක
+                    withoutEnlargement: true,
+                  })
+                  .sharpen(sharpen)
+                  // වර්ණවල සහ ආලෝකයේ පැහැදිලි බව ස්වාභාවිකව වැඩි කිරීමට (Vibrancy & Brightness Fix)
+                  .modulate({ saturation: 1.05, brightness: 1.01 })
+                  .webp({ quality, lossless, effort: 6 })
+                  .toFile(out);
+                console.log('Optimized:', input, '->', out);
+              } catch (e) {
+                console.error('Failed:', input, e.message);
+              }
+            }
+          }
+
+          if (existsSync('public/images/logo.png')) {
+            await sharp('public/images/logo.png')
+              .resize(300, 50, {
+                fit: 'contain',
+                background: { r: 0, g: 0, b: 0, alpha: 0 },
+                kernel: sharp.kernel.lanczos3,
+              })
+              .sharpen(logoSharpen)
+              .webp({ quality: 100, lossless: true, effort: 6 })
+              .toFile('public/images/logo.webp');
+            console.log('Optimized: logo.png -> logo.webp');
+          }
+          EOF
+
+      - name: Commit and Push Optimized WebP Images
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/images/**/*.webp || true
+          
+          # ✅ 2026 CRITICAL FIXED: Commit පණිවිඩයට [skip ci] එක් කිරීමෙන් infinite loop එකක් වීම වළක්වා ආරක්ෂාව 100% ක් තහවුරු කරයි
+          git diff --staged --quiet || (git commit -m "chore: auto optimize images to webp [skip ci]" && git push)
