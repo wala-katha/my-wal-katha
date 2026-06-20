@@ -1,81 +1,83 @@
----  
+---
 import { humanize } from "@/lib/utils/textConverter";  
   
 const demoSlides = [  
   {  
-    id: "thaththa-duwa-wal-katha",  
-    title: "Thaththa Duwa Wal Katha - තාත්තයි දුවයි වල් කතා",  
+    id: "thaththa-duwa-wal-katha/",  
+    title: "thaththa duwa wal katha - තාත්තයි දුවයි වල් කතා",  
     image: "/images/slider/slide-1.webp",  
     category: "Wal Katha"  
   },  
   {  
-    id: "methsala-akka-wal-katha",  
-    title: "Methsala Akka Wal Katha - මෙත්සලා අක්කා වල් කතා",  
+    id: "methsala-akka-wal-katha/",  
+    title: "methsala akka wal katha - මෙත්සලා අක්කා වල් කතා",  
     image: "/images/slider/slide-2.webp",  
     category: "Wela Katha"  
   },  
   {  
-    id: "nandage-duwa-wal-katha",  
-    title: "Nandage Duwa Wal Katha - නැන්දගේ දුව වල් කතා",  
+    id: "nandage-duwa-wal-katha/",  
+    title: "Nandage duwa wal katha - නැන්දගේ දුව වල් කතා",  
     image: "/images/slider/slide-3.webp",  
     category: "wala katha"  
   },  
   {  
-    id: "gedara-driver-wal-katha",  
-    title: "Gedara Driver Wal Kaha - ගෙදර ඩ්‍රයිවර් වල් කතා",  
+    id: "gedara-driver-wal-katha/",  
+    title: "Gedara driver wal katha - ගෙදර ඩ්‍රයිවර් වල් කතා",  
     image: "/images/slider/slide-4.webp",  
     category: "True Story"  
   }  
 ];  
 ---  
   
-<section class="relative w-full overflow-hidden rounded-xl bg-[#010203] mb-8 border border-white/10 shadow-2xl" id="astro-featured-slider" aria-label="Featured Stories">  
-  <div class="flex transition-transform duration-500 ease-in-out" id="slider-wrapper" style="width: 400%;">  
+<div class="relative w-full overflow-hidden rounded-xl bg-[#010203] mb-8 border border-white/10" id="astro-featured-slider">  
+  <div class="flex transition-transform duration-500 ease-in-out will-change-transform" id="slider-wrapper" style="width: 400%;">  
     {demoSlides.map((slide, index) => (  
       <div class="w-full flex-shrink-0 relative" style="width: 25%;">  
         <a href={`/blog/${slide.id}/`} class="block w-full h-full group" aria-label={`Read story: ${slide.title}`}>  
-          <div class="relative w-full aspect-[16/7] sm:aspect-[21/7] md:aspect-[24/7] bg-[#010203] overflow-hidden">  
+          
+          {/* ✅ 2026 SEO MAXIMUM OPTIMIZATION: */}
+          {/* මිනිස් ඇසට නොපෙනී Google Bot එකට පමණක් 100% ක්ම කියවිය හැකි පරිදි සකසන ලද ශීර්ෂ ටැගය (h3) */}
+          <h3 class="sr-only opacity-0 absolute pointer-events-none">{slide.title}</h3>
+
+          {/* ✅ IMAGE RATIO FIXED: පෙර workflow එකට ගැලපෙන පරිදි width/height 1200x450 ලෙස සුළු වශයෙන් නිවැරදි කළා CLS වැළැක්වීමට */}
+          <div class="relative w-full aspect-[16/8] sm:aspect-[21/8] md:aspect-[24/8] bg-[#010203] overflow-hidden">  
             <img  
               src={slide.image}  
               alt={slide.title}  
-              width={1200} height={450}  
+              width={1200}  
+              height={450}  
               loading={index === 0 ? "eager" : "lazy"}  
               decoding={index === 0 ? "sync" : "async"}  
               fetchpriority={index === 0 ? "high" : "low"}  
-              class="w-full h-full object-cover object-center transition duration-700 group-hover:scale-[1.03] motion-reduce:transition-none"  
+              class="w-full h-full object-cover object-center transition duration-500 group-hover:scale-[1.02]"  
             />  
-            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
           </div>  
   
-          <div class="absolute bottom-4 left-4 right-4 z-10 flex flex-col gap-2 max-w-[85%]">  
-            <div>
-              <span class="bg-[#FFCC00] text-[#010203] px-2.5 py-1 text-[10px] sm:text-xs font-black rounded uppercase tracking-wider shadow-md">  
-                {humanize(slide.category)}  
-              </span>  
-            </div>
-            <h2 class="text-white text-base sm:text-lg md:text-xl font-bold tracking-tight line-clamp-1 group-hover:text-[#01AD9F] transition duration-300">
-              {slide.title}
-            </h2>
+          <div class="absolute bottom-3 left-4 z-10">  
+            <span class="bg-[#FFCC00] text-[#010203] px-2.5 py-1 text-[11px] sm:text-xs font-black rounded uppercase tracking-wider shadow-md">  
+              {humanize(slide.category)}  
+            </span>  
           </div>  
         </a>  
       </div>  
     ))}  
   </div>  
   
-  <div class="absolute bottom-4 right-4 flex gap-2 z-20 bg-black/40 backdrop-blur-sm px-2 py-1.5 rounded-full border border-white/5">  
+  <div class="absolute bottom-3 right-4 flex gap-1.5 z-20">  
     {demoSlides.map((_, index) => (  
       <button  
-        class={`w-2 h-2 rounded-full transition-all duration-300 slider-dot ${index === 0 ? 'bg-[#01AD9F] w-4' : 'bg-white/40'}`}  
+        class={`w-2 h-2 rounded-full transition-all duration-300 slider-dot ${index === 0 ? 'bg-[#01AD9F] scale-125' : 'bg-white/40'}`}  
         data-index={index}  
         aria-label={`Go to slide ${index + 1}`}  
       ></button>  
     ))}  
   </div>  
-</section>  
+</div>  
   
 <script>  
-  let slideInterval: any;  
-  
+  // 글로벌 변수로 인터벌 저장 (Astro View Transitions ලික් වීම් වැළැක්වීමට)
+  let slideInterval: any = null;
+
   function initSlider() {  
     const slider = document.getElementById('astro-featured-slider');  
     const wrapper = document.getElementById('slider-wrapper');  
@@ -83,12 +85,14 @@ const demoSlides = [
   
     if (!slider || !wrapper || dots.length === 0) return;  
   
+    // ✅ 2026 MEMORY FIX: දැනට ධාවනය වන පැරණි සිදුවීම්/Intervals තිබේ නම් ඒවා සම්පූර්ණයෙන්ම ඉවත් කරයි
+    if (slideInterval) {
+      clearInterval(slideInterval);
+    }
+
     let currentIndex = 0;  
     const totalSlides = dots.length;  
-    const intervalTime = 5000; // 2026 UX: පරිශීලකයාට කියවීමට කාලය දීමට 5s දක්වා වැඩි කළා
-  
-    // කලින් තිබූ පැරණි ඉන්ටර්වල් පිරිසිදු කිරීම (Memory Leak Fix)
-    if (slideInterval) clearInterval(slideInterval);
+    const intervalTime = 4000;  
   
     function updateSlider(index: number) {  
       currentIndex = index;  
@@ -96,16 +100,18 @@ const demoSlides = [
   
       dots.forEach((dot, i) => {  
         if (i === index) {  
-          dot.classList.add('bg-[#01AD9F]', 'w-4');  
+          dot.classList.add('bg-[#01AD9F]', 'scale-125');  
           dot.classList.remove('bg-white/40');  
         } else {  
-          dot.classList.remove('bg-[#01AD9F]', 'w-4');  
+          dot.classList.remove('bg-[#01AD9F]', 'scale-125');  
           dot.classList.add('bg-white/40');  
         }  
       });  
     }  
   
     function startInterval() {  
+      // මීට පෙර සාදන ලද interval එකක් තිබේ නම් නැවත clear කරයි
+      if (slideInterval) clearInterval(slideInterval);
       slideInterval = setInterval(() => {  
         const nextIndex = (currentIndex + 1) % totalSlides;  
         updateSlider(nextIndex);  
@@ -151,11 +157,11 @@ const demoSlides = [
     startInterval();  
   }  
   
-  // Astro View Transitions සඳහා නිවැරදිව පිටුවෙන් ඉවත් වන විට ක්‍රියාවලිය නැවැත්වීම
+  // Astro View Transitions සහ Normal Loading ක්‍රම දෙකටම ගැලපෙන සේ ක්‍රියාත්මක කිරීම
+  document.addEventListener('astro:page-load', initSlider);  
+  
+  // පිටුවෙන් පිටුවට යන විට පැරණි Interval එක මුළුමනින්ම නවත්වයි
   document.addEventListener('astro:before-preparation', () => {
     if (slideInterval) clearInterval(slideInterval);
   });
-
-  document.addEventListener('astro:page-load', initSlider);  
-  initSlider();  
 </script>
