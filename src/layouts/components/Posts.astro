@@ -27,29 +27,29 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
   <div class={`row gy-5 gx-1.5 md:gx-3 ${posts.length == 1 ? "justify-center" : ""} `}>        
     {        
       posts.map((post, i: number) => (        
-        /* ✅ MODIFIED: col-4 වෙනුවට col-6 යෙදීමෙන් පේළියට පෝස්ට් 2 බැගින් පහළට දර්ශනය වේ */
+        /* ✅ MODIFIED: col-6 යෙදීමෙන් පේළියට පෝස්ට් 2 බැගින් පහළට දර්ශනය වේ */
         <div class="col-6 flex flex-col justify-between">        
           {post.data.image && (        
             <a        
               href={`/blog/${post.id}/`}        
-              class="rounded-xl block hover:text-primary overflow-hidden group relative border border-white/10 shadow-2xl transition duration-300"        
-              /* ✅ FIXED: aspect-[3/4] මඟින් පින්තූරය පේළියට 2 තබාගෙනම තව ටිකක් පළල් (Wider) කර පෙන්වයි */
-              style="aspect-ratio: 3 / 4;"
+              class="rounded-xl block hover:text-primary overflow-hidden group relative border border-white/10 shadow-2xl transition duration-300 w-full"        
+              /* ✅ OPTIMIZED: aspect-[2/3] සහ object-contain මඟින් පින්තූරය කිසිසේත්ම CROP නොකර දිගු (Book Cover Size) හැඩයට පෙන්වයි */
+              style="aspect-ratio: 2 / 3;"
               title={`${post.data.title} සම්පූර්ණ කතාව කියවන්න`}
             >        
-              {/* ✅ SEO & VISUAL FIXED: Crop නොවී පිරී ඉතිරී පෙනීමට object-cover object-top සමඟ සයිස් එක 650x866 දක්වා වැඩි කළා */}
+              {/* ✅ SEO & VISUAL FIXED: object-contain සහ background එකතු කිරීමෙන් සම්පූර්ණ පින්තූරයම සුරක්ෂිතව දිස්වේ */}
               <Image        
-                class="group-hover:scale-[1.04] transition duration-500 w-full h-full object-cover object-top"        
+                class="group-hover:scale-[1.03] transition duration-500 w-full h-full object-contain bg-neutral-900/50"        
                 src={post.data.image}        
                 alt={`${post.data.title} - Sinhala Wal Katha Photo`}        
-                width={650} 
-                height={866}        
+                width={600} 
+                height={900}        
                 /* ✅ OPTIMIZATION: පේළියකට 2 බැගින් එන බැවින් මුල් පෝස්ට් 2 පමණක් eager ලෝඩ් කර LCP වේගවත් කරයි */
                 loading={i < 2 ? "eager" : "lazy"}        
                 decoding="async"        
               />        
               {/* Image Overlay */}
-              <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none"></div>
             </a>        
           )}        
                   
@@ -104,6 +104,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                   href={`/authors/${slugify(author.data.title)}/`}        
                   class="flex items-center hover:text-primary text-[9px] sm:text-xs font-bold text-[#F8F8FF] min-w-0 flex-shrink-1"        
                   title={`${author.data.title} ලේඛකයාගේ සියලුම කතා`}
+                  aria-label={`View profile of author ${author.data.title}`}
                 >        
                   {author.data.image && (        
                     <Image        
