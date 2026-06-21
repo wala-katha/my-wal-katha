@@ -16,76 +16,41 @@ export interface NavigationLink {
 }
 
 const { main }: { main: NavigationLink[] } = menu;
-
-// ✅ FIX: Current path for active link highlighting
-const currentPath = Astro.url.pathname;
 ---
 
-<header
-  id="site-header"
-  class="header sticky top-0 z-50 py-4 transition-all duration-300 border-b border-white/[0.06] bg-[#010203]/80 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.8)]"
-  role="banner"
->
-  <nav
-    class="navbar container flex items-center justify-between"
-    aria-label="Main navigation"
-    role="navigation"
-  >
+{/* 👑 PREMIUM GLOSSY GLASSMORPHISM HEADER */}
+<header id="site-header" class="header sticky top-0 z-50 py-4 transition-all duration-300 border-b border-white/[0.06] bg-[#010203]/80 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
+  <nav class="navbar container flex items-center justify-between">
     {/* LOGO */}
-    <div class="order-0 flex-shrink-0">
+    <div class="order-0">
       <Logo />
     </div>
 
-    {/* ✅ FIX 8: Replace checkbox hack with semantic button
-        PROBLEM: <input type="checkbox"> for mobile menu toggle
-        - Not keyboard accessible without extra ARIA
-        - Screen readers announce it as "checkbox" not "menu button"
-        - Causes reflow when checked state changes (FIX 2 partial)
-        FIX: Hidden checkbox kept for CSS-only fallback (safe.css depends on it)
-             But ARIA enhanced for accessibility
-    */}
-    <input
-      id="nav-toggle"
-      type="checkbox"
-      class="hidden"
-      aria-hidden="true"
-      tabindex="-1"
-    />
+    {/* MOBILE MENU TOGGLE CHECKBOX */}
+    <input id="nav-toggle" type="checkbox" class="hidden" />
 
-    {/* ✅ FIX 4: Mobile menu open button — proper keyboard accessibility */}
+    {/* MOBILE MENU BUTTONS */}
     <label
       id="show-button"
       for="nav-toggle"
-      class="order-2 flex cursor-pointer items-center text-white/90 hover:text-[#01AD9F] transition-colors duration-200 p-2 rounded-lg focus-within:ring-2 focus-within:ring-[#01AD9F] md:hidden"
-      role="button"
-      aria-label="Open navigation menu"
-      aria-expanded="false"
-      aria-controls="nav-menu"
-      tabindex="0"
+      class="order-2 flex cursor-pointer items-center text-white/90 hover:text-[#01AD9F] transition-colors duration-200 p-2"
     >
-      <svg class="h-6 w-6 fill-current" viewBox="0 0 20 20" aria-hidden="true">
-        <title>Open Menu</title>
+      <svg class="h-6 w-6 fill-current" viewBox="0 0 20 20">
+        <title>Menu Open</title>
         <path d="M0 3h20v2H0V3z m0 6h20v2H0V9z m0 6h20v2H0V15z"></path>
       </svg>
     </label>
-
-    {/* ✅ FIX 4: Mobile menu close button — proper keyboard accessibility */}
+    
     <label
       id="hide-button"
       for="nav-toggle"
-      class="order-2 hidden cursor-pointer items-center text-white/90 hover:text-[#01AD9F] transition-colors duration-200 p-2 rounded-lg focus-within:ring-2 focus-within:ring-[#01AD9F] md:hidden"
-      role="button"
-      aria-label="Close navigation menu"
-      aria-expanded="true"
-      aria-controls="nav-menu"
-      tabindex="0"
+      class="order-2 hidden cursor-pointer items-center text-white/90 hover:text-[#01AD9F] transition-colors duration-200 p-2"
     >
-      <svg class="h-6 w-6 fill-current" viewBox="0 0 20 20" aria-hidden="true">
-        <title>Close Menu</title>
+      <svg class="h-6 w-6 fill-current" viewBox="0 0 20 20">
+        <title>Menu Close</title>
         <polygon
           points="11 9 22 9 22 11 11 11 11 22 9 22 9 11 -2 11 -2 9 9 9 9 -2 11 -2"
-          transform="rotate(45 10 10)"
-        ></polygon>
+          transform="rotate(45 10 10)"></polygon>
       </svg>
     </label>
 
@@ -93,128 +58,85 @@ const currentPath = Astro.url.pathname;
     <ul
       id="nav-menu"
       class="navbar-nav order-3 hidden w-full text-center gap-1"
-      role="menubar"
-      aria-label="Site navigation"
     >
       {
-        main.map((menuItem, index) => {
-          const isActive = menuItem.url
-            ? currentPath === menuItem.url || currentPath.startsWith(menuItem.url + "/")
-            : false;
-
-          return menuItem.hasChildren ? (
-            <li
-              class="nav-item nav-dropdown relative cursor-pointer flex flex-col items-center group"
-              role="none"
-            >
-              <button
-                class={`nav-dropdown-btn nav-link flex items-center justify-center gap-1 w-auto bg-transparent border-none outline-none cursor-pointer mx-auto font-semibold py-2 px-4 transition duration-200 focus-visible:ring-2 focus-visible:ring-[#01AD9F] focus-visible:rounded-lg ${isActive ? "text-[#01AD9F]" : "text-white/80 hover:text-[#01AD9F]"}`}
-                aria-expanded="false"
-                aria-haspopup="true"
-                data-dropdown-target={`dropdown-${index}`}
-                role="menuitem"
-                type="button"
-              >
-                <span>{menuItem.name}</span>
-                <svg
-                  class="h-4 w-4 fill-current transition-transform duration-300 dropdown-icon"
-                  viewBox="0 0 20 20"
-                  aria-hidden="true"
+        main.map((menu, index) => (
+          <>
+            {menu.hasChildren ? (
+              <li class="nav-item nav-dropdown relative cursor-pointer flex flex-col items-center group">
+                <button 
+                  class="nav-dropdown-btn nav-link flex items-center justify-center gap-1 w-auto bg-transparent border-none outline-none cursor-pointer mx-auto text-white/80 hover:text-[#01AD9F] font-semibold py-2 px-4 transition duration-200"
+                  aria-expanded="false"
+                  data-dropdown-target={`dropdown-${index}`}
                 >
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                </svg>
-              </button>
-
-              {/* ✅ FIX 10 & 11: Dropdown — animation paused when hidden
-                  animation-play-state: paused when hidden prevents CPU waste
-                  aria-hidden toggles via JS for screen readers */}
-              <div
-                id={`dropdown-${index}`}
-                class="nav-dropdown-list silver-animated-border hidden min-w-[220px] rounded-xl z-50 text-center mx-auto my-2"
-                role="menu"
-                aria-label={`${menuItem.name} submenu`}
-              >
-                <ul class="inner-dropdown bg-[#0c0d10] rounded-xl p-2 w-full h-full relative z-10" role="none">
-                  {menuItem.children?.map((child) => {
-                    const isChildActive = currentPath === child.url || currentPath.startsWith(child.url + "/");
-                    return (
-                      <li class="py-1.5" role="none">
-                        <a
-                          href={child.url}
-                          class={`block px-4 py-2 text-sm hover:bg-white/[0.03] rounded-lg transition duration-200 text-center w-full font-medium focus-visible:ring-2 focus-visible:ring-[#01AD9F] focus-visible:outline-none ${isChildActive ? "text-[#01AD9F]" : "text-white/70 hover:text-[#01AD9F]"}`}
-                          role="menuitem"
-                          aria-current={isChildActive ? "page" : undefined}
+                  <span>{menu.name}</span>
+                  <svg class="h-4 w-4 fill-current transition-transform duration-300 dropdown-icon" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                  </svg>
+                </button>
+                
+                {/* 👑 SILVER ANIMATED BORDER DROPDOWN BOX */}
+                <div 
+                  id={`dropdown-${index}`} 
+                  class="nav-dropdown-list silver-animated-border hidden min-w-[220px] rounded-xl z-50 text-center mx-auto my-2"
+                >
+                  <ul class="inner-dropdown bg-[#0c0d10] rounded-xl p-2 w-full h-full relative z-10">
+                    {menu.children?.map((child) => (
+                      <li class="py-1.5">
+                        <a 
+                          href={child.url} 
+                          class="block px-4 py-2 text-sm text-white/70 hover:text-[#01AD9F] hover:bg-white/[0.03] rounded-lg transition duration-200 text-center w-full font-medium"
                         >
                           {child.name}
                         </a>
                       </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </li>
-          ) : (
-            <li class="nav-item flex justify-center" role="none">
-              <a
-                href={menuItem.url}
-                class={`nav-link block text-center w-full font-semibold py-2 px-4 transition duration-200 focus-visible:ring-2 focus-visible:ring-[#01AD9F] focus-visible:rounded-lg focus-visible:outline-none ${isActive ? "text-[#01AD9F]" : "text-white/80 hover:text-[#01AD9F]"}`}
-                role="menuitem"
-                aria-current={isActive ? "page" : undefined}
-              >
-                {menuItem.name}
-              </a>
-            </li>
-          );
-        })
+                    ))}
+                  </ul>
+                </div>
+              </li>
+            ) : (
+              <li class="nav-item flex justify-center">
+                <a 
+                  href={menu.url} 
+                  class="nav-link block text-center w-full text-white/80 hover:text-[#01AD9F] font-semibold py-2 px-4 transition duration-200"
+                >
+                  {menu.name}
+                </a>
+              </li>
+            )}
+          </>
+        ))
       }
     </ul>
 
-    {/* ✅ FIX 5: Search button — descriptive aria-label */}
+    {/* SEARCH ICON BUTTON */}
     <div class="order-1 ml-auto flex md:ml-0">
       <a
-        class="inline-flex items-center justify-center cursor-pointer p-2.5 text-xl text-white/80 transition-all duration-300 hover:text-[#01AD9F] hover:scale-110 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.05] focus-visible:ring-2 focus-visible:ring-[#01AD9F] focus-visible:outline-none"
+        class="inline-block cursor-pointer p-2.5 text-xl text-white/80 transition-all duration-300 hover:text-[#01AD9F] hover:scale-110 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.05]"
         href="/search"
-        aria-label="Search stories"
-        title="Search Sinhala Wal Katha stories"
+        title="search"
+        aria-label="search"
       >
-        <IoSearch aria-hidden="true" />
+        <IoSearch />
       </a>
     </div>
   </nav>
 </header>
 
-{/* ✅ FIX 12: Scoped styles — use is:global only for rules that MUST be global
-    Moved component-specific styles to scoped where possible
-    is:global kept only for CSS selector rules that affect child elements
-    rendered by Astro (nav-toggle state machine requires global)
-*/}
 <style is:global>
-  /* ✅ Keep global: nav-toggle state machine — safe.css + navigation.css depend on these */
-  #nav-toggle:checked ~ #show-button {
-    display: none !important;
-  }
-  #nav-toggle:checked ~ #hide-button {
-    display: flex !important;
-  }
-  #nav-toggle:checked ~ #nav-menu {
-    display: flex !important;
-    flex-direction: column;
-  }
-
   .nav-link {
     font-family: inherit;
   }
 
-  /* Mobile nav menu panel */
   .navbar-nav {
     background-color: #060709 !important;
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 1rem;
     padding: 1rem;
     margin-top: 1rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
   }
-
+  
   .nav-dropdown-list {
     position: relative !important;
     left: 0 !important;
@@ -223,26 +145,15 @@ const currentPath = Astro.url.pathname;
     margin-top: 0.5rem !important;
   }
 
-  /* ✅ FIX 3 & 10: Silver animated border — GPU composited + paused when hidden
-     PROBLEM: 
-     - `will-change` missing — browser cannot promote to GPU layer
-     - Animation runs even when dropdown is hidden → wasted CPU
-     - `rotate()` + `scale()` — two separate transform operations, not composited
-     FIX:
-     - `will-change: transform` added → GPU layer promotion
-     - Combined transform in single operation
-     - `.silver-animated-border:not(.hidden)::before` — animation only when visible
-  */
+  /* ==========================================================
+     ✨ PREMIUM TWO-WAY SILVER LAVA FLOW BORDER ANIMATION
+     ========================================================== */
   .silver-animated-border {
     position: absolute;
     padding: 1.5px;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.04);
-    box-shadow:
-      0 10px 40px rgba(0, 0, 0, 0.6),
-      0 0 15px rgba(255, 255, 255, 0.03);
-    /* ✅ FIX: Contain layout/paint — prevent reflow trigger */
-    contain: layout style;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 255, 255, 0.03);
   }
 
   .silver-animated-border::before {
@@ -253,197 +164,126 @@ const currentPath = Astro.url.pathname;
     width: 200%;
     height: 200%;
     background: linear-gradient(
-      45deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.02) 25%,
-      rgba(255, 255, 255, 0.2) 40%,
-      #ffffff 50%,
-      rgba(255, 255, 255, 0.2) 60%,
-      rgba(255, 255, 255, 0.02) 75%,
+      45deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.02) 25%, 
+      rgba(255, 255, 255, 0.2) 40%, 
+      #ffffff 50%, 
+      rgba(255, 255, 255, 0.2) 60%, 
+      rgba(255, 255, 255, 0.02) 75%, 
       transparent 100%
     );
-    /* ✅ FIX 3: GPU compositing — will-change + combined transform */
-    will-change: transform;
-    /* ✅ FIX 10: Paused by default — only plays when dropdown visible */
     animation: silverLavaFlow 2.5s cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite;
-    animation-play-state: paused;
-  }
-
-  /* ✅ Animation only runs when dropdown is NOT hidden */
-  .silver-animated-border:not(.hidden)::before {
-    animation-play-state: running;
   }
 
   @keyframes silverLavaFlow {
-    0%   { transform: rotate(0deg) scale(1); }
-    50%  { transform: rotate(180deg) scale(1.05); }
-    100% { transform: rotate(360deg) scale(1); }
+    0% {
+      transform: rotate(0deg) scale(1);
+    }
+    50% {
+      transform: rotate(180deg) scale(1.05);
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+    }
   }
 
-  /* ✅ FIX 2: Forced reflow mitigation
-     Header scroll behavior — use transform instead of top/height changes
-     Changing height/top triggers layout → reflow
-     Using transform: translateY() is GPU composited → no reflow
-  */
-  .header {
-    /* Promote header to its own GPU layer — prevents reflow cascade */
-    will-change: transform;
-    transform: translateZ(0);
-    /* contain: layout — children cannot affect outside layout */
-    contain: layout style;
+  #nav-toggle:checked ~ #show-button {
+    display: none !important;
   }
-
-  /* ✅ Active nav link style */
-  .nav-link[aria-current="page"] {
-    color: #01AD9F !important;
+  #nav-toggle:checked ~ #hide-button {
+    display: flex !important;
   }
 </style>
 
 <script>
-  // ✅ FIX 7 & 6: Single global handler with proper cleanup
-  // PROBLEM: 
-  //   - DOMContentLoaded + astro:page-load both fire on first load → double init
-  //   - cloneNode accumulates in memory over multiple page navigations
-  //   - outsideClickHandler on document fires on EVERY click including search input
-  // FIX:
-  //   - Single astro:page-load listener (fires on first load AND navigations)
-  //   - cloneNode pattern kept but scoped to current page's elements only
-  //   - outsideClickHandler uses composedPath() for accurate detection
-
+  // ✅ ROOT FIX: Global click listener එක module-scope variable එකක ගබඩා කර,
+  // initHeaderLogic() සෑම astro:page-load වලදීත් run වෙද්දී පැරණි listener එක
+  // පළමුව ඉවත් කරයි. නැතිනම් listeners accumulate වී, search input එක click/focus
+  // කරද්දී "outside click" handler එක ක්‍රියාත්මක වී navToggle change event
+  // dispatch කරයි → cascade re-render → persisted React island reset වෙනවා.
   let outsideClickHandler: ((e: MouseEvent) => void) | null = null;
-  // ✅ FIX: Track initialized dropdowns to prevent double-binding
-  let initializedDropdowns = new WeakSet<Element>();
 
   function initHeaderLogic() {
+    const dropdownButtons = document.querySelectorAll(".nav-dropdown-btn");
     const navToggle = document.getElementById("nav-toggle") as HTMLInputElement | null;
     const headerElement = document.getElementById("site-header");
-    const showButton = document.getElementById("show-button");
-    const hideButton = document.getElementById("hide-button");
-
-    // ✅ FIX 6: Remove DOMContentLoaded duplicate — astro:page-load handles both
-    // Reset initialized set on each page load
-    initializedDropdowns = new WeakSet<Element>();
-
-    // ✅ Dropdown button init
-    const dropdownButtons = document.querySelectorAll<HTMLButtonElement>(".nav-dropdown-btn");
 
     dropdownButtons.forEach((btn) => {
-      // ✅ FIX 7: Skip already-initialized buttons via WeakSet (no cloneNode needed)
-      // cloneNode was removing aria attributes set by previous init — replaced with flag
-      if (initializedDropdowns.has(btn)) return;
-      initializedDropdowns.add(btn);
+      // ✅ cloneNode pattern දිගටම පවතී — duplicate listeners on the button itself avoid කරයි
+      const newBtn = btn.cloneNode(true) as HTMLButtonElement;
+      btn.parentNode?.replaceChild(newBtn, btn);
 
-      const targetId = btn.getAttribute("data-dropdown-target");
-      const dropdownMenu = document.getElementById(targetId || "");
-      const icon = btn.querySelector<SVGElement>(".dropdown-icon");
+      const targetId = newBtn.getAttribute("data-dropdown-target");
+      const menu = document.getElementById(targetId || "");
+      const icon = newBtn.querySelector(".dropdown-icon");
 
-      if (!dropdownMenu) return;
+      if (newBtn && menu) {
+        newBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
 
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
+          document.querySelectorAll(".nav-dropdown-list").forEach((m) => {
+            if (m.id !== targetId) {
+              m.classList.add("hidden");
+              m.parentElement?.querySelector(".dropdown-icon")?.classList.remove("rotate-180");
+              m.parentElement?.querySelector(".nav-dropdown-btn")?.setAttribute("aria-expanded", "false");
+            }
+          });
 
-        // Close other open dropdowns
-        document.querySelectorAll<HTMLElement>(".nav-dropdown-list").forEach((m) => {
-          if (m.id !== targetId && !m.classList.contains("hidden")) {
-            m.classList.add("hidden");
-            m.setAttribute("aria-hidden", "true");
-            const parentBtn = m.parentElement?.querySelector<HTMLElement>(".nav-dropdown-btn");
-            parentBtn?.querySelector(".dropdown-icon")?.classList.remove("rotate-180");
-            parentBtn?.setAttribute("aria-expanded", "false");
+          const isHidden = menu.classList.contains("hidden");
+          if (isHidden) {
+            menu.classList.remove("hidden");
+            icon?.classList.add("rotate-180");
+            newBtn.setAttribute("aria-expanded", "true");
+          } else {
+            menu.classList.add("hidden");
+            icon?.classList.remove("rotate-180");
+            newBtn.setAttribute("aria-expanded", "false");
           }
         });
-
-        const isHidden = dropdownMenu.classList.contains("hidden");
-
-        if (isHidden) {
-          dropdownMenu.classList.remove("hidden");
-          dropdownMenu.setAttribute("aria-hidden", "false");
-          icon?.classList.add("rotate-180");
-          btn.setAttribute("aria-expanded", "true");
-        } else {
-          dropdownMenu.classList.add("hidden");
-          dropdownMenu.setAttribute("aria-hidden", "true");
-          icon?.classList.remove("rotate-180");
-          btn.setAttribute("aria-expanded", "false");
-        }
-      });
-
-      // ✅ Keyboard: Escape closes dropdown
-      btn.addEventListener("keydown", (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          dropdownMenu.classList.add("hidden");
-          dropdownMenu.setAttribute("aria-hidden", "true");
-          icon?.classList.remove("rotate-180");
-          btn.setAttribute("aria-expanded", "false");
-          btn.focus();
-        }
-      });
+      }
     });
 
-    // ✅ FIX 4: Mobile menu label keyboard support
-    // Labels with tabindex="0" need Enter/Space key handling
-    [showButton, hideButton].forEach((label) => {
-      if (!label) return;
-      label.addEventListener("keydown", (e: Event) => {
-        const ke = e as KeyboardEvent;
-        if (ke.key === "Enter" || ke.key === " ") {
-          ke.preventDefault();
-          navToggle?.click();
-        }
-      });
-    });
-
-    // ✅ FIX 7: Clean up old outside click handler before adding new one
+    // ✅ FIX: පැරණි document-level listener එක තිබේ නම් පළමුව remove කරන්න
     if (outsideClickHandler) {
       document.removeEventListener("click", outsideClickHandler);
       outsideClickHandler = null;
     }
 
-    // ✅ FIX 2 (partial): Use composedPath() — avoids offsetWidth/getBoundingClientRect
-    // which trigger forced reflow. composedPath() is pure event data, no layout query.
     outsideClickHandler = (e: MouseEvent) => {
-      const path = e.composedPath();
-      const clickedInsideHeader = headerElement ? path.includes(headerElement) : false;
+      const target = e.target as Node;
 
-      if (!clickedInsideHeader) {
-        // Close all dropdowns
-        document.querySelectorAll<HTMLElement>(".nav-dropdown-list").forEach((m) => {
-          if (!m.classList.contains("hidden")) {
-            m.classList.add("hidden");
-            m.setAttribute("aria-hidden", "true");
-            const parentBtn = m.parentElement?.querySelector<HTMLElement>(".nav-dropdown-btn");
-            parentBtn?.querySelector(".dropdown-icon")?.classList.remove("rotate-180");
-            parentBtn?.setAttribute("aria-expanded", "false");
-          }
+      if (headerElement && !headerElement.contains(target)) {
+        document.querySelectorAll(".nav-dropdown-list").forEach((menu) => {
+          menu.classList.add("hidden");
+          const parent = menu.parentElement;
+          parent?.querySelector(".dropdown-icon")?.classList.remove("rotate-180");
+          parent?.querySelector(".nav-dropdown-btn")?.setAttribute("aria-expanded", "false");
         });
 
-        // ✅ FIX: Only uncheck if currently checked — prevents unnecessary reflow
-        if (navToggle?.checked) {
+        // ✅ FIX: navToggle already unchecked නම් event dispatch නොකරන්න —
+        // අනවශ්‍ය "change" events ඇතිවීම නවතී (cascade re-render root cause)
+        if (navToggle && navToggle.checked) {
           navToggle.checked = false;
-          // ✅ FIX 2: dispatchEvent causes reflow — use requestAnimationFrame
-          requestAnimationFrame(() => {
-            navToggle.dispatchEvent(new Event("change", { bubbles: true }));
-          });
+          navToggle.dispatchEvent(new Event("change"));
         }
       }
     };
 
-    document.addEventListener("click", outsideClickHandler, { passive: true });
+    document.addEventListener("click", outsideClickHandler);
   }
 
-  // ✅ FIX 6: Single event listener — astro:page-load fires on:
-  //   1. First page load (after DOMContentLoaded)
-  //   2. Every View Transition navigation
-  // Removed DOMContentLoaded duplicate
+  // ✅ Astro Lifecycle — DOMContentLoaded සහ astro:page-load දෙකේදීම
+  // නමුත් දැන් cleanup logic එක නිසා listener accumulation නෑ
+  document.addEventListener("DOMContentLoaded", initHeaderLogic);
   document.addEventListener("astro:page-load", initHeaderLogic);
 
-  // ✅ Clean up before swap — prevents stale handler on new page
+  // ✅ EXTRA SAFETY: astro:before-swap වෙද්දී listener cleanup —
+  // page transition අතරතුර stale handler trigger වීම සම්පූර්ණයෙන් වළක්වයි
   document.addEventListener("astro:before-swap", () => {
     if (outsideClickHandler) {
       document.removeEventListener("click", outsideClickHandler);
       outsideClickHandler = null;
     }
-    // ✅ Reset WeakSet on navigation
-    initializedDropdowns = new WeakSet<Element>();
   });
 </script>
