@@ -2,14 +2,14 @@
 import { Image } from "astro:assets";
 import { humanize } from "@/lib/utils/textConverter";
 
-// ✅ ROOT FIX: images දැන් src/assets/ ඇතුළේ import කරනවා —
-// මෙතැන් සිට Astro Sharp pipeline එක build time එකේදීම
-// automatic compression + responsive srcset generate කරයි.
-// public/images/slider/ වල තිබුණු raw 2.1MB-2.5MB files තවදුරටත් භාවිතා නොවේ.
-import slide1 from "@/assets/images/slider/slide-1.webp";
-import slide2 from "@/assets/images/slider/slide-2.webp";
-import slide3 from "@/assets/images/slider/slide-3.webp";
-import slide4 from "@/assets/images/slider/slide-4.webp";
+// ✅ FIX: actual uploaded files .jpg format (src/assets/images/slider/) —
+// format="webp" prop එක Image component එකේ දාලා තියෙන නිසා,
+// Sharp විසින් build time එකේදී .jpg → .webp automatically convert කරයි.
+// Output එක browser එකට යන්නේ optimized webp විදිහටම.
+import slide1 from "@/assets/images/slider/slide-1.jpg";
+import slide2 from "@/assets/images/slider/slide-2.jpg";
+import slide3 from "@/assets/images/slider/slide-3.jpg";
+import slide4 from "@/assets/images/slider/slide-4.jpg";
 
 const demoSlides = [
   {
@@ -78,7 +78,7 @@ const demoSlides = [
                 responsive srcset/sizes auto-generate කරයි (100vw නෙවෙයි, 1000px max)
               - width/height — 8:3 aspect ratio (1000x375), parent CSS aspect-ratio:8/3 සමග match
               - quality={75} — visual quality maintain කරමින් file size අඩු කරයි
-              - format="webp" — original format එකම පවත්වාගනියි
+              - format="webp" — input .jpg වුණත් output එක webp බවට convert කරයි
               - Build time එකේදී Sharp විසින් breakpoints කිහිපයකට (mobile/tablet/desktop)
                 resize + compress කරයි — දැන් display size එකට ගැලපෙන file එක විතරයි browser එකට යන්නේ */}
           <div 
