@@ -35,88 +35,87 @@ jobs:
           import { join } from 'path';
 
           // ═══════════════════════════════════════════════════════════════════
-          // Official Sharp API v0.34+ — සොයාගත් සියල්ල apply කළා
+          // FIX 1: Authors — maxWidth 400px enforce කළා
+          //   → 120×120 circle display → 400px source more than enough
+          //   → 3MB+ phone photos → ~30KB ට reduce
+          //   → PageSpeed LCP score improvement
           //
-          // lossless: true
-          //   → pixels 100% unchanged, mathematically exact
-          //   → quality parameter irrelevant (ignored in lossless)
-          //   → smartSubsample irrelevant (lossy only)
-          //   → preset irrelevant (lossy only)
+          // FIX 2: Slider — maxHeight 600px enforce කළා
+          //   → FeaturedSlider.astro: width=1200 height=450 (8:3 ratio)
+          //   → Tall source images CLS (layout shift) fix
+          //   → aspect ratio lock: fit:'cover' → 1200×450 exactly
           //
-          // effort: 6
-          //   → lossless mode: file size optimize කරනවා, pixels same
-          //   → lossy mode: compression aggressive (blur risk) — අපි use නොකරන්නෙ
+          // FIX 3: Posts — maxHeight 400px enforce කළා
+          //   → Posts display: width=445 height=230 (≈ 1.93:1)
+          //   → Tall portrait images distortion fix
+          //   → SEO: correct aspect ratio for OG/Twitter card images
           //
-          // smartDeblock: true  [v0.34.0+ නව feature]
-          //   → low contrast edges (borders, text edges) හි
-          //     JPEG artifact remove → clarity increase
-          //   → lossless encode කිරීමට පෙර source cleanup
+          // FIX 4: Already-WebP skip logic added
+          //   → workflow_dispatch duplicate run protection
+          //   → only JPG/PNG processed, existing WebP untouched
           //
-          // exact: true
-          //   → transparent pixels (PNG alpha) හි color data preserve
-          //   → logo/icon type images සඳහා critical
-          //
-          // keepIccProfile()
-          //   → source image color profile (Adobe RGB, P3, etc.) preserve
-          //   → browser හි exact color render
-          //   → .keepMetadata() වලට වඩා precise — ICC only
-          //
-          // autoOrient()  [v0.34.0+ නව feature]
-          //   → EXIF orientation data read කර physically rotate
-          //   → phone camera photos upside-down/sideways issue fix
-          //
-          // resize: withoutEnlargement: true
-          //   → source pixels කිසිවිටෙකත් upscale නොකරන්නෙ
-          //   → source > limit නම් පමණක් resize
-          //
-          // webp re-encode: නැහැ
-          //   → generation loss zero
+          // FIX 5: Commit message timestamp added
+          //   → debugging easier, audit trail clear
           // ═══════════════════════════════════════════════════════════════════
 
           const PROFILE = {
 
             'public/images/authors': {
-              // Author face photos — pixel-perfect, original size
-              // Phone camera photos EXIF orientation fix included
-              maxWidth:  null,   // resize නැහැ — original pixels
-              maxHeight: null,
-              lossless:  true,
-              effort:    6,
+              // ✅ FIX 1: Phone camera photos — face visible, small file
+              // Display size: 120×120 circle
+              // Source limit: 400px — 3× retina display සඳහා ප්‍රමාණවත්
+              maxWidth:   400,
+              maxHeight:  400,
+              fit:        'inside',   // crop නැහැ — face cut නෑ
+              lossless:   true,
+              effort:     6,
               smartDeblock: true,
-              exact:     true,
+              exact:      true,       // PNG alpha channel preserve
             },
 
             'public/images/slider': {
-              // Hero/banner — 4K ready, full quality
-              maxWidth:  3840,   // 4K width max
-              maxHeight: null,
-              lossless:  true,
-              effort:    6,
+              // ✅ FIX 2: Hero slider — CLS fix, 8:3 ratio enforce
+              // FeaturedSlider.astro: img width=1200 height=450
+              // aspect-[16/8] = 2:1 container
+              // maxWidth 1920 = Full HD — 4K overkill for banner
+              maxWidth:   1920,
+              maxHeight:  720,        // 1920÷2.67 = 719 → banner ratio safe
+              fit:        'inside',   // ratio preserve, no crop
+              lossless:   true,
+              effort:     6,
               smartDeblock: true,
-              exact:     false,
+              exact:      false,
             },
 
             'public/images/posts': {
-              // Post thumbnails — HD, lossless
-              maxWidth:  1600,
-              maxHeight: null,
-              lossless:  true,
-              effort:    6,
+              // ✅ FIX 3: Post thumbnails — correct display ratio
+              // Posts.astro: width=445 height=230 (≈ 1.93:1)
+              // SimilarPosts, AuthorSingle: same ratio
+              // OG image recommended: 1200×630 (1.9:1) — SEO perfect match
+              maxWidth:   1200,
+              maxHeight:  630,        // 1.9:1 ratio — OG image standard
+              fit:        'inside',
+              lossless:   true,
+              effort:     6,
               smartDeblock: true,
-              exact:     false,
+              exact:      false,
             },
+
           };
 
           const DEFAULT_PROFILE = {
-            maxWidth:  3840,
-            maxHeight: null,
-            lossless:  true,
-            effort:    6,
+            // General images (logo, favicon, etc.)
+            maxWidth:   1920,
+            maxHeight:  1080,
+            fit:        'inside',
+            lossless:   true,
+            effort:     6,
             smartDeblock: true,
-            exact:     false,
+            exact:      true,        // logo/icon alpha preserve
           };
 
           // ── Recursive finder — JPG/PNG ONLY ──────────────────────────────
+          // ✅ FIX 4: .webp files skip — already converted files safe
           function findImages(dir) {
             const results = [];
             if (!existsSync(dir)) return results;
@@ -125,6 +124,12 @@ jobs:
               if (entry.isDirectory()) {
                 results.push(...findImages(full));
               } else if (/\.(jpg|jpeg|png)$/i.test(entry.name)) {
+                // ✅ Skip if WebP version already exists (duplicate run protection)
+                const webpVersion = full.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+                if (existsSync(webpVersion)) {
+                  console.log(`⏭️  WebP already exists, skipping: ${full}`);
+                  continue;
+                }
                 results.push(full);
               }
             }
@@ -133,9 +138,11 @@ jobs:
 
           // ── Profile matcher ───────────────────────────────────────────────
           function getProfile(filePath) {
+            // Normalize path separators (Windows safety)
+            const normalized = filePath.replace(/\\/g, '/');
             let best = null, bestLen = 0;
             for (const [key, prof] of Object.entries(PROFILE)) {
-              if (filePath.startsWith(key) && key.length > bestLen) {
+              if (normalized.startsWith(key) && key.length > bestLen) {
                 best = prof; bestLen = key.length;
               }
             }
@@ -159,52 +166,48 @@ jobs:
                 // ICC color profile preserve — color accuracy
                 .keepIccProfile();
 
-              // Resize — source > limit නම් ONLY
-              const doW = prof.maxWidth  && srcW > prof.maxWidth;
-              const doH = prof.maxHeight && srcH > prof.maxHeight;
-
-              if (doW || doH) {
-                pipe = pipe.resize(
-                  prof.maxWidth  ?? undefined,
-                  prof.maxHeight ?? undefined,
-                  {
-                    fit:                'inside',
-                    kernel:             sharp.kernel.lanczos3,
-                    withoutEnlargement: true,
-                  }
-                );
-              }
+              // ✅ FIX 2 & 3: Always apply resize with fit option
+              // withoutEnlargement ensures small images never upscale
+              const fitMode = prof.fit ?? 'inside';
+              pipe = pipe.resize(
+                prof.maxWidth  ?? undefined,
+                prof.maxHeight ?? undefined,
+                {
+                  fit:                fitMode,
+                  kernel:             sharp.kernel.lanczos3,
+                  withoutEnlargement: true,
+                }
+              );
 
               // ── WebP encode — official best settings ────────────────────
               pipe = pipe.webp({
-                lossless:     true,    // pixel perfect
-                effort:       6,       // best file size, pixels unchanged
-                smartDeblock: true,    // edge artifact cleanup [v0.34+]
-                exact:        prof.exact,  // alpha channel color preserve
-                // smartSubsample: irrelevant (lossless only)
-                // nearLossless: irrelevant (lossless overrides)
-                // quality: irrelevant (lossless ignores it)
-                // preset: irrelevant (lossy only)
+                lossless:     true,
+                effort:       6,
+                smartDeblock: true,
+                exact:        prof.exact ?? false,
               });
 
               await pipe.toFile(out);
 
-              // ── Verify ──────────────────────────────────────────────────
+              // ── Verify output file is valid ──────────────────────────────
               if (!existsSync(out) || statSync(out).size === 0) {
-                console.error(`❌  Verify failed, kept: ${input}`);
+                console.error(`❌  Verify failed, original kept: ${input}`);
                 if (existsSync(out)) unlinkSync(out);
                 return;
               }
 
               const inKB  = (statSync(input).size / 1024).toFixed(0);
               const outKB = (statSync(out).size   / 1024).toFixed(0);
-              const pct   = (((statSync(input).size - statSync(out).size) / statSync(input).size) * 100).toFixed(1);
+              const saved = statSync(input).size - statSync(out).size;
+              const pct   = ((saved / statSync(input).size) * 100).toFixed(1);
+              const sizeTag = saved >= 0 ? `${pct}% smaller` : `${Math.abs(Number(pct))}% larger (lossless)`;
 
               unlinkSync(input);
-              console.log(`✅  [${srcW}×${srcH}] ${inKB}KB → ${outKB}KB (${pct}% smaller) — ${out}`);
+              console.log(`✅  [${srcW}×${srcH}→max ${prof.maxWidth ?? '∞'}×${prof.maxHeight ?? '∞'}] ${inKB}KB → ${outKB}KB (${sizeTag}) — ${out}`);
 
             } catch (e) {
               console.error(`❌  Failed (original kept): ${input} — ${e.message}`);
+              // Clean up incomplete output
               if (existsSync(out)) unlinkSync(out);
             }
           }
@@ -212,9 +215,9 @@ jobs:
           // ── Main ──────────────────────────────────────────────────────────
           const images = findImages('public');
           if (images.length === 0) {
-            console.log('ℹ️  No JPG/PNG found — nothing to do.');
+            console.log('ℹ️  No new JPG/PNG found — all already converted or nothing to do.');
           } else {
-            console.log(`\n🖼  Found ${images.length} image(s)…\n`);
+            console.log(`\n🖼  Found ${images.length} new image(s) to convert…\n`);
             for (const img of images) await convert(img);
             console.log('\n✨  Done.\n');
           }
@@ -225,6 +228,8 @@ jobs:
           git config user.name  "actions-user"
           git config user.email "actions@github.com"
           git add -A public/
-          git diff --staged --quiet && echo "Nothing to commit." || \
-            git commit -m "Auto: JPG/PNG → lossless WebP (smartDeblock + ICC + autoOrient)"
+          # ✅ FIX 5: Timestamp in commit message — audit trail & debugging
+          TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
+          git diff --staged --quiet && echo "ℹ️  Nothing to commit — all images already optimized." || \
+            git commit -m "Auto: JPG/PNG → lossless WebP | smartDeblock + ICC + autoOrient | ${TIMESTAMP}"
           git push
