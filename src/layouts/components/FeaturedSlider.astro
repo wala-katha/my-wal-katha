@@ -1,44 +1,51 @@
 ---
-import { humanize } from "@/lib/utils/textConverter";  
-  
-const demoSlides = [  
-  {  
-    id: "thaththa-duwa-wal-katha/",  
-    title: "thaththa duwa wal katha - තාත්තයි දුවයි වල් කතා",  
-    image: "/images/slider/slide-1.webp",  
-    category: "Wal Katha"  
-  },  
-  {  
-    id: "methsala-akka-wal-katha/",  
-    title: "methsala akka wal katha - මෙත්සලා අක්කා වල් කතා",  
-    image: "/images/slider/slide-2.webp",  
-    category: "Wela Katha"  
-  },  
-  {  
-    id: "nandage-duwa-wal-katha/",  
-    title: "Nandage duwa wal katha - නැන්දගේ දුව වල් කතා",  
-    image: "/images/slider/slide-3.webp",  
-    category: "wala katha"  
-  },  
-  {  
-    id: "gedara-driver-wal-katha/",  
-    title: "Gedara driver wal katha - ගෙදර ඩ්‍රයිවර් වල් කතා",  
-    image: "/images/slider/slide-4.webp",  
-    category: "True Story"  
-  }  
-];  
----  
+import { Image } from "astro:assets";
+import { humanize } from "@/lib/utils/textConverter";
 
-<!-- ✅ FIX 6: Critical LCP image preload — Base.astro එකේ දැනටමත් ඇත, මෙතන duplicate නොකරයි -->
-<!-- Base.astro: isHomePage check සහ slide-1.webp preload දැනටමත් handle කර ඇත -->
+// ✅ ROOT FIX: images දැන් src/assets/ ඇතුළේ import කරනවා —
+// මෙතැන් සිට Astro Sharp pipeline එක build time එකේදීම
+// automatic compression + responsive srcset generate කරයි.
+// public/images/slider/ වල තිබුණු raw 2.1MB-2.5MB files තවදුරටත් භාවිතා නොවේ.
+import slide1 from "@/assets/images/slider/slide-1.webp";
+import slide2 from "@/assets/images/slider/slide-2.webp";
+import slide3 from "@/assets/images/slider/slide-3.webp";
+import slide4 from "@/assets/images/slider/slide-4.webp";
+
+const demoSlides = [
+  {
+    id: "thaththa-duwa-wal-katha/",
+    title: "thaththa duwa wal katha - තාත්තයි දුවයි වල් කතා",
+    image: slide1,
+    category: "Wal Katha"
+  },
+  {
+    id: "methsala-akka-wal-katha/",
+    title: "methsala akka wal katha - මෙත්සලා අක්කා වල් කතා",
+    image: slide2,
+    category: "Wela Katha"
+  },
+  {
+    id: "nandage-duwa-wal-katha/",
+    title: "Nandage duwa wal katha - නැන්දගේ දුව වල් කතා",
+    image: slide3,
+    category: "wala katha"
+  },
+  {
+    id: "gedara-driver-wal-katha/",
+    title: "Gedara driver wal katha - ගෙදර ඩ්‍රයිවර් වල් කතා",
+    image: slide4,
+    category: "True Story"
+  }
+];
+---
 
 <div 
   class="relative w-full overflow-hidden rounded-xl bg-[#010203] mb-8 border border-white/10" 
   id="astro-featured-slider"
   aria-label="Featured Stories Slider"
   aria-roledescription="carousel"
->  
-  <!-- ✅ FIX 3 (WCAG): Live region — screen readers slide changes announce කරයි -->
+>
+  <!-- ✅ WCAG: Live region — screen readers slide changes announce කරයි -->
   <div aria-live="polite" aria-atomic="true" class="sr-only" id="slider-live-region"></div>
 
   <div 
@@ -46,8 +53,8 @@ const demoSlides = [
     id="slider-wrapper" 
     style="width: 400%; transform: translateX(0%); transition: transform 0.5s ease-in-out;"
     aria-label="Slides"
-  >  
-    {demoSlides.map((slide, index) => (  
+  >
+    {demoSlides.map((slide, index) => (
       <div 
         class="w-full flex-shrink-0 relative" 
         style="width: 25%;"
@@ -56,70 +63,52 @@ const demoSlides = [
         aria-label={`Slide ${index + 1} of ${demoSlides.length}: ${slide.title}`}
         aria-hidden={index !== 0 ? "true" : "false"}
         id={`slide-${index}`}
-      >  
+      >
         <a 
           href={`/blog/${slide.id}`} 
           class="block w-full h-full group" 
           aria-label={`Read story: ${slide.title}`}
           tabindex={index !== 0 ? -1 : 0}
-        >  
-          
-          {/* ✅ FIX 4: Heading hierarchy fix
-              - index.astro හි invisible-seo-h1 div එකේ H1 ඇත
-              - Posts section හි H2 ඇත  
-              - Slider headings H2 level (sr-only) — sequential order maintain
-              - opacity-0 ඉවත් කළා: sr-only alone enough, opacity-0 redundant & confusing */}
+        >
+          <!-- Heading hierarchy: index.astro h1 → Posts h2 → slider h2 (sr-only) -->
           <h2 class="sr-only">{slide.title}</h2>
 
-          {/* ✅ FIX 1 & FIX 2: Responsive images with correct sizes
-              
-              PROBLEM WAS:
-              - width=1200 height=450 serve වීම නමුත් display 662×248px (mobile)
-              - sizes attribute නැතිකම — browser always full 1200px download කළා
-              - ~1,589 KiB per image waste
-              
-              SOLUTION:
-              - srcset නැහැ (static file, CDN resize නැහැ) — sizes alone fix කරයි
-              - sizes="100vw" — browser viewport width = image display width correctly calculate
-              - width/height aspect ratio 1200:450 = 8:3 maintain (CLS=0)
-              - Mobile display: ~390px wide → browser ~390px needed ලෙස request
-              - Cloudflare Pages automatic image resizing enabled නොවන නිසා 
-                srcset generate කළේ නැහැ — sizes alone helps with future CDN
-
-              ACTUAL FIX FOR IMAGE SIZE:
-              GitHub Actions workflow fix (previous conversation) — 
-              slider images maxWidth:1920, maxHeight:720 — 
-              නමුත් existing webp files already 2093px — 
-              manual resize or new upload කිරීමෙන් පසු effective වේ */}
+          {/* ✅ IMAGE FIX: Astro <Image> component + layout="constrained"
+              - layout="constrained" — site .container max-width:1000px එකට ගැලපෙන 
+                responsive srcset/sizes auto-generate කරයි (100vw නෙවෙයි, 1000px max)
+              - width/height — 8:3 aspect ratio (1000x375), parent CSS aspect-ratio:8/3 සමග match
+              - quality={75} — visual quality maintain කරමින් file size අඩු කරයි
+              - format="webp" — original format එකම පවත්වාගනියි
+              - Build time එකේදී Sharp විසින් breakpoints කිහිපයකට (mobile/tablet/desktop)
+                resize + compress කරයි — දැන් display size එකට ගැලපෙන file එක විතරයි browser එකට යන්නේ */}
           <div 
             class="relative w-full bg-[#010203] overflow-hidden"
             style="aspect-ratio: 8/3;"
-          >  
-            <img  
-              src={slide.image}  
+          >
+            <Image
+              src={slide.image}
               alt={slide.title}
-              width={1200}  
-              height={450}
-              sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, 1000px"
-              loading={index === 0 ? "eager" : "lazy"}  
-              decoding={index === 0 ? "sync" : "async"}  
+              layout="constrained"
+              width={1000}
+              height={375}
+              quality={75}
+              format="webp"
+              loading={index === 0 ? "eager" : "lazy"}
+              decoding={index === 0 ? "sync" : "async"}
               fetchpriority={index === 0 ? "high" : "auto"}
               class="w-full h-full object-cover object-center transition duration-500 group-hover:scale-[1.02]"
               aria-hidden="true"
-            />  
-          </div>  
-  
-          {/* ✅ FIX 5 (CONTRAST): Category badge — image overlay contrast fix
-              PROBLEM: #FFCC00 on image = no guaranteed contrast (image varies)
-              FIX: Dark semi-transparent backdrop + high contrast text
-              bg-black/60 backdrop ensures minimum contrast ratio ≥ 4.5:1 */}
-          <div class="absolute bottom-3 left-4 z-10">  
-            <span class="bg-[#FFCC00] text-[#010203] px-2.5 py-1 text-[11px] sm:text-xs font-black rounded uppercase tracking-wider shadow-md ring-1 ring-black/20">  
-              {humanize(slide.category)}  
-            </span>  
+            />
           </div>
 
-          {/* ✅ NEW: Story title overlay — visible on hover, helps SEO & UX */}
+          {/* Category badge — dark backdrop, WCAG contrast ≥ 4.5:1 */}
+          <div class="absolute bottom-3 left-4 z-10">
+            <span class="bg-[#FFCC00] text-[#010203] px-2.5 py-1 text-[11px] sm:text-xs font-black rounded uppercase tracking-wider shadow-md ring-1 ring-black/20">
+              {humanize(slide.category)}
+            </span>
+          </div>
+
+          {/* Story title overlay — visible on hover */}
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
             <div class="absolute bottom-10 left-4 right-4">
               <p class="text-white text-xs sm:text-sm font-semibold line-clamp-1 drop-shadow-md">
@@ -127,23 +116,17 @@ const demoSlides = [
               </p>
             </div>
           </div>
-        </a>  
-      </div>  
-    ))}  
-  </div>  
-  
-  {/* ✅ FIX 3 (TOUCH TARGETS): Slider dots — 8×8px → 44×44px touch area
-      PROBLEM: w-2 h-2 = 8px × 8px — WCAG 2.5.5 fail (min 44×44px)
-      SOLUTION: 
-      - Outer button: min-w-[44px] min-h-[44px] — full touch area
-      - Inner visual dot: w-2.5 h-2.5 (10px) — visual dot size slightly increased
-      - flex items-center justify-center — dot centered in touch area
-      - aria-current="true" on active slide */}
-  <div class="absolute bottom-1 right-2 flex gap-0 z-20" role="tablist" aria-label="Slide navigation">  
-    {demoSlides.map((slide, index) => (  
-      <button  
+        </a>
+      </div>
+    ))}
+  </div>
+
+  <!-- Slider dots — 44×44px touch target (WCAG 2.5.5) -->
+  <div class="absolute bottom-1 right-2 flex gap-0 z-20" role="tablist" aria-label="Slide navigation">
+    {demoSlides.map((slide, index) => (
+      <button
         class={`slider-dot min-w-[44px] min-h-[44px] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#01AD9F] focus-visible:ring-offset-1 focus-visible:ring-offset-black rounded-lg`}
-        data-index={index}  
+        data-index={index}
         aria-label={`Go to slide ${index + 1}: ${slide.title}`}
         aria-selected={index === 0 ? "true" : "false"}
         role="tab"
@@ -151,65 +134,58 @@ const demoSlides = [
         type="button"
       >
         <span class={`block w-2.5 h-2.5 rounded-full transition-all duration-300 slider-dot-visual ${index === 0 ? 'bg-[#01AD9F] scale-125' : 'bg-white/40'}`}></span>
-      </button>  
-    ))}  
-  </div>  
-</div>  
-  
-<script>  
+      </button>
+    ))}
+  </div>
+</div>
+
+<script>
   // ✅ Global interval variable — Astro View Transitions leak prevention
   let slideInterval: ReturnType<typeof setInterval> | null = null;
 
-  function initSlider() {  
-    const slider = document.getElementById('astro-featured-slider');  
+  function initSlider() {
+    const slider = document.getElementById('astro-featured-slider');
     const wrapper = document.getElementById('slider-wrapper') as HTMLElement | null;
-    // ✅ FIX: dot selector update — outer button, visual dot separate
     const dots = document.querySelectorAll<HTMLButtonElement>('.slider-dot');
     const visualDots = document.querySelectorAll<HTMLElement>('.slider-dot-visual');
     const liveRegion = document.getElementById('slider-live-region');
     const slides = document.querySelectorAll<HTMLElement>('[role="group"][aria-roledescription="slide"]');
-  
-    if (!slider || !wrapper || dots.length === 0) return;  
-  
-    // ✅ Clear any existing interval before re-init
+
+    if (!slider || !wrapper || dots.length === 0) return;
+
     if (slideInterval) {
       clearInterval(slideInterval);
       slideInterval = null;
     }
 
-    let currentIndex = 0;  
-    const totalSlides = dots.length;  
-    const intervalTime = 4000;  
-  
-    function updateSlider(index: number) {  
-      currentIndex = index;  
-      wrapper!.style.transform = `translateX(-${index * 25}%)`;  
+    let currentIndex = 0;
+    const totalSlides = dots.length;
+    const intervalTime = 4000;
 
-      // ✅ FIX: Visual dots update — separate from touch target buttons
-      visualDots.forEach((dot, i) => {  
-        if (i === index) {  
-          dot.classList.add('bg-[#01AD9F]', 'scale-125');  
-          dot.classList.remove('bg-white/40');  
-        } else {  
-          dot.classList.remove('bg-[#01AD9F]', 'scale-125');  
-          dot.classList.add('bg-white/40');  
-        }  
+    function updateSlider(index: number) {
+      currentIndex = index;
+      wrapper!.style.transform = `translateX(-${index * 25}%)`;
+
+      visualDots.forEach((dot, i) => {
+        if (i === index) {
+          dot.classList.add('bg-[#01AD9F]', 'scale-125');
+          dot.classList.remove('bg-white/40');
+        } else {
+          dot.classList.remove('bg-[#01AD9F]', 'scale-125');
+          dot.classList.add('bg-white/40');
+        }
       });
 
-      // ✅ ARIA: dot button selected state update
       dots.forEach((dot, i) => {
         dot.setAttribute('aria-selected', i === index ? 'true' : 'false');
       });
 
-      // ✅ ARIA: slide hidden state update — screen readers skip hidden slides
       slides.forEach((slide, i) => {
         slide.setAttribute('aria-hidden', i !== index ? 'true' : 'false');
-        // ✅ Keyboard: tabindex update — hidden slides not focusable
         const link = slide.querySelector('a');
         if (link) link.setAttribute('tabindex', i !== index ? '-1' : '0');
       });
 
-      // ✅ WCAG: Live region announcement — screen reader slide change announce
       if (liveRegion) {
         const slideData = [
           { title: "thaththa duwa wal katha" },
@@ -219,24 +195,23 @@ const demoSlides = [
         ];
         liveRegion.textContent = `Slide ${index + 1} of ${totalSlides}: ${slideData[index]?.title ?? ''}`;
       }
-    }  
-  
-    function startInterval() {  
+    }
+
+    function startInterval() {
       if (slideInterval) clearInterval(slideInterval);
-      slideInterval = setInterval(() => {  
-        const nextIndex = (currentIndex + 1) % totalSlides;  
-        updateSlider(nextIndex);  
-      }, intervalTime);  
-    }  
-  
-    function stopInterval() {  
+      slideInterval = setInterval(() => {
+        const nextIndex = (currentIndex + 1) % totalSlides;
+        updateSlider(nextIndex);
+      }, intervalTime);
+    }
+
+    function stopInterval() {
       if (slideInterval) {
         clearInterval(slideInterval);
         slideInterval = null;
       }
-    }  
+    }
 
-    // ✅ FIX: Keyboard navigation — arrow keys for slider
     slider.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') {
         stopInterval();
@@ -248,49 +223,46 @@ const demoSlides = [
         startInterval();
       }
     });
-  
-    dots.forEach((dot) => {  
-      dot.addEventListener('click', (e) => {  
-        stopInterval();  
-        const index = parseInt((e.currentTarget as HTMLElement).getAttribute('data-index') || '0');  
-        updateSlider(index);  
-        startInterval();  
-      });  
-    });  
-  
-    let touchStartX = 0;  
-    let touchEndX = 0;  
-  
-    slider.addEventListener('touchstart', (e) => {  
-      touchStartX = (e as TouchEvent).changedTouches[0].screenX;  
-      stopInterval();  
-    }, { passive: true });  
-  
-    slider.addEventListener('touchend', (e) => {  
-      touchEndX = (e as TouchEvent).changedTouches[0].screenX;  
-      const diff = touchStartX - touchEndX;  
-      if (Math.abs(diff) > 50) {  
-        const nextIndex = diff > 0  
-          ? (currentIndex + 1) % totalSlides  
-          : (currentIndex - 1 + totalSlides) % totalSlides;  
-        updateSlider(nextIndex);  
-      }  
-      startInterval();  
-    }, { passive: true });  
-  
-    // ✅ Pause on hover/focus — resume on leave
-    slider.addEventListener('mouseenter', stopInterval);  
+
+    dots.forEach((dot) => {
+      dot.addEventListener('click', (e) => {
+        stopInterval();
+        const index = parseInt((e.currentTarget as HTMLElement).getAttribute('data-index') || '0');
+        updateSlider(index);
+        startInterval();
+      });
+    });
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    slider.addEventListener('touchstart', (e) => {
+      touchStartX = (e as TouchEvent).changedTouches[0].screenX;
+      stopInterval();
+    }, { passive: true });
+
+    slider.addEventListener('touchend', (e) => {
+      touchEndX = (e as TouchEvent).changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 50) {
+        const nextIndex = diff > 0
+          ? (currentIndex + 1) % totalSlides
+          : (currentIndex - 1 + totalSlides) % totalSlides;
+        updateSlider(nextIndex);
+      }
+      startInterval();
+    }, { passive: true });
+
+    slider.addEventListener('mouseenter', stopInterval);
     slider.addEventListener('mouseleave', startInterval);
     slider.addEventListener('focusin', stopInterval);
     slider.addEventListener('focusout', startInterval);
-  
-    startInterval();  
-  }  
-  
-  // ✅ Both Astro View Transitions and normal page load
-  document.addEventListener('astro:page-load', initSlider);  
-  
-  // ✅ Clean up before page transition — prevent memory leak
+
+    startInterval();
+  }
+
+  document.addEventListener('astro:page-load', initSlider);
+
   document.addEventListener('astro:before-preparation', () => {
     if (slideInterval) {
       clearInterval(slideInterval);
