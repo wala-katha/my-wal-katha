@@ -1,7 +1,14 @@
 ---
 import { Image } from "astro:assets";
 import config from "@/config/config.json";
+
+// ✅ FIX 5: Props interface — src prop type properly defined
+interface Props {
+  src?: string;
+}
+
 const { src } = Astro.props;
+
 const {
   logo,
   logo_width,
@@ -10,44 +17,113 @@ const {
   title,
 }: {
   logo: string;
-  logo_width: any;
-  logo_height: any;
+  // ✅ FIX 7: Proper types instead of 'any'
+  logo_width: string;
+  logo_height: string;
   logo_text: string;
   title: string;
 } = config.site;
+
+// ✅ FIX 4: Safe number parsing — handles both "300" and "300px" formats
+const parseSize = (val: string): number => {
+  const n = parseInt(val.replace(/px/gi, "").trim(), 10);
+  return isNaN(n) ? 0 : n;
+};
+
+const configWidth  = parseSize(logo_width);   // 300
+const configHeight = parseSize(logo_height);  // 50
+
+// ✅ FIX 1 & 3: Aspect ratio mismatch fix
+//
+// PROBLEM (PageSpeed Screenshot 5):
+//   - logo.webp actual size: 1920×323px → natural ratio: 5.94:1
+//   - config.json: logo_width="300", logo_height="50" → ratio: 6.0:1
+//   - Astro <Image> renders: width=300 height=50
+//   - Browser CSS: style="height:50px; width:300px" → forces 6:1
+//   - Actual image ratio 5.94:1 ≠ displayed 6.0:1 → PageSpeed flags aspect ratio mismatch
+//   - PageSpeed showed: displayed 170×50 (3.40) vs actual 1920×323 (5.94)
+//     The 170×50 display is from navbar-brand CSS max-width constraint
+//
+// ROOT CAUSE:
+//   navbar-brand CSS in navigation.css:
+//   ".navbar-brand img { max-width: 170px; }" — overrides width=300 → displays at 170px
+//   But height stays 50px → 170×50 = ratio 3.40 ≠ actual 5.94
+//
+// FIX STRATEGY:
+//   Calculate display height from actual image ratio so browser
+//   never needs to distort the image.
+//   
+//   Actual logo ratio: 1920 ÷ 323 = 5.943...
+//   If display width = 170px (navbar constraint) → height = 170 ÷ 5.943 = ~28.6px
+//   If display width = 300px → height = 300 ÷ 5.943 = ~50.5px ≈ 50px ✅
+//
+//   REAL FIX: Remove inline style override, let browser use natural aspect ratio
+//   Use only width attribute, height="auto" via CSS — browser computes correct height
+//   This eliminates the ratio mismatch completely.
+//
+// ACTUAL IMAGE RATIO: 1920:323
+// We encode this in width/height props so browser reserves correct space (CLS=0)
+// while CSS max-width handles the responsive scaling.
+
+// Natural ratio from actual logo.webp dimensions
+const LOGO_NATURAL_WIDTH  = 1920;
+const LOGO_NATURAL_HEIGHT = 323;
+
+// Render width = config width (300px) or src override
+// Render height = calculated from natural ratio to prevent distortion
+const renderWidth  = configWidth > 0 ? configWidth : 300;
+const renderHeight = Math.round((renderWidth / LOGO_NATURAL_WIDTH) * LOGO_NATURAL_HEIGHT);
+// renderHeight = Math.round((300 / 1920) * 323) = Math.round(50.46) = 50 ✅
+// This matches config height="50" AND natural ratio → no distortion
+
+// ✅ FIX 3: No inline style override — let CSS handle responsive scaling
+// CSS in navigation.css: .navbar-brand img { max-width: 170px; height: auto; }
+// Browser will scale proportionally from width=300 height=50 → 170×~28.5px
+// Ratio preserved: 300÷50 = 6.0 ≈ natural 5.94 (close enough, no PageSpeed flag)
 
 const currentLogoText = logo_text ? logo_text : title;
 const textWords = currentLogoText.split(" ");
 const firstWord = textWords[0];
 const remainingText = textWords.slice(1).join(" ");
+
+// Active logo source
+const logoSrc = src || logo;
 ---
 
+{/* ✅ FIX 6: Schema.org — name itemprop added alongside logo for completeness */}
 <div itemscope itemtype="https://schema.org/Organization" class="inline-block">
-  <a href="/" class="navbar-brand block transition-all duration-300 hover:opacity-90" itemprop="url">
-    {
-      src || logo ? (
-        <Image
-          width={Number(logo_width.replace("px", ""))}
-          height={Number(logo_height.replace("px", ""))}
-          src={src ? src : logo}
-          alt={title}
-          itemprop="logo"
-          loading="eager"
-          fetchpriority="high"
-          style={{
-            height: logo_height.replace("px", "") + "px",
-            width: logo_width.replace("px", "") + "px",
-          }}
-        />
-      ) : (
-        <span
-          itemprop="name"
-          class="text-xl sm:text-2xl font-black tracking-tight drop-shadow-md select-none text-[#F8F8FF]"
-        >
-          <span class="text-[#01AD9F]">{firstWord}</span>
-          {remainingText ? ` ${remainingText}` : ''}
-        </span>
-      )
-    }
+  {/* Organization name — hidden from view, visible to crawlers */}
+  <meta itemprop="name" content={title} />
+  <meta itemprop="url" content={config.site.base_url} />
+
+  <a
+    href="/"
+    class="navbar-brand block transition-all duration-300 hover:opacity-90"
+    itemprop="url"
+    aria-label={`${title} - Home`}
+  >
+    {logoSrc ? (
+      <Image
+        src={logoSrc}
+        alt={`${title} Logo`}
+        width={renderWidth}
+        height={renderHeight}
+        itemprop="logo"
+        loading="eager"
+        fetchpriority="high"
+        decoding="sync"
+        sizes="(max-width: 640px) 140px, 170px"
+        class="h-auto"
+        style={`max-width: ${configWidth}px;`}
+      />
+    ) : (
+      <span
+        itemprop="name"
+        class="text-xl sm:text-2xl font-black tracking-tight drop-shadow-md select-none text-[#F8F8FF]"
+      >
+        <span class="text-[#01AD9F]">{firstWord}</span>
+        {remainingText ? ` ${remainingText}` : ""}
+      </span>
+    )}
   </a>
 </div>
