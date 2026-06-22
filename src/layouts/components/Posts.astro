@@ -1,5 +1,6 @@
 ---
 import { getSinglePage } from "@/lib/contentParser.astro";
+import { getOptimizedImage } from "@/lib/imageRegistry";
 import dateFormat from "@/lib/utils/dateFormat";
 import { humanize, plainify, slugify } from "@/lib/utils/textConverter";
 import { Image } from "astro:assets";
@@ -15,34 +16,30 @@ type Props = {
 const authors = await getSinglePage("authors");
 const { className, posts, fluid } = Astro.props;
 
-// ✅ FIX 4: allGlobalPosts redundant fetch ඉවත් කළා
-// PROBLEM: getSinglePage("posts") props එකෙන් ලැබෙන posts ම නැවත fetch කළා
-// FIX: props posts use කරයි — tags ද props posts වලින් ගනී
-// NOTE: index.astro, page/[slug].astro, categories/[category].astro
-//       සියල්ල posts prop pass කරනවා — safe
 const allTags = posts.flatMap((post) => post.data.tags || []);
 const uniqueTags = [...new Set(allTags)].filter(Boolean);
 ---
 
-{/* ✅ SEMANTIC SEO: posts list structured as semantic <ul> grid */}
 <div class={`w-full mx-auto max-w-[1450px] px-2 sm:px-4 ${className ?? ''} bg-[#010203]`}>
   <ul class={`row gy-5 gx-2 sm:gx-4 m-0 p-0 list-none ${posts.length === 1 ? "justify-center" : ""}`}>
     {
       posts.map((post, i: number) => {
 
-        // ✅ FIX 10: Author lookup — safe slugify both sides
         const postAuthor = authors.find((author) =>
           post.data.authors
             .map((a: string) => slugify(a))
             .includes(slugify(author.data.title))
         );
 
-        // ✅ FIX 9: dateFormat returns object with toString() — safe string conversion
         const formattedDate = post.data.date ? dateFormat(post.data.date).toString() : null;
         const isoDate = post.data.date ? new Date(post.data.date).toISOString() : undefined;
-
-        // ✅ FIX 7: Safe body text — crash prevention
         const bodyText = typeof post.body === "string" ? plainify(post.body.slice(0, 200)) : "";
+
+        // ✅ IMAGE OPTIMIZATION: registry lookup
+        // Registry hit → Astro <Image> optimized (Sharp compress/resize/srcset)
+        // Registry miss → fallback: raw <img> tag (site කිසිසේත් break නොවේ)
+        const optimizedPostImage    = getOptimizedImage(post.data.image);
+        const optimizedAuthorImage  = getOptimizedImage(postAuthor?.data.image);
 
         return (
           <li class="col-6 flex flex-col justify-between">
@@ -51,24 +48,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
               itemscope
               itemtype="https://schema.org/Article"
             >
-              {/* ✅ FIX 1 & 2: Post image — responsive sizes corrected
-                  PROBLEM: 
-                  - Image served at 1600×2495px, displayed at 434×677px
-                  - sizes="50vw" incorrect — container is max-w-[1000px]
-                  - 50vw on 1440px screen = 720px, but actual display ~480px
-                  
-                  FIX:
-                  - width=600 height=800 (3:4 ratio) — matches aspect-ratio: 3/4
-                  - sizes: accurate viewport breakpoints for 2-column grid
-                    - Mobile (<640px): 2 columns in ~390px viewport = ~185px each
-                    - Tablet (<768px): 2 columns in ~750px viewport = ~360px each  
-                    - Desktop (<1024px): 2 columns in ~1000px max = ~480px each
-                    - Large: fixed ~480px (container 1000px ÷ 2)
-                  - Astro Image component handles srcset generation automatically
-                    with these width/sizes values
-                  
-                  IMPACT: ~1,924 KiB → ~150 KiB per image (estimated)
-              */}
+              {/* ── POST THUMBNAIL ── */}
               {post.data.image && (
                 <a
                   href={`/blog/${post.id}/`}
@@ -78,19 +58,36 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                   aria-label={`Read: ${post.data.title}`}
                   itemprop="url"
                 >
-                  <Image
-                    class="group-hover:scale-[1.03] transition duration-500 w-full h-full object-cover object-top"
-                    src={post.data.image}
-                    alt={`${post.data.title} - Sinhala Wal Katha`}
-                    width={600}
-                    height={800}
-                    sizes="(max-width: 480px) 185px, (max-width: 768px) 360px, (max-width: 1024px) 480px, 480px"
-                    loading={i < 2 ? "eager" : "lazy"}
-                    decoding={i < 2 ? "sync" : "async"}
-                    fetchpriority={i === 0 ? "high" : "auto"}
-                    itemprop="image"
-                  />
-                  {/* Gradient overlay */}
+                  {optimizedPostImage ? (
+                    // ✅ OPTIMIZED: src/assets/ image → Sharp srcset + WebP convert
+                    <Image
+                      class="group-hover:scale-[1.03] transition duration-500 w-full h-full object-cover object-top"
+                      src={optimizedPostImage}
+                      alt={`${post.data.title} - Sinhala Wal Katha`}
+                      width={600}
+                      height={800}
+                      quality={78}
+                      format="webp"
+                      sizes="(max-width: 480px) 185px, (max-width: 768px) 360px, (max-width: 1024px) 480px, 480px"
+                      loading={i < 2 ? "eager" : "lazy"}
+                      decoding={i < 2 ? "sync" : "async"}
+                      fetchpriority={i === 0 ? "high" : "auto"}
+                      itemprop="image"
+                    />
+                  ) : (
+                    // ✅ FALLBACK: public/ image — unoptimized නමුත් site break නොවේ
+                    <img
+                      class="group-hover:scale-[1.03] transition duration-500 w-full h-full object-cover object-top"
+                      src={post.data.image}
+                      alt={`${post.data.title} - Sinhala Wal Katha`}
+                      width={600}
+                      height={800}
+                      loading={i < 2 ? "eager" : "lazy"}
+                      decoding={i < 2 ? "sync" : "async"}
+                      fetchpriority={i === 0 ? "high" : undefined}
+                      itemprop="image"
+                    />
+                  )}
                   <div
                     class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"
                     aria-hidden="true"
@@ -98,7 +95,6 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                 </a>
               )}
 
-              {/* ✅ Schema.org meta — hidden, SEO only */}
               {post.data.title && <meta itemprop="name" content={post.data.title} />}
               {post.data.description && <meta itemprop="description" content={post.data.description} />}
 
@@ -121,21 +117,16 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                   </ul>
                 </li>
 
-                {/* ✅ FIX 9: dateFormat toString() explicit call */}
                 {formattedDate && (
                   <li class="hidden xs:flex items-center flex-wrap font-bold text-[9px] sm:text-[11px] text-[#F8F8FF]/70">
                     <BiCalendarEdit className="mr-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#01AD9F]" />
-                    <time
-                      dateTime={isoDate}
-                      itemprop="datePublished"
-                    >
+                    <time dateTime={isoDate} itemprop="datePublished">
                       {formattedDate}
                     </time>
                   </li>
                 )}
               </ul>
 
-              {/* ✅ Heading hierarchy — h3 correct here (index.astro h1 → Posts section h2 → post title h3) */}
               <h3 class="mb-1.5 line-clamp-2 leading-tight" itemprop="headline">
                 <a
                   href={`/blog/${post.id}/`}
@@ -146,7 +137,6 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                 </a>
               </h3>
 
-              {/* ✅ FIX 7: Safe body text with crash prevention */}
               {bodyText && (
                 <p
                   class="text-[#F8F8FF]/70 text-[10px] sm:text-sm line-clamp-2 mb-2 leading-snug"
@@ -168,35 +158,36 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
                     itemtype="https://schema.org/Person"
                   >
                     {postAuthor.data.image && (
-                      <Image
-                        src={postAuthor.data.image}
-                        alt={postAuthor.data.title}
-                        width={24}
-                        height={24}
-                        loading="lazy"
-                        decoding="async"
-                        class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0 border border-white/20"
-                      />
+                      optimizedAuthorImage ? (
+                        // ✅ OPTIMIZED author avatar
+                        <Image
+                          src={optimizedAuthorImage}
+                          alt={postAuthor.data.title}
+                          width={24}
+                          height={24}
+                          quality={80}
+                          format="webp"
+                          loading="lazy"
+                          decoding="async"
+                          class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0 border border-white/20"
+                        />
+                      ) : (
+                        // ✅ FALLBACK author avatar
+                        <img
+                          src={postAuthor.data.image}
+                          alt={postAuthor.data.title}
+                          width={24}
+                          height={24}
+                          loading="lazy"
+                          decoding="async"
+                          class="mr-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover flex-shrink-0 border border-white/20"
+                        />
+                      )
                     )}
                     <span class="truncate" itemprop="name">{postAuthor.data.title}</span>
                   </a>
                 )}
 
-                {/* ✅ FIX 3: "Read" button contrast fix
-                    PROBLEM: bg-[#01AD9F] text-white — contrast ratio ~2.8:1 (WCAG AA fail, needs 4.5:1)
-                    
-                    WCAG AA contrast check:
-                    - #01AD9F on white = 2.85:1 ❌
-                    - #01AD9F on #010203 dark bg = passes for large text only
-                    - text-white (#ffffff) on #01AD9F = 2.85:1 ❌
-                    
-                    FIX: text-[#010203] (near black) on bg-[#01AD9F]
-                    - #010203 on #01AD9F = 7.23:1 ✅ WCAG AAA passes
-                    - Same visual appearance, just text color changed dark→black
-                    
-                    ADDITIONAL: min-w touch target ensure — py-2 (8px+8px=16px height)
-                    Added min-h for touch target compliance
-                */}
                 <a
                   href={`/blog/${post.id}/`}
                   class="text-[9px] sm:text-xs bg-[#01AD9F] text-[#010203] px-3 sm:px-5 py-1.5 rounded-full hover:bg-[#018f84] transition-all font-black whitespace-nowrap flex-grow text-center max-w-[90px] min-h-[32px] flex items-center justify-center"
@@ -212,7 +203,7 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
     }
   </ul>
 
-  {/* ✅ Tags section */}
+  {/* Tags section */}
   {uniqueTags.length > 0 && (
     <div class="mt-16 p-4 sm:p-6 bg-[#FFCC00] rounded-xl border border-[#E6B800]">
       <div class="flex items-center gap-2 mb-4 border-b border-[#010203]/10 pb-2">
@@ -221,11 +212,6 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
       </div>
 
       <div class="relative flex flex-col">
-        {/* ✅ FIX 6: Tags toggle — SSR safe
-            PROBLEM: index >= 12 hidden class JS-only — SSR render time all tags visible briefly
-            FIX: First 12 always visible, rest hidden via CSS class set at SSR time
-            JS only toggles — no flash of all tags
-        */}
         <nav
           aria-label="Tags Cloud"
           class="transition-all duration-300 ease-in-out overflow-hidden"
@@ -277,8 +263,6 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
 
     if (!btn || !container) return;
 
-    // ✅ FIX 6: SSR-safe — hidden tags already hidden via inline style
-    // JS only shows/hides on toggle
     let isOpen = false;
 
     btn.addEventListener('click', () => {
@@ -286,28 +270,21 @@ const uniqueTags = [...new Set(allTags)].filter(Boolean);
 
       if (isOpen) {
         container.style.maxHeight = '2000px';
-        hiddenTags.forEach(tag => {
-          tag.style.display = '';
-        });
+        hiddenTags.forEach(tag => { tag.style.display = ''; });
         if (btnText) btnText.textContent = 'Show Less';
         btn.setAttribute('aria-expanded', 'true');
       } else {
         container.style.maxHeight = '110px';
         if (btnText) btnText.textContent = 'Show All Tags';
         btn.setAttribute('aria-expanded', 'false');
-
-        // ✅ Wait for CSS transition before hiding
         setTimeout(() => {
           if (!isOpen) {
-            hiddenTags.forEach(tag => {
-              tag.style.display = 'none';
-            });
+            hiddenTags.forEach(tag => { tag.style.display = 'none'; });
           }
         }, 300);
       }
     });
   }
 
-  // ✅ Both Astro View Transitions and direct load
   document.addEventListener('astro:page-load', initTagsToggler);
 </script>
