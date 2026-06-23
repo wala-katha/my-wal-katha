@@ -1,8 +1,6 @@
 // src/lib/imageRegistry.ts
 // ✅ PURPOSE: public/images/ path string → Astro optimized ImageMetadata object
 // Posts/Authors images import කරලා registry object එකකට map කරයි.
-// Posts.astro, PostSingle.astro, Authors.astro, AuthorSingle.astro
-// සියල්ලේදී post.data.image string → optimized <Image> src ලෙස lookup කරයි.
 // content.config.ts, markdown frontmatter, SEO/OG/JSON-LD logic — කිසිවක් touch නොවේ.
 
 // ── POST IMAGES ──────────────────────────────────────────────
@@ -16,18 +14,25 @@ import authorJohn    from "@/assets/images/authors/john-doe.jpg";
 import authorMark    from "@/assets/images/authors/mark-dinn.jpg";
 
 // ── REGISTRY MAP ──────────────────────────────────────────────
-// Key = markdown frontmatter එකේ image field path (exact match)
-// Value = imported ImageMetadata object (Sharp optimize කරනවා)
-export const imageRegistry: Record<string, ImageMetadata> = {
-  // Posts — frontmatter image field values (exact, case-sensitive)
-  "/images/posts/Nandage duwa wal katha.webp"  : postNandage,
-  "/images/posts/Thaththa Duwa wal katha.webp" : postThaththa,
-  "/images/posts/Methsala akka wal katha.webp" : postMethsala,
-  "/images/posts/Gedara driver wal katha.webp" : postGedara,
+// ✅ CRITICAL FIX: Keys = markdown frontmatter image field values EXACTLY
+// Gitingest scan කළාම actual frontmatter values:
+//   thaththa-duwa-wal-katha.md  → image: "/images/posts/Thaththa-Duwa-wal-katha.jpg"
+//   Nandage-Duwa-wal-katha.md   → image: "/images/posts/Nandage duwa wal katha.webp"
+//   Methsala-akka-wal-katha.md  → image: "/images/posts/Methsala akka wal katha.webp"
+//   Gedara-driver-wal-katha.md  → image: "/images/posts/Gedara driver wal katha.webp"
+//   walakatha.md  → image: /images/authors/mark-dinn.webp
+//   walkatha.md   → image: "/images/authors/john-doe.webp"
 
-  // Authors — frontmatter image field values (exact, case-sensitive)
-  "/images/authors/john-doe.webp"  : authorJohn,
-  "/images/authors/mark-dinn.webp" : authorMark,
+export const imageRegistry: Record<string, ImageMetadata> = {
+  // ✅ Posts — frontmatter හි EXACT values (case-sensitive, spaces/hyphens exact)
+  "/images/posts/Thaththa-Duwa-wal-katha.jpg" : postThaththa,
+  "/images/posts/Nandage duwa wal katha.webp" : postNandage,
+  "/images/posts/Methsala akka wal katha.webp": postMethsala,
+  "/images/posts/Gedara driver wal katha.webp": postGedara,
+
+  // ✅ Authors — frontmatter හි EXACT values
+  "/images/authors/mark-dinn.webp": authorMark,
+  "/images/authors/john-doe.webp" : authorJohn,
 };
 
 /**
